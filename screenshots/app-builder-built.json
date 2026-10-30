@@ -1,0 +1,38 @@
+{
+  "url": "http://127.0.0.1:8081/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Prompt Forge",
+      "hasCanvas": false,
+      "bodyTextLen": 2523,
+      "bodyTextHash": "1d17ce86ac7c387450246a5362758b71ec2c3584ec800a970052d36dbd2b8da9",
+      "bodyTextPrefix": "Prompt Forge New prompt Save to library Library Sign in Source A",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Prompt Forge",
+      "hasCanvas": false,
+      "bodyTextLen": 2045,
+      "bodyTextHash": "316e44790e58e26863bb3b711d8ff7917b5d45163d3108b3fc26abae7b621e5c",
+      "bodyTextPrefix": "Prompt Forge New Save Library Sign in to keep this in your accou",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-built.json",
+  "divergesFromBaseline": false,
+  "baselineReasons": []
+}
