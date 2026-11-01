@@ -404,3 +404,14 @@ export function filterCameraOptions(options: {
     );
   });
 }
+
+import type { PromptDoc } from "./model.ts";
+
+export function isCameraApplied(doc: PromptDoc, item: CameraItem): boolean {
+  const framing = doc.scene_composition.framing_doctrine;
+  if (!framing.named_principle && !framing.camera_elevation_and_axis) return false;
+  return (
+    framing.named_principle.trim().toLowerCase() === item.principle.trim().toLowerCase() ||
+    framing.camera_elevation_and_axis.trim().toLowerCase() === item.axis.trim().toLowerCase()
+  );
+}

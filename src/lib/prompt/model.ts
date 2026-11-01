@@ -84,9 +84,7 @@ export type PromptDoc = {
         shadow_depth: string;
       };
       accent_and_practicals: {
-        rim_or_kicker: string;
         practical_sources: string;
-        color_temperature_balance: string;
       };
     };
     color_science: {
@@ -198,28 +196,18 @@ export const CLUSTERS: Cluster[] = [
     fields: [
       text(
         "aesthetic_dna.lighting_architecture.lighting_style",
-        "Lighting style",
-        "Rembrandt, chiaroscuro, split, volumetric, golden hour",
+        "Lighting style & atmosphere",
+        "Rembrandt, chiaroscuro, split, volumetric, golden hour, neon noir",
       ),
       text(
         "aesthetic_dna.lighting_architecture.key_source.fixture_or_origin",
-        "Fixture or origin",
-        "softbox, direct sun, candle flame, neon tube",
-      ),
-      text(
-        "aesthetic_dna.lighting_architecture.key_source.angle_and_elevation",
-        "Angle & elevation",
-        "45° camera-left, high overhead, 90° lateral side rake",
+        "Key light & fixture",
+        "softbox, direct sun, candle flame, neon tube, streetlamp",
       ),
       text(
         "aesthetic_dna.lighting_architecture.fill_and_negative_space.shadow_depth",
-        "Shadow depth",
+        "Shadow depth & contrast",
         "rich penumbra, deep carved shadows, soft open fill",
-      ),
-      text(
-        "aesthetic_dna.lighting_architecture.accent_and_practicals.practical_sources",
-        "Practical sources",
-        "candles, neon signage, streetlamps, crystal caustics",
       ),
     ],
   },
@@ -428,9 +416,7 @@ export function emptyDoc(): PromptDoc {
         },
         fill_and_negative_space: { fill_mechanism: "", shadow_depth: "" },
         accent_and_practicals: {
-          rim_or_kicker: "",
           practical_sources: "",
-          color_temperature_balance: "",
         },
       },
       color_science: { dominant_palette: [], tonal_behavior: "" },
@@ -551,7 +537,6 @@ export function toPromptLine(doc: PromptDoc): string {
   push(doc.scene_composition.environmental_staging.location_context);
   push(doc.scene_composition.framing_doctrine.spatial_planes.foreground_obstruction);
   push(doc.aesthetic_dna.lighting_architecture.lighting_style);
-  push(doc.aesthetic_dna.lighting_architecture.accent_and_practicals.rim_or_kicker);
   push(doc.aesthetic_dna.optics.lens_type_and_focal_length);
   push(doc.aesthetic_dna.optics.aperture_and_dof);
   push(doc.scene_composition.framing_doctrine.named_principle);

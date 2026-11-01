@@ -412,3 +412,14 @@ export function filterLightingOptions(
     );
   });
 }
+
+import type { PromptDoc } from "./model.ts";
+
+export function isLightingApplied(doc: PromptDoc, item: LightingItem): boolean {
+  const current = doc.aesthetic_dna.lighting_architecture;
+  if (!current.lighting_style) return false;
+  return (
+    current.lighting_style.trim().toLowerCase() === item.style.trim().toLowerCase() ||
+    Boolean(item.fixture && current.key_source.fixture_or_origin.trim().toLowerCase() === item.fixture.trim().toLowerCase())
+  );
+}

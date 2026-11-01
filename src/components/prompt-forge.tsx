@@ -32,11 +32,32 @@ import { applySection, captureFields, fieldsHaveContent, normalizeTag, sectionBl
 import { applyLook, lookIsApplied, looksFor, LOOK_FILTERS, LOOKS, customOutfitToLook, type Look, type LookFilter } from "@/lib/prompt/looks";
 import { PoseCardVisual } from "@/components/pose-art";
 import { PoseCatalogModal } from "@/components/pose-catalog-modal";
-import { type PoseItem } from "@/lib/prompt/pose-database";
+import {
+  POSE_LIBRARY,
+  POSE_CATEGORIES,
+  filterPoses,
+  isPoseApplied,
+  type PoseItem,
+  type PoseCategory,
+} from "@/lib/prompt/pose-database";
 import { CameraCatalogModal } from "@/components/camera-catalog-modal";
-import { type CameraItem } from "@/lib/prompt/camera-database";
+import {
+  CAMERA_LIBRARY,
+  CAMERA_CATEGORIES,
+  filterCameraOptions,
+  isCameraApplied,
+  type CameraItem,
+  type CameraCategory,
+} from "@/lib/prompt/camera-database";
 import { LightingCatalogModal } from "@/components/lighting-catalog-modal";
-import { type LightingItem } from "@/lib/prompt/lighting-database";
+import {
+  LIGHTING_LIBRARY,
+  LIGHTING_CATEGORIES,
+  filterLightingOptions,
+  isLightingApplied,
+  type LightingItem,
+  type LightingCategory,
+} from "@/lib/prompt/lighting-database";
 import {
   WardrobeCatalogModal,
   CatalogItemImage,
@@ -141,18 +162,6 @@ const WARDROBE_SLOT_PILLS: Array<{ id: WardrobeSlot | "all"; label: string }> = 
   { id: "dress_onepiece", label: "Dresses" },
   { id: "layer_top", label: "Mid-Layers" },
   { id: "legwear", label: "Legwear" },
-];
-
-const POSE_CATEGORIES: Array<{ id: LookFilter; label: string }> = [
-  { id: "pose", label: "All Poses" },
-  { id: "modeling", label: "Photoshoot" },
-  { id: "sitting", label: "Sitting" },
-  { id: "reclining", label: "Floor" },
-  { id: "action", label: "Action" },
-  { id: "paintings", label: "Fine Art" },
-  { id: "knights", label: "Knights" },
-  { id: "couples", label: "Couples" },
-  { id: "cinematic", label: "Cinematic" },
 ];
 
 function WardrobeItemCard({
@@ -339,6 +348,314 @@ function WardrobeOutfitCard({
   );
 }
 
+function PoseCard({
+  pose,
+  applied,
+  density,
+  onSelect,
+}: {
+  pose: PoseItem;
+  applied: boolean;
+  density: "comfortable" | "compact";
+  onSelect: () => void;
+}) {
+  if (density === "compact") {
+    return (
+      <button
+        type="button"
+        onClick={onSelect}
+        title={`${pose.name} (${pose.stance}) - Click to apply posture`}
+        aria-pressed={applied}
+        className={cn(
+          "group relative flex flex-col overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-xs",
+          applied ? "border-amber-500 ring-2 ring-amber-500/40" : "border-border",
+        )}
+      >
+        <div className="relative aspect-square w-full bg-neutral-900/60 overflow-hidden">
+          {pose.image ? (
+            <img
+              src={pose.image}
+              alt={pose.name}
+              loading="lazy"
+              className="h-full w-full object-cover transition-transform group-hover:scale-105"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-muted font-mono text-[9px] uppercase">
+              {pose.category}
+            </div>
+          )}
+          <span className="absolute top-1 left-1 rounded bg-black/80 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-amber-400">
+            {pose.category.slice(0, 7)}
+          </span>
+          {applied && (
+            <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-amber-500 text-black shadow font-bold">
+              <Check className="size-2.5 stroke-[3]" />
+            </span>
+          )}
+          <span className="absolute bottom-1 right-1 rounded bg-black/75 px-1 py-0.5 text-[7px] font-medium text-neutral-300 capitalize">
+            {pose.stance}
+          </span>
+        </div>
+        <div className="p-1.5">
+          <p className="text-[11px] font-medium leading-tight text-foreground truncate group-hover:text-primary">
+            {pose.name}
+          </p>
+        </div>
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={applied}
+      className={cn(
+        "group relative flex flex-col overflow-hidden rounded-xl border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-md",
+        applied ? "border-amber-500 ring-2 ring-amber-500/40" : "border-border",
+      )}
+    >
+      <div className="relative aspect-[4/3] w-full bg-neutral-900/60 overflow-hidden">
+        {pose.image ? (
+          <img
+            src={pose.image}
+            alt={pose.name}
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-muted font-mono text-xs uppercase">
+            {pose.category}
+          </div>
+        )}
+        <span className="absolute top-1.5 left-1.5 rounded-md bg-black/80 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-400">
+          {pose.category}
+        </span>
+        {applied && (
+          <span className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-amber-500 text-black shadow font-bold">
+            <Check className="size-3 stroke-[3]" />
+          </span>
+        )}
+        <span className="absolute bottom-1.5 right-1.5 rounded bg-black/80 px-1.5 py-0.5 text-[8px] font-medium text-neutral-300 capitalize">
+          {pose.stance}
+        </span>
+      </div>
+      <div className="p-2.5 flex-1 flex flex-col justify-between">
+        <div>
+          <h4 className="text-xs font-semibold leading-snug text-foreground line-clamp-2 group-hover:text-primary">
+            {pose.name}
+          </h4>
+          {pose.subtitle && (
+            <p className="mt-1 text-[10px] text-muted line-clamp-1">
+              {pose.subtitle}
+            </p>
+          )}
+        </div>
+        <div className="mt-2 flex items-center justify-between pt-1 border-t border-border/50">
+          <span className="text-[9px] font-medium text-faint truncate max-w-[120px]">
+            {pose.tags[0] ? `#${pose.tags[0]}` : pose.stance}
+          </span>
+          <span className={cn("text-[10px] font-semibold", applied ? "text-amber-500" : "text-primary group-hover:underline")}>
+            {applied ? "Applied" : "+ Apply"}
+          </span>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function LightingCard({
+  item,
+  applied,
+  density,
+  onSelect,
+}: {
+  item: LightingItem;
+  applied: boolean;
+  density: "comfortable" | "compact";
+  onSelect: () => void;
+}) {
+  if (density === "compact") {
+    return (
+      <button
+        type="button"
+        onClick={onSelect}
+        title={`${item.name} (${item.badge}) - Click to apply lighting setup`}
+        aria-pressed={applied}
+        className={cn(
+          "group relative flex flex-col overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-xs",
+          applied ? "border-amber-500 ring-2 ring-amber-500/40" : "border-border",
+        )}
+      >
+        <div className="relative aspect-square w-full bg-neutral-900/60 overflow-hidden">
+          <img
+            src={item.image}
+            alt={item.name}
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform group-hover:scale-105"
+          />
+          <span className="absolute top-1 left-1 rounded bg-black/80 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-amber-400">
+            {item.badge}
+          </span>
+          {applied && (
+            <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-amber-500 text-black shadow font-bold">
+              <Check className="size-2.5 stroke-[3]" />
+            </span>
+          )}
+        </div>
+        <div className="p-1.5">
+          <p className="text-[11px] font-medium leading-tight text-foreground truncate group-hover:text-primary">
+            {item.name}
+          </p>
+        </div>
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={applied}
+      className={cn(
+        "group relative flex flex-col overflow-hidden rounded-xl border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-md",
+        applied ? "border-amber-500 ring-2 ring-amber-500/40" : "border-border",
+      )}
+    >
+      <div className="relative aspect-[4/3] w-full bg-neutral-900/60 overflow-hidden">
+        <img
+          src={item.image}
+          alt={item.name}
+          loading="lazy"
+          className="h-full w-full object-cover transition-transform group-hover:scale-105"
+        />
+        <span className="absolute top-1.5 left-1.5 rounded-md bg-black/80 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-400">
+          {item.badge}
+        </span>
+        {applied && (
+          <span className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-amber-500 text-black shadow font-bold">
+            <Check className="size-3 stroke-[3]" />
+          </span>
+        )}
+      </div>
+      <div className="p-2.5 flex-1 flex flex-col justify-between">
+        <div>
+          <h4 className="text-xs font-semibold leading-snug text-foreground line-clamp-2 group-hover:text-primary">
+            {item.name}
+          </h4>
+          <p className="mt-1 text-[10px] text-muted line-clamp-1">
+            {item.subtitle}
+          </p>
+        </div>
+        <div className="mt-2 flex items-center justify-between pt-1 border-t border-border/50">
+          <span className="text-[9px] font-medium text-faint capitalize">
+            {item.category}
+          </span>
+          <span className={cn("text-[10px] font-semibold", applied ? "text-amber-500" : "text-primary group-hover:underline")}>
+            {applied ? "Applied" : "+ Apply"}
+          </span>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function CameraCard({
+  item,
+  applied,
+  density,
+  onSelect,
+}: {
+  item: CameraItem;
+  applied: boolean;
+  density: "comfortable" | "compact";
+  onSelect: () => void;
+}) {
+  if (density === "compact") {
+    return (
+      <button
+        type="button"
+        onClick={onSelect}
+        title={`${item.name} (${item.badge}) - Click to apply camera framing & optics`}
+        aria-pressed={applied}
+        className={cn(
+          "group relative flex flex-col overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-xs",
+          applied ? "border-emerald-500 ring-2 ring-emerald-500/40" : "border-border",
+        )}
+      >
+        <div className="relative aspect-square w-full bg-neutral-900/60 overflow-hidden">
+          <img
+            src={item.image}
+            alt={item.name}
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform group-hover:scale-105"
+          />
+          <span className="absolute top-1 left-1 rounded bg-black/80 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-emerald-400">
+            {item.badge}
+          </span>
+          {applied && (
+            <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-emerald-500 text-white shadow font-bold">
+              <Check className="size-2.5 stroke-[3]" />
+            </span>
+          )}
+        </div>
+        <div className="p-1.5">
+          <p className="text-[11px] font-medium leading-tight text-foreground truncate group-hover:text-primary">
+            {item.name}
+          </p>
+        </div>
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={applied}
+      className={cn(
+        "group relative flex flex-col overflow-hidden rounded-xl border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-md",
+        applied ? "border-emerald-500 ring-2 ring-emerald-500/40" : "border-border",
+      )}
+    >
+      <div className="relative aspect-[4/3] w-full bg-neutral-900/60 overflow-hidden">
+        <img
+          src={item.image}
+          alt={item.name}
+          loading="lazy"
+          className="h-full w-full object-cover transition-transform group-hover:scale-105"
+        />
+        <span className="absolute top-1.5 left-1.5 rounded-md bg-black/80 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-400">
+          {item.badge}
+        </span>
+        {applied && (
+          <span className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-emerald-500 text-white shadow font-bold">
+            <Check className="size-3 stroke-[3]" />
+          </span>
+        )}
+      </div>
+      <div className="p-2.5 flex-1 flex flex-col justify-between">
+        <div>
+          <h4 className="text-xs font-semibold leading-snug text-foreground line-clamp-2 group-hover:text-primary">
+            {item.name}
+          </h4>
+          <p className="mt-1 text-[10px] text-muted line-clamp-1">
+            {item.subtitle}
+          </p>
+        </div>
+        <div className="mt-2 flex items-center justify-between pt-1 border-t border-border/50">
+          <span className="text-[9px] font-medium text-faint capitalize">
+            {item.lens || item.category}
+          </span>
+          <span className={cn("text-[10px] font-semibold", applied ? "text-emerald-500" : "text-primary group-hover:underline")}>
+            {applied ? "Applied" : "+ Apply"}
+          </span>
+        </div>
+      </div>
+    </button>
+  );
+}
+
 function cn(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(" ");
 }
@@ -508,6 +825,12 @@ export function PromptForge() {
   const [customItems, setCustomItems] = useState<WardrobeItem[]>([]);
   const [assetDensity, setAssetDensity] = useState<"comfortable" | "compact">("compact");
   const [assetFullscreen, setAssetFullscreen] = useState(false);
+  const [poseCategoryFilter, setPoseCategoryFilter] = useState<PoseCategory>("all");
+  const [poseSearch, setPoseSearch] = useState("");
+  const [lightingCategoryFilter, setLightingCategoryFilter] = useState<LightingCategory>("all");
+  const [lightingSearch, setLightingSearch] = useState("");
+  const [cameraCategoryFilter, setCameraCategoryFilter] = useState<CameraCategory>("all");
+  const [cameraSearch, setCameraSearch] = useState("");
   const [poseStanceFilter, setPoseStanceFilter] = useState<LookFilter>("pose");
   const [lookFilter, setLookFilter] = useState<LookFilter>("pose");
   const [poseGalleryOpen, setPoseGalleryOpen] = useState(false);
@@ -597,17 +920,69 @@ export function PromptForge() {
     return base;
   }, [lookFilter, customOutfits]);
 
-  const poseShelfLooks = useMemo(() => {
-    return looksFor(poseStanceFilter);
-  }, [poseStanceFilter]);
+  const displayedPoses = useMemo(() => {
+    return filterPoses({
+      category: poseCategoryFilter === "all" ? undefined : poseCategoryFilter,
+      query: poseSearch,
+      includeAdult: false,
+    });
+  }, [poseCategoryFilter, poseSearch]);
 
-  const lightingShelfLooks = useMemo(() => {
-    return looksFor("light");
-  }, []);
+  const displayedLighting = useMemo(() => {
+    return filterLightingOptions(lightingSearch, lightingCategoryFilter);
+  }, [lightingSearch, lightingCategoryFilter]);
 
-  const cameraShelfLooks = useMemo(() => {
-    return looksFor("angle");
-  }, []);
+  const displayedCamera = useMemo(() => {
+    return filterCameraOptions({
+      category: cameraCategoryFilter === "all" ? undefined : cameraCategoryFilter,
+      query: cameraSearch,
+    });
+  }, [cameraCategoryFilter, cameraSearch]);
+
+  const handleSelectPose = (pose: PoseItem) => {
+    let next = setAt(doc, `subjects.${slot}.kinetic_posture`, pose.posture);
+    if (pose.props && pose.props.length > 0) {
+      const currentProps = doc.scene_composition.environmental_staging.grounded_props ?? [];
+      const merged = Array.from(new Set([...currentProps, ...pose.props]));
+      next = setAt(next, "scene_composition.environmental_staging.grounded_props", merged);
+    }
+    setDoc(next);
+    setUntouched(false);
+    setStatus(`Applied ${pose.name} to ${doc.subjects[slot]?.subject_id.trim() || `Subject ${slot + 1}`} (posture).`);
+  };
+
+  const handleSelectLighting = (item: LightingItem) => {
+    let next = setAt(doc, "aesthetic_dna.lighting_architecture.lighting_style", item.style);
+    if (item.fixture) {
+      next = setAt(next, "aesthetic_dna.lighting_architecture.key_source.fixture_or_origin", item.fixture);
+    }
+    if (item.angle) {
+      next = setAt(next, "aesthetic_dna.lighting_architecture.key_source.angle_and_elevation", item.angle);
+    }
+    if (item.shadow) {
+      next = setAt(next, "aesthetic_dna.lighting_architecture.fill_and_negative_space.shadow_depth", item.shadow);
+    }
+    if (item.practical) {
+      next = setAt(next, "aesthetic_dna.lighting_architecture.accent_and_practicals.practical_sources", item.practical);
+    }
+    setDoc(next);
+    setUntouched(false);
+    setStatus(`Applied ${item.name} (${item.badge}).`);
+  };
+
+  const handleSelectCamera = (item: CameraItem) => {
+    let next = setAt(doc, "scene_composition.framing_doctrine.named_principle", item.principle);
+    next = setAt(next, "scene_composition.framing_doctrine.camera_elevation_and_axis", item.axis);
+    if (item.lens) {
+      next = setAt(next, "aesthetic_dna.optics.lens_type_and_focal_length", item.lens);
+    }
+    if (item.dof) {
+      next = setAt(next, "aesthetic_dna.optics.aperture_and_dof", item.dof);
+    }
+    setDoc(next);
+    setUntouched(false);
+    setStatus(`Applied ${item.name} (${item.badge}).`);
+  };
 
   useEffect(() => {
     if (isPending) return;
@@ -1522,11 +1897,11 @@ export function PromptForge() {
                     {assetTab === "wardrobe"
                       ? `${allWardrobeItems.length} Pieces · ${allWardrobeOutfits.length} Outfits`
                       : assetTab === "poses"
-                        ? "36+ Poses"
+                        ? `${POSE_LIBRARY.length} Poses`
                         : assetTab === "lighting"
-                          ? "27 Setups"
+                          ? `${LIGHTING_LIBRARY.length} Setups`
                           : assetTab === "camera"
-                            ? "27 Angles"
+                            ? `${CAMERA_LIBRARY.length} Angles`
                             : "Saved"}
                   </span>
                 </div>
@@ -1575,9 +1950,9 @@ export function PromptForge() {
             <div className="mt-2.5 flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
               {[
                 { id: "wardrobe" as const, label: "Wardrobe", icon: Shirt, count: allWardrobeItems.length },
-                { id: "poses" as const, label: "Poses", icon: Sparkles, count: 36 },
-                { id: "lighting" as const, label: "Light", icon: SunMedium, count: 27 },
-                { id: "camera" as const, label: "Camera", icon: Camera, count: 27 },
+                { id: "poses" as const, label: "Poses", icon: Sparkles, count: POSE_LIBRARY.length },
+                { id: "lighting" as const, label: "Light", icon: SunMedium, count: LIGHTING_LIBRARY.length },
+                { id: "camera" as const, label: "Camera", icon: Camera, count: CAMERA_LIBRARY.length },
                 { id: "saved" as const, label: "Saved", icon: BookmarkIcon },
               ].map((tab) => {
                 const Icon = tab.icon;
@@ -1586,6 +1961,7 @@ export function PromptForge() {
                   <button
                     key={tab.id}
                     type="button"
+                    data-testid={`asset-tab-${tab.id}`}
                     onClick={() => setAssetTab(tab.id)}
                     aria-pressed={active}
                     className={cn(
@@ -1775,7 +2151,7 @@ export function PromptForge() {
             </>
           )}
 
-          {/* TAB 2: POSES */}
+          {/* TAB 2: POSES (97 Poses) */}
           {assetTab === "poses" && (
             <>
               <div className="shrink-0 border-b border-border bg-surface/30 px-3 py-2 space-y-2">
@@ -1789,7 +2165,7 @@ export function PromptForge() {
                     className="flex shrink-0 items-center gap-1 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-400 hover:bg-amber-500/20 transition-all shadow-xs"
                   >
                     <Sparkles className="size-3.5" />
-                    <span>Large Gallery</span>
+                    <span>Large Gallery ({POSE_LIBRARY.length})</span>
                   </button>
                 </div>
 
@@ -1797,15 +2173,15 @@ export function PromptForge() {
                   <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted" />
                   <input
                     type="text"
-                    value={lookSearch}
-                    onChange={(e) => setLookSearch(e.target.value)}
-                    placeholder="Search 36+ poses (e.g. leaning, action, sitting)..."
+                    value={poseSearch}
+                    onChange={(e) => setPoseSearch(e.target.value)}
+                    placeholder={`Search ${POSE_LIBRARY.length} poses (e.g. guard, casting, casual)...`}
                     className="w-full rounded-md border border-border bg-bg py-1.5 pl-8 pr-7 text-xs text-foreground placeholder-muted focus:border-primary focus:outline-none"
                   />
-                  {lookSearch && (
+                  {poseSearch && (
                     <button
                       type="button"
-                      onClick={() => setLookSearch("")}
+                      onClick={() => setPoseSearch("")}
                       className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground"
                     >
                       <X className="size-3.5" />
@@ -1815,20 +2191,26 @@ export function PromptForge() {
 
                 <div className="flex items-center gap-1 overflow-x-auto pb-0.5 no-scrollbar text-xs">
                   {POSE_CATEGORIES.map((cat) => {
-                    const active = poseStanceFilter === cat.id;
+                    const active = poseCategoryFilter === cat.id;
+                    const count = cat.id === "all"
+                      ? POSE_LIBRARY.length
+                      : POSE_LIBRARY.filter((p) => p.category === cat.id).length;
                     return (
                       <button
                         key={cat.id}
                         type="button"
-                        onClick={() => setPoseStanceFilter(cat.id)}
+                        onClick={() => setPoseCategoryFilter(cat.id)}
                         className={cn(
-                          "h-7 shrink-0 rounded-full px-2.5 text-[11px] font-medium transition-all",
+                          "h-7 shrink-0 rounded-full px-2.5 text-[11px] font-medium transition-all flex items-center gap-1",
                           active
                             ? "bg-primary text-primary-fg shadow-xs"
                             : "border border-border bg-bg text-muted hover:text-foreground",
                         )}
                       >
-                        {cat.label}
+                        <span>{cat.label}</span>
+                        <span className={cn("text-[9px] px-1 rounded-full", active ? "bg-black/30 text-white" : "text-muted")}>
+                          {count}
+                        </span>
                       </button>
                     );
                   })}
@@ -1836,74 +2218,42 @@ export function PromptForge() {
               </div>
 
               <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
-                <div
-                  className={cn(
-                    "grid gap-2",
-                    assetDensity === "compact"
-                      ? "grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-1.5"
-                      : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2",
-                  )}
-                >
-                  {poseShelfLooks
-                    .filter((look) => {
-                      if (!lookSearch.trim()) return true;
-                      const q = lookSearch.toLowerCase();
-                      return (
-                        look.name.toLowerCase().includes(q) ||
-                        (look.subtitle && look.subtitle.toLowerCase().includes(q)) ||
-                        (look.posture && look.posture.toLowerCase().includes(q)) ||
-                        look.id.toLowerCase().includes(q)
-                      );
-                    })
-                    .map((look) => {
-                      const on = lookIsApplied(doc, look, slot);
-                      return (
-                        <button
-                          key={look.id}
-                          type="button"
-                          onClick={() => onApplyLook(look)}
-                          aria-pressed={on}
-                          className={cn(
-                            "group overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60",
-                            on ? "border-amber-500 ring-2 ring-amber-500/40 shadow-xs" : "border-border",
-                          )}
-                        >
-                          <div className="aspect-[4/5] bg-bg relative">
-                            <PoseCardVisual
-                              image={look.image}
-                              id={look.id}
-                              name={look.name}
-                              subtitle={look.subtitle}
-                              category={look.category}
-                              stance={look.stance}
-                              badge={look.badge}
-                              active={on}
-                            />
-                          </div>
-                          <div className="p-1.5">
-                            <div className="flex items-center justify-between gap-1">
-                              <p className="text-[11px] font-semibold truncate group-hover:text-primary">{look.name}</p>
-                              {on && <Check className="h-3 w-3 text-amber-500 shrink-0" />}
-                            </div>
-                            {look.subtitle && (
-                              <p className="text-[9px] text-muted truncate">{look.subtitle}</p>
-                            )}
-                          </div>
-                        </button>
-                      );
-                    })}
-                </div>
+                {displayedPoses.length === 0 ? (
+                  <div className="py-12 text-center text-xs text-muted">
+                    <Sparkles className="mx-auto size-8 opacity-30 mb-2" />
+                    <p>No poses match "{poseSearch}".</p>
+                  </div>
+                ) : (
+                  <div
+                    className={cn(
+                      "grid",
+                      assetDensity === "compact"
+                        ? "grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-1.5"
+                        : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2",
+                    )}
+                  >
+                    {displayedPoses.map((pose) => (
+                      <PoseCard
+                        key={pose.id}
+                        pose={pose}
+                        applied={isPoseApplied(doc, pose, slot)}
+                        density={assetDensity}
+                        onSelect={() => handleSelectPose(pose)}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             </>
           )}
 
-          {/* TAB 3: LIGHTING */}
+          {/* TAB 3: LIGHTING (27 Setups) */}
           {assetTab === "lighting" && (
             <>
               <div className="shrink-0 border-b border-border bg-surface/30 px-3 py-2 space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-xs text-muted">
-                    Lighting architecture (key origin, shadow depth, practicals)
+                    Lighting architecture (style, key fixture, shadow depth)
                   </p>
                   <button
                     type="button"
@@ -1911,7 +2261,7 @@ export function PromptForge() {
                     className="flex shrink-0 items-center gap-1 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-400 hover:bg-amber-500/20 transition-all shadow-xs"
                   >
                     <SunMedium className="size-3.5" />
-                    <span>Studio (27)</span>
+                    <span>Studio ({LIGHTING_LIBRARY.length})</span>
                   </button>
                 </div>
 
@@ -1919,86 +2269,81 @@ export function PromptForge() {
                   <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted" />
                   <input
                     type="text"
-                    value={lookSearch}
-                    onChange={(e) => setLookSearch(e.target.value)}
+                    value={lightingSearch}
+                    onChange={(e) => setLightingSearch(e.target.value)}
                     placeholder="Search 27 lighting setups (e.g. rembrandt, chiaroscuro, neon)..."
                     className="w-full rounded-md border border-border bg-bg py-1.5 pl-8 pr-7 text-xs text-foreground placeholder-muted focus:border-primary focus:outline-none"
                   />
-                  {lookSearch && (
+                  {lightingSearch && (
                     <button
                       type="button"
-                      onClick={() => setLookSearch("")}
+                      onClick={() => setLightingSearch("")}
                       className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground"
                     >
                       <X className="size-3.5" />
                     </button>
                   )}
                 </div>
+
+                <div className="flex items-center gap-1 overflow-x-auto pb-0.5 no-scrollbar text-xs">
+                  {LIGHTING_CATEGORIES.map((cat) => {
+                    const active = lightingCategoryFilter === cat.id;
+                    const count = cat.id === "all"
+                      ? LIGHTING_LIBRARY.length
+                      : LIGHTING_LIBRARY.filter((item) => item.category === cat.id).length;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setLightingCategoryFilter(cat.id)}
+                        className={cn(
+                          "h-7 shrink-0 rounded-full px-2.5 text-[11px] font-medium transition-all flex items-center gap-1",
+                          active
+                            ? "bg-primary text-primary-fg shadow-xs"
+                            : "border border-border bg-bg text-muted hover:text-foreground",
+                        )}
+                      >
+                        <span>{cat.label.replace(/\s*\(\d+\)/, "")}</span>
+                        <span className={cn("text-[9px] px-1 rounded-full", active ? "bg-black/30 text-white" : "text-muted")}>
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
-                <div
-                  className={cn(
-                    "grid gap-2",
-                    assetDensity === "compact"
-                      ? "grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-1.5"
-                      : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2",
-                  )}
-                >
-                  {lightingShelfLooks
-                    .filter((look) => {
-                      if (!lookSearch.trim()) return true;
-                      const q = lookSearch.toLowerCase();
-                      return (
-                        look.name.toLowerCase().includes(q) ||
-                        (look.style && look.style.toLowerCase().includes(q)) ||
-                        (look.fixture && look.fixture.toLowerCase().includes(q)) ||
-                        look.id.toLowerCase().includes(q)
-                      );
-                    })
-                    .map((look) => {
-                      const on = lookIsApplied(doc, look, slot);
-                      return (
-                        <button
-                          key={look.id}
-                          type="button"
-                          onClick={() => onApplyLook(look)}
-                          aria-pressed={on}
-                          className={cn(
-                            "group overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60",
-                            on ? "border-amber-500 ring-2 ring-amber-500/40 shadow-xs" : "border-border",
-                          )}
-                        >
-                          <div className="aspect-[4/5] bg-bg relative">
-                            <PoseCardVisual
-                              image={look.image}
-                              id={look.id}
-                              name={look.name}
-                              subtitle={look.subtitle}
-                              category={look.category}
-                              stance={look.stance}
-                              badge={look.badge}
-                              active={on}
-                            />
-                          </div>
-                          <div className="p-1.5">
-                            <div className="flex items-center justify-between gap-1">
-                              <p className="text-[11px] font-semibold truncate group-hover:text-primary">{look.name}</p>
-                              {on && <Check className="h-3 w-3 text-amber-500 shrink-0" />}
-                            </div>
-                            {look.subtitle && (
-                              <p className="text-[9px] text-muted truncate">{look.subtitle}</p>
-                            )}
-                          </div>
-                        </button>
-                      );
-                    })}
-                </div>
+                {displayedLighting.length === 0 ? (
+                  <div className="py-12 text-center text-xs text-muted">
+                    <SunMedium className="mx-auto size-8 opacity-30 mb-2" />
+                    <p>No lighting setups match "{lightingSearch}".</p>
+                  </div>
+                ) : (
+                  <div
+                    className={cn(
+                      "grid",
+                      assetDensity === "compact"
+                        ? "grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-1.5"
+                        : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2",
+                    )}
+                  >
+                    {displayedLighting.map((item) => (
+                      <LightingCard
+                        key={item.id}
+                        item={item}
+                        applied={isLightingApplied(doc, item)}
+                        density={assetDensity}
+                        onSelect={() => handleSelectLighting(item)}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             </>
           )}
 
-          {/* TAB 4: CAMERA & ANGLES */}
+          {/* TAB 4: CAMERA & ANGLES (27 Angles & Optics) */}
           {assetTab === "camera" && (
             <>
               <div className="shrink-0 border-b border-border bg-surface/30 px-3 py-2 space-y-2">
@@ -2012,7 +2357,7 @@ export function PromptForge() {
                     className="flex shrink-0 items-center gap-1 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20 transition-all shadow-xs"
                   >
                     <Camera className="size-3.5" />
-                    <span>Studio (27)</span>
+                    <span>Studio ({CAMERA_LIBRARY.length})</span>
                   </button>
                 </div>
 
@@ -2020,82 +2365,76 @@ export function PromptForge() {
                   <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted" />
                   <input
                     type="text"
-                    value={lookSearch}
-                    onChange={(e) => setLookSearch(e.target.value)}
+                    value={cameraSearch}
+                    onChange={(e) => setCameraSearch(e.target.value)}
                     placeholder="Search 27 camera angles (e.g. low angle, dutch, 85mm)..."
                     className="w-full rounded-md border border-border bg-bg py-1.5 pl-8 pr-7 text-xs text-foreground placeholder-muted focus:border-primary focus:outline-none"
                   />
-                  {lookSearch && (
+                  {cameraSearch && (
                     <button
                       type="button"
-                      onClick={() => setLookSearch("")}
+                      onClick={() => setCameraSearch("")}
                       className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground"
                     >
                       <X className="size-3.5" />
                     </button>
                   )}
                 </div>
+
+                <div className="flex items-center gap-1 overflow-x-auto pb-0.5 no-scrollbar text-xs">
+                  {CAMERA_CATEGORIES.map((cat) => {
+                    const active = cameraCategoryFilter === cat.id;
+                    const count = cat.id === "all"
+                      ? CAMERA_LIBRARY.length
+                      : CAMERA_LIBRARY.filter((item) => item.category === cat.id).length;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setCameraCategoryFilter(cat.id)}
+                        className={cn(
+                          "h-7 shrink-0 rounded-full px-2.5 text-[11px] font-medium transition-all flex items-center gap-1",
+                          active
+                            ? "bg-primary text-primary-fg shadow-xs"
+                            : "border border-border bg-bg text-muted hover:text-foreground",
+                        )}
+                      >
+                        <span>{cat.label.replace(/\s*\(\d+\)/, "")}</span>
+                        <span className={cn("text-[9px] px-1 rounded-full", active ? "bg-black/30 text-white" : "text-muted")}>
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
-                <div
-                  className={cn(
-                    "grid gap-2",
-                    assetDensity === "compact"
-                      ? "grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-1.5"
-                      : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2",
-                  )}
-                >
-                  {cameraShelfLooks
-                    .filter((look) => {
-                      if (!lookSearch.trim()) return true;
-                      const q = lookSearch.toLowerCase();
-                      return (
-                        look.name.toLowerCase().includes(q) ||
-                        (look.principle && look.principle.toLowerCase().includes(q)) ||
-                        (look.axis && look.axis.toLowerCase().includes(q)) ||
-                        (look.lens && look.lens.toLowerCase().includes(q)) ||
-                        look.id.toLowerCase().includes(q)
-                      );
-                    })
-                    .map((look) => {
-                      const on = lookIsApplied(doc, look, slot);
-                      return (
-                        <button
-                          key={look.id}
-                          type="button"
-                          onClick={() => onApplyLook(look)}
-                          aria-pressed={on}
-                          className={cn(
-                            "group overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60",
-                            on ? "border-emerald-500 ring-2 ring-emerald-500/40 shadow-xs" : "border-border",
-                          )}
-                        >
-                          <div className="aspect-[4/5] bg-bg relative">
-                            <PoseCardVisual
-                              image={look.image}
-                              id={look.id}
-                              name={look.name}
-                              subtitle={look.subtitle}
-                              category={look.category}
-                              stance={look.stance}
-                              badge={look.badge}
-                              active={on}
-                            />
-                          </div>
-                          <div className="p-1.5">
-                            <div className="flex items-center justify-between gap-1">
-                              <p className="text-[11px] font-semibold truncate group-hover:text-primary">{look.name}</p>
-                              {on && <Check className="h-3 w-3 text-emerald-500 shrink-0" />}
-                            </div>
-                            {look.subtitle && (
-                              <p className="text-[9px] text-muted truncate">{look.subtitle}</p>
-                            )}
-                          </div>
-                        </button>
-                      );
-                    })}
-                </div>
+                {displayedCamera.length === 0 ? (
+                  <div className="py-12 text-center text-xs text-muted">
+                    <Camera className="mx-auto size-8 opacity-30 mb-2" />
+                    <p>No camera angles match "{cameraSearch}".</p>
+                  </div>
+                ) : (
+                  <div
+                    className={cn(
+                      "grid",
+                      assetDensity === "compact"
+                        ? "grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-1.5"
+                        : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2",
+                    )}
+                  >
+                    {displayedCamera.map((item) => (
+                      <CameraCard
+                        key={item.id}
+                        item={item}
+                        applied={isCameraApplied(doc, item)}
+                        density={assetDensity}
+                        onSelect={() => handleSelectCamera(item)}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             </>
           )}

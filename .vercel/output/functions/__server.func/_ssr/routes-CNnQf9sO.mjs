@@ -2,10 +2,10 @@ import { o as __toESM } from "../_runtime.mjs";
 import { J as require_react, x as require_jsx_runtime, y as Link } from "../_libs/@tanstack/react-router+[...].mjs";
 import { i as signOut, t as authClient } from "./client-IWHfIGH2.mjs";
 import { a as getServerFnById, i as TSS_SERVER_FUNCTION, r as createServerFn } from "./ssr.mjs";
-import { A as saveSnippets, C as loadLibrary, D as saveCharacters, E as saveBookmarks, F as toPromptLine, N as titleFromDoc, O as saveDraft, P as toJson, S as loadDraft, T as resolvePath, _ as getAt, b as loadBookmarks, c as clusterHasContent, d as docFromFlat, g as filledKeys, h as emptySubject, i as authMiddleware, j as setAt, k as saveLibrary, l as coerceDoc, m as emptyFields, n as CLUSTER_GROUPS, p as emptyDoc, r as SECTION_KEYS, s as clusterById, t as CLUSTERS, u as countFilled, v as isNativeDoc, w as loadSnippets, x as loadCharacters } from "./storage-Btoi1Ksw.mjs";
+import { A as saveSnippets, C as loadLibrary, D as saveCharacters, E as saveBookmarks, F as toPromptLine, N as titleFromDoc, O as saveDraft, P as toJson, S as loadDraft, T as resolvePath, _ as getAt, b as loadBookmarks, c as clusterHasContent, d as docFromFlat, g as filledKeys, h as emptySubject, i as authMiddleware, j as setAt, k as saveLibrary, l as coerceDoc, m as emptyFields, n as CLUSTER_GROUPS, p as emptyDoc, r as SECTION_KEYS, s as clusterById, t as CLUSTERS, u as countFilled, v as isNativeDoc, w as loadSnippets, x as loadCharacters } from "./storage-B2z-ArVt.mjs";
 import { a as hasGateSessionMarker } from "./server-CW2nNadZ.mjs";
 import { A as Check, C as FilePlus, D as CircleAlert, E as Code, M as Bookmark, N as BookmarkPlus, O as ChevronUp, S as FileText, T as Copy, _ as Grid2x2, a as Tag, b as FolderInput, c as Shirt, d as Minimize2, f as Maximize2, g as ImagePlus, h as Image$1, i as Trash2, j as Camera, k as ChevronDown, l as Search, m as Layers, n as Upload, o as SunMedium, p as Library, s as Sparkles, t as X, u as Plus, v as Grid3x3, w as Download, x as Flame, y as Funnel } from "../_libs/lucide-react.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-COrT59ZB.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-CNnQf9sO.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 /**
@@ -740,7 +740,7 @@ var FIGURES = {
 		]
 	})
 };
-var POSE_CATEGORIES$1 = [
+var POSE_CATEGORIES = [
 	{
 		id: "all",
 		label: "All Poses"
@@ -1751,6 +1751,7 @@ var POSE_LIBRARY = [
 		subtitle: "Summoner Ritual · Staff Planted",
 		category: "fantasy",
 		stance: "standing",
+		image: "/poses/pose_anime_p001.jpg",
 		posture: "Both hands gripping tall gnarled wizard staff planted before them, robes billowing, chanting with glowing arcane aura.",
 		props: ["carved wooden wizard staff"],
 		tags: [
@@ -1767,6 +1768,7 @@ var POSE_LIBRARY = [
 		subtitle: "Runic Circle · Palms Outward",
 		category: "fantasy",
 		stance: "standing",
+		image: "/poses/pose_anime_p002.jpg",
 		posture: "Standing with feet planted wide, both palms pushed forward at chest height framing glowing holographic runic magic circle.",
 		tags: [
 			"fantasy",
@@ -1782,6 +1784,7 @@ var POSE_LIBRARY = [
 		subtitle: "Divine Supplication · Clasped Hands",
 		category: "fantasy",
 		stance: "kneeling",
+		image: "/poses/pose_anime_p003.jpg",
 		posture: "Kneeling on both knees, hands tightly clasped before heart in solemn prayer, eyes closed, gentle divine light from above.",
 		tags: [
 			"fantasy",
@@ -1797,6 +1800,7 @@ var POSE_LIBRARY = [
 		subtitle: "Cozy Warmth · Steam Rising",
 		category: "casual",
 		stance: "sitting",
+		image: "/poses/pose_model_01.jpg",
 		posture: "Seated comfortably, holding steaming ceramic mug with both hands cupped around warmth, blowing softly at surface.",
 		props: ["ceramic coffee mug"],
 		tags: [
@@ -1813,6 +1817,7 @@ var POSE_LIBRARY = [
 		subtitle: "Urban Chill · Hands Buried",
 		category: "casual",
 		stance: "standing",
+		image: "/poses/pose_model_02.jpg",
 		posture: "Walking slowly down sidewalk, both hands tucked into hoodie front pouch pocket, hood pulled up, shoulders slightly slouched.",
 		props: ["oversized hoodie"],
 		tags: [
@@ -1829,6 +1834,7 @@ var POSE_LIBRARY = [
 		subtitle: "Everyday Habit · One Hand Screen",
 		category: "casual",
 		stance: "standing",
+		image: "/poses/pose_model_03.jpg",
 		posture: "Standing on one hip, looking down at smartphone held in right hand with thumb scrolling, slight smile on lips.",
 		props: ["smartphone"],
 		tags: [
@@ -1845,6 +1851,7 @@ var POSE_LIBRARY = [
 		subtitle: "Relaxed Bar · Elbow on Surface",
 		category: "casual",
 		stance: "standing",
+		image: "/poses/pose_model_04.jpg",
 		posture: "Leaning sideways against high wooden counter, one elbow propped on surface supporting weight, smiling conversation posture.",
 		props: ["wooden cafe counter"],
 		tags: [
@@ -2508,6 +2515,22 @@ var POSE_LIBRARY = [
 		]
 	}
 ];
+function filterPoses(options) {
+	const { category = "all", stance = "all", query = "", includeAdult = false } = options;
+	const q = query.trim().toLowerCase();
+	return POSE_LIBRARY.filter((pose) => {
+		if (!includeAdult && pose.adult) return false;
+		if (category !== "all" && pose.category !== category) return false;
+		if (stance !== "all" && pose.stance !== stance) return false;
+		if (!q) return true;
+		return pose.name.toLowerCase().includes(q) || pose.subtitle && pose.subtitle.toLowerCase().includes(q) || pose.posture.toLowerCase().includes(q) || pose.id.toLowerCase().includes(q) || pose.tags.some((t) => t.toLowerCase().includes(q));
+	});
+}
+function isPoseApplied(doc, pose, subjectIndex) {
+	const current = doc.subjects[subjectIndex]?.kinetic_posture;
+	if (!current) return false;
+	return current.trim().toLowerCase() === pose.posture.trim().toLowerCase();
+}
 var CAMERA_CATEGORIES = [
 	{
 		id: "all",
@@ -3081,6 +3104,20 @@ var CAMERA_LIBRARY = [
 		]
 	}
 ];
+function filterCameraOptions(options) {
+	const { category = "all", query = "" } = options;
+	const q = query.trim().toLowerCase();
+	return CAMERA_LIBRARY.filter((item) => {
+		if (category !== "all" && item.category !== category) return false;
+		if (!q) return true;
+		return item.name.toLowerCase().includes(q) || item.subtitle.toLowerCase().includes(q) || item.principle.toLowerCase().includes(q) || item.axis.toLowerCase().includes(q) || item.badge.toLowerCase().includes(q) || item.tags.some((t) => t.toLowerCase().includes(q));
+	});
+}
+function isCameraApplied(doc, item) {
+	const framing = doc.scene_composition.framing_doctrine;
+	if (!framing.named_principle && !framing.camera_elevation_and_axis) return false;
+	return framing.named_principle.trim().toLowerCase() === item.principle.trim().toLowerCase() || framing.camera_elevation_and_axis.trim().toLowerCase() === item.axis.trim().toLowerCase();
+}
 var LIGHTING_CATEGORIES = [
 	{
 		id: "all",
@@ -3676,6 +3713,19 @@ var LIGHTING_LIBRARY = [
 		]
 	}
 ];
+function filterLightingOptions(query, category = "all") {
+	const q = query.trim().toLowerCase();
+	return LIGHTING_LIBRARY.filter((item) => {
+		if (category !== "all" && item.category !== category) return false;
+		if (!q) return true;
+		return item.name.toLowerCase().includes(q) || item.subtitle.toLowerCase().includes(q) || item.style.toLowerCase().includes(q) || item.fixture.toLowerCase().includes(q) || item.angle.toLowerCase().includes(q) || item.badge.toLowerCase().includes(q) || item.tags.some((t) => t.toLowerCase().includes(q));
+	});
+}
+function isLightingApplied(doc, item) {
+	const current = doc.aesthetic_dna.lighting_architecture;
+	if (!current.lighting_style) return false;
+	return current.lighting_style.trim().toLowerCase() === item.style.trim().toLowerCase() || Boolean(item.fixture && current.key_source.fixture_or_origin.trim().toLowerCase() === item.fixture.trim().toLowerCase());
+}
 var WARDROBE_SLOTS = [
 	{
 		"slot": "headwear",
@@ -13807,11 +13857,15 @@ function looksFor(filter) {
 	if (filter === "cinematic") return LOOKS.filter((look) => look.category === "cinematic");
 	if (filter === "couples") return LOOKS.filter((look) => look.category === "couples");
 	if (filter === "action") return LOOKS.filter((look) => look.category === "action");
+	if (filter === "fantasy") return LOOKS.filter((look) => look.category === "fantasy");
 	if (filter === "sitting") return LOOKS.filter((look) => look.category === "sitting" && !look.adult);
 	if (filter === "reclining") return LOOKS.filter((look) => look.category === "reclining" && !look.adult);
+	if (filter === "casual") return LOOKS.filter((look) => look.category === "casual");
 	if (filter === "wardrobe") return LOOKS.filter((look) => look.kind === "wardrobe");
+	if (filter === "light") return LOOKS.filter((look) => look.kind === "light");
+	if (filter === "angle") return LOOKS.filter((look) => look.kind === "angle");
 	if (filter === "all") return LOOKS.filter((look) => !look.adult);
-	return LOOKS.filter((look) => look.kind === filter);
+	return LOOKS.filter((look) => look.kind === filter || look.category === filter);
 }
 function customOutfitToLook(outfit) {
 	return {
@@ -13867,16 +13921,6 @@ function applyLook(doc, look, subjectIndex) {
 	let next = setAt(doc, "scene_composition.environmental_staging.location_context", look.location ?? "");
 	next = setAt(next, "scene_composition.environmental_staging.atmosphere_and_air_density", look.atmosphere ?? "");
 	return setAt(next, "scene_composition.environmental_staging.grounded_props", look.props ?? []);
-}
-function lookIsApplied(doc, look, subjectIndex) {
-	if (look.kind === "wardrobe" && look.outfitId) {
-		const outfit = WARDROBE_OUTFITS_BY_ID.get(look.outfitId) || look.customOutfit;
-		if (outfit) return isWardrobeOutfitApplied(doc, outfit, subjectIndex);
-	}
-	if (look.kind === "pose") return doc.subjects[subjectIndex]?.kinetic_posture === look.posture;
-	if (look.kind === "angle") return doc.scene_composition.framing_doctrine.named_principle === look.principle && doc.scene_composition.framing_doctrine.camera_elevation_and_axis === look.axis;
-	if (look.kind === "light") return doc.aesthetic_dna.lighting_architecture.lighting_style === look.style && (!look.fixture || doc.aesthetic_dna.lighting_architecture.key_source.fixture_or_origin === look.fixture);
-	return doc.scene_composition.environmental_staging.location_context === look.location;
 }
 function PoseCardVisual({ image, id, name, subtitle, category, stance, badge, active }) {
 	if (image) {
@@ -14102,7 +14146,7 @@ function PoseCatalogModal({ isOpen, onClose, onSelectPose, activePosture }) {
 				className: "shrink-0 border-b border-neutral-800/80 bg-neutral-950/80 px-6 py-3",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 					className: "flex flex-wrap items-center gap-2",
-					children: POSE_CATEGORIES$1.map((cat) => {
+					children: POSE_CATEGORIES.map((cat) => {
 						const count = categoryCounts[cat.id] ?? 0;
 						const isSelected = category === cat.id;
 						return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
@@ -17436,44 +17480,6 @@ var WARDROBE_SLOT_PILLS = [
 		label: "Legwear"
 	}
 ];
-var POSE_CATEGORIES = [
-	{
-		id: "pose",
-		label: "All Poses"
-	},
-	{
-		id: "modeling",
-		label: "Photoshoot"
-	},
-	{
-		id: "sitting",
-		label: "Sitting"
-	},
-	{
-		id: "reclining",
-		label: "Floor"
-	},
-	{
-		id: "action",
-		label: "Action"
-	},
-	{
-		id: "paintings",
-		label: "Fine Art"
-	},
-	{
-		id: "knights",
-		label: "Knights"
-	},
-	{
-		id: "couples",
-		label: "Couples"
-	},
-	{
-		id: "cinematic",
-		label: "Cinematic"
-	}
-];
 function WardrobeItemCard({ item, applied, density, onSelect }) {
 	if (density === "compact") return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 		type: "button",
@@ -17617,6 +17623,251 @@ function WardrobeOutfitCard({ outfit, applied, density, onSelect }) {
 		})]
 	});
 }
+function PoseCard({ pose, applied, density, onSelect }) {
+	if (density === "compact") return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+		type: "button",
+		onClick: onSelect,
+		title: `${pose.name} (${pose.stance}) - Click to apply posture`,
+		"aria-pressed": applied,
+		className: cn("group relative flex flex-col overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-xs", applied ? "border-amber-500 ring-2 ring-amber-500/40" : "border-border"),
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "relative aspect-square w-full bg-neutral-900/60 overflow-hidden",
+			children: [
+				pose.image ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+					src: pose.image,
+					alt: pose.name,
+					loading: "lazy",
+					className: "h-full w-full object-cover transition-transform group-hover:scale-105"
+				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "flex h-full w-full items-center justify-center text-muted font-mono text-[9px] uppercase",
+					children: pose.category
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "absolute top-1 left-1 rounded bg-black/80 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-amber-400",
+					children: pose.category.slice(0, 7)
+				}),
+				applied && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-amber-500 text-black shadow font-bold",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "size-2.5 stroke-[3]" })
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "absolute bottom-1 right-1 rounded bg-black/75 px-1 py-0.5 text-[7px] font-medium text-neutral-300 capitalize",
+					children: pose.stance
+				})
+			]
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "p-1.5",
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "text-[11px] font-medium leading-tight text-foreground truncate group-hover:text-primary",
+				children: pose.name
+			})
+		})]
+	});
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+		type: "button",
+		onClick: onSelect,
+		"aria-pressed": applied,
+		className: cn("group relative flex flex-col overflow-hidden rounded-xl border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-md", applied ? "border-amber-500 ring-2 ring-amber-500/40" : "border-border"),
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "relative aspect-[4/3] w-full bg-neutral-900/60 overflow-hidden",
+			children: [
+				pose.image ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+					src: pose.image,
+					alt: pose.name,
+					loading: "lazy",
+					className: "h-full w-full object-cover transition-transform group-hover:scale-105"
+				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "flex h-full w-full items-center justify-center text-muted font-mono text-xs uppercase",
+					children: pose.category
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "absolute top-1.5 left-1.5 rounded-md bg-black/80 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-400",
+					children: pose.category
+				}),
+				applied && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-amber-500 text-black shadow font-bold",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "size-3 stroke-[3]" })
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "absolute bottom-1.5 right-1.5 rounded bg-black/80 px-1.5 py-0.5 text-[8px] font-medium text-neutral-300 capitalize",
+					children: pose.stance
+				})
+			]
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "p-2.5 flex-1 flex flex-col justify-between",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", {
+				className: "text-xs font-semibold leading-snug text-foreground line-clamp-2 group-hover:text-primary",
+				children: pose.name
+			}), pose.subtitle && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "mt-1 text-[10px] text-muted line-clamp-1",
+				children: pose.subtitle
+			})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "mt-2 flex items-center justify-between pt-1 border-t border-border/50",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "text-[9px] font-medium text-faint truncate max-w-[120px]",
+					children: pose.tags[0] ? `#${pose.tags[0]}` : pose.stance
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: cn("text-[10px] font-semibold", applied ? "text-amber-500" : "text-primary group-hover:underline"),
+					children: applied ? "Applied" : "+ Apply"
+				})]
+			})]
+		})]
+	});
+}
+function LightingCard({ item, applied, density, onSelect }) {
+	if (density === "compact") return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+		type: "button",
+		onClick: onSelect,
+		title: `${item.name} (${item.badge}) - Click to apply lighting setup`,
+		"aria-pressed": applied,
+		className: cn("group relative flex flex-col overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-xs", applied ? "border-amber-500 ring-2 ring-amber-500/40" : "border-border"),
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "relative aspect-square w-full bg-neutral-900/60 overflow-hidden",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+					src: item.image,
+					alt: item.name,
+					loading: "lazy",
+					className: "h-full w-full object-cover transition-transform group-hover:scale-105"
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "absolute top-1 left-1 rounded bg-black/80 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-amber-400",
+					children: item.badge
+				}),
+				applied && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-amber-500 text-black shadow font-bold",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "size-2.5 stroke-[3]" })
+				})
+			]
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "p-1.5",
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "text-[11px] font-medium leading-tight text-foreground truncate group-hover:text-primary",
+				children: item.name
+			})
+		})]
+	});
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+		type: "button",
+		onClick: onSelect,
+		"aria-pressed": applied,
+		className: cn("group relative flex flex-col overflow-hidden rounded-xl border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-md", applied ? "border-amber-500 ring-2 ring-amber-500/40" : "border-border"),
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "relative aspect-[4/3] w-full bg-neutral-900/60 overflow-hidden",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+					src: item.image,
+					alt: item.name,
+					loading: "lazy",
+					className: "h-full w-full object-cover transition-transform group-hover:scale-105"
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "absolute top-1.5 left-1.5 rounded-md bg-black/80 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-400",
+					children: item.badge
+				}),
+				applied && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-amber-500 text-black shadow font-bold",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "size-3 stroke-[3]" })
+				})
+			]
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "p-2.5 flex-1 flex flex-col justify-between",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", {
+				className: "text-xs font-semibold leading-snug text-foreground line-clamp-2 group-hover:text-primary",
+				children: item.name
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "mt-1 text-[10px] text-muted line-clamp-1",
+				children: item.subtitle
+			})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "mt-2 flex items-center justify-between pt-1 border-t border-border/50",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "text-[9px] font-medium text-faint capitalize",
+					children: item.category
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: cn("text-[10px] font-semibold", applied ? "text-amber-500" : "text-primary group-hover:underline"),
+					children: applied ? "Applied" : "+ Apply"
+				})]
+			})]
+		})]
+	});
+}
+function CameraCard({ item, applied, density, onSelect }) {
+	if (density === "compact") return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+		type: "button",
+		onClick: onSelect,
+		title: `${item.name} (${item.badge}) - Click to apply camera framing & optics`,
+		"aria-pressed": applied,
+		className: cn("group relative flex flex-col overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-xs", applied ? "border-emerald-500 ring-2 ring-emerald-500/40" : "border-border"),
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "relative aspect-square w-full bg-neutral-900/60 overflow-hidden",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+					src: item.image,
+					alt: item.name,
+					loading: "lazy",
+					className: "h-full w-full object-cover transition-transform group-hover:scale-105"
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "absolute top-1 left-1 rounded bg-black/80 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-emerald-400",
+					children: item.badge
+				}),
+				applied && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-emerald-500 text-white shadow font-bold",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "size-2.5 stroke-[3]" })
+				})
+			]
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "p-1.5",
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "text-[11px] font-medium leading-tight text-foreground truncate group-hover:text-primary",
+				children: item.name
+			})
+		})]
+	});
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+		type: "button",
+		onClick: onSelect,
+		"aria-pressed": applied,
+		className: cn("group relative flex flex-col overflow-hidden rounded-xl border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-md", applied ? "border-emerald-500 ring-2 ring-emerald-500/40" : "border-border"),
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "relative aspect-[4/3] w-full bg-neutral-900/60 overflow-hidden",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+					src: item.image,
+					alt: item.name,
+					loading: "lazy",
+					className: "h-full w-full object-cover transition-transform group-hover:scale-105"
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "absolute top-1.5 left-1.5 rounded-md bg-black/80 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-400",
+					children: item.badge
+				}),
+				applied && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-emerald-500 text-white shadow font-bold",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "size-3 stroke-[3]" })
+				})
+			]
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "p-2.5 flex-1 flex flex-col justify-between",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", {
+				className: "text-xs font-semibold leading-snug text-foreground line-clamp-2 group-hover:text-primary",
+				children: item.name
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "mt-1 text-[10px] text-muted line-clamp-1",
+				children: item.subtitle
+			})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "mt-2 flex items-center justify-between pt-1 border-t border-border/50",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "text-[9px] font-medium text-faint capitalize",
+					children: item.lens || item.category
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: cn("text-[10px] font-semibold", applied ? "text-emerald-500" : "text-primary group-hover:underline"),
+					children: applied ? "Applied" : "+ Apply"
+				})]
+			})]
+		})]
+	});
+}
 function cn(...parts) {
 	return parts.filter(Boolean).join(" ");
 }
@@ -17754,6 +18005,12 @@ function PromptForge() {
 	const [customItems, setCustomItems] = (0, import_react.useState)([]);
 	const [assetDensity, setAssetDensity] = (0, import_react.useState)("compact");
 	const [assetFullscreen, setAssetFullscreen] = (0, import_react.useState)(false);
+	const [poseCategoryFilter, setPoseCategoryFilter] = (0, import_react.useState)("all");
+	const [poseSearch, setPoseSearch] = (0, import_react.useState)("");
+	const [lightingCategoryFilter, setLightingCategoryFilter] = (0, import_react.useState)("all");
+	const [lightingSearch, setLightingSearch] = (0, import_react.useState)("");
+	const [cameraCategoryFilter, setCameraCategoryFilter] = (0, import_react.useState)("all");
+	const [cameraSearch, setCameraSearch] = (0, import_react.useState)("");
 	const [poseStanceFilter, setPoseStanceFilter] = (0, import_react.useState)("pose");
 	const [lookFilter, setLookFilter] = (0, import_react.useState)("pose");
 	const [poseGalleryOpen, setPoseGalleryOpen] = (0, import_react.useState)(false);
@@ -17830,15 +18087,52 @@ function PromptForge() {
 		if (lookFilter === "wardrobe" && customOutfits.length > 0) return [...customOutfits.map(customOutfitToLook), ...base];
 		return base;
 	}, [lookFilter, customOutfits]);
-	const poseShelfLooks = (0, import_react.useMemo)(() => {
-		return looksFor(poseStanceFilter);
-	}, [poseStanceFilter]);
-	const lightingShelfLooks = (0, import_react.useMemo)(() => {
-		return looksFor("light");
-	}, []);
-	const cameraShelfLooks = (0, import_react.useMemo)(() => {
-		return looksFor("angle");
-	}, []);
+	const displayedPoses = (0, import_react.useMemo)(() => {
+		return filterPoses({
+			category: poseCategoryFilter === "all" ? void 0 : poseCategoryFilter,
+			query: poseSearch,
+			includeAdult: false
+		});
+	}, [poseCategoryFilter, poseSearch]);
+	const displayedLighting = (0, import_react.useMemo)(() => {
+		return filterLightingOptions(lightingSearch, lightingCategoryFilter);
+	}, [lightingSearch, lightingCategoryFilter]);
+	const displayedCamera = (0, import_react.useMemo)(() => {
+		return filterCameraOptions({
+			category: cameraCategoryFilter === "all" ? void 0 : cameraCategoryFilter,
+			query: cameraSearch
+		});
+	}, [cameraCategoryFilter, cameraSearch]);
+	const handleSelectPose = (pose) => {
+		let next = setAt(doc, `subjects.${slot}.kinetic_posture`, pose.posture);
+		if (pose.props && pose.props.length > 0) {
+			const currentProps = doc.scene_composition.environmental_staging.grounded_props ?? [];
+			const merged = Array.from(/* @__PURE__ */ new Set([...currentProps, ...pose.props]));
+			next = setAt(next, "scene_composition.environmental_staging.grounded_props", merged);
+		}
+		setDoc(next);
+		setUntouched(false);
+		setStatus(`Applied ${pose.name} to ${doc.subjects[slot]?.subject_id.trim() || `Subject ${slot + 1}`} (posture).`);
+	};
+	const handleSelectLighting = (item) => {
+		let next = setAt(doc, "aesthetic_dna.lighting_architecture.lighting_style", item.style);
+		if (item.fixture) next = setAt(next, "aesthetic_dna.lighting_architecture.key_source.fixture_or_origin", item.fixture);
+		if (item.angle) next = setAt(next, "aesthetic_dna.lighting_architecture.key_source.angle_and_elevation", item.angle);
+		if (item.shadow) next = setAt(next, "aesthetic_dna.lighting_architecture.fill_and_negative_space.shadow_depth", item.shadow);
+		if (item.practical) next = setAt(next, "aesthetic_dna.lighting_architecture.accent_and_practicals.practical_sources", item.practical);
+		setDoc(next);
+		setUntouched(false);
+		setStatus(`Applied ${item.name} (${item.badge}).`);
+	};
+	const handleSelectCamera = (item) => {
+		let next = setAt(doc, "scene_composition.framing_doctrine.named_principle", item.principle);
+		next = setAt(next, "scene_composition.framing_doctrine.camera_elevation_and_axis", item.axis);
+		if (item.lens) next = setAt(next, "aesthetic_dna.optics.lens_type_and_focal_length", item.lens);
+		if (item.dof) next = setAt(next, "aesthetic_dna.optics.aperture_and_dof", item.dof);
+		setDoc(next);
+		setUntouched(false);
+		setStatus(`Applied ${item.name} (${item.badge}).`);
+	};
 	(0, import_react.useEffect)(() => {
 		if (isPending) return;
 		let cancelled = false;
@@ -18758,7 +19052,7 @@ function PromptForge() {
 												children: "Asset Library"
 											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 												className: "rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary",
-												children: assetTab === "wardrobe" ? `${allWardrobeItems.length} Pieces · ${allWardrobeOutfits.length} Outfits` : assetTab === "poses" ? "36+ Poses" : assetTab === "lighting" ? "27 Setups" : assetTab === "camera" ? "27 Angles" : "Saved"
+												children: assetTab === "wardrobe" ? `${allWardrobeItems.length} Pieces · ${allWardrobeOutfits.length} Outfits` : assetTab === "poses" ? `${POSE_LIBRARY.length} Poses` : assetTab === "lighting" ? `${LIGHTING_LIBRARY.length} Setups` : assetTab === "camera" ? `${CAMERA_LIBRARY.length} Angles` : "Saved"
 											})]
 										}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
 											className: "truncate text-[10px] text-muted",
@@ -18802,19 +19096,19 @@ function PromptForge() {
 											id: "poses",
 											label: "Poses",
 											icon: Sparkles,
-											count: 36
+											count: POSE_LIBRARY.length
 										},
 										{
 											id: "lighting",
 											label: "Light",
 											icon: SunMedium,
-											count: 27
+											count: LIGHTING_LIBRARY.length
 										},
 										{
 											id: "camera",
 											label: "Camera",
 											icon: Camera,
-											count: 27
+											count: CAMERA_LIBRARY.length
 										},
 										{
 											id: "saved",
@@ -18826,6 +19120,7 @@ function PromptForge() {
 										const active = assetTab === tab.id;
 										return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 											type: "button",
+											"data-testid": `asset-tab-${tab.id}`,
 											onClick: () => setAssetTab(tab.id),
 											"aria-pressed": active,
 											className: cn("flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold transition-all", active ? "bg-primary text-primary-fg shadow-xs" : "border border-border bg-surface text-muted hover:border-primary/40 hover:text-foreground"),
@@ -18971,7 +19266,11 @@ function PromptForge() {
 											type: "button",
 											onClick: () => setPoseGalleryOpen(true),
 											className: "flex shrink-0 items-center gap-1 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-400 hover:bg-amber-500/20 transition-all shadow-xs",
-											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "size-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Large Gallery" })]
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "size-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+												"Large Gallery (",
+												POSE_LIBRARY.length,
+												")"
+											] })]
 										})]
 									}),
 									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -18980,14 +19279,14 @@ function PromptForge() {
 											/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Search, { className: "absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted" }),
 											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
 												type: "text",
-												value: lookSearch,
-												onChange: (e) => setLookSearch(e.target.value),
-												placeholder: "Search 36+ poses (e.g. leaning, action, sitting)...",
+												value: poseSearch,
+												onChange: (e) => setPoseSearch(e.target.value),
+												placeholder: `Search ${POSE_LIBRARY.length} poses (e.g. guard, casting, casual)...`,
 												className: "w-full rounded-md border border-border bg-bg py-1.5 pl-8 pr-7 text-xs text-foreground placeholder-muted focus:border-primary focus:outline-none"
 											}),
-											lookSearch && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+											poseSearch && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 												type: "button",
-												onClick: () => setLookSearch(""),
+												onClick: () => setPoseSearch(""),
 												className: "absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground",
 												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "size-3.5" })
 											})
@@ -18996,210 +19295,185 @@ function PromptForge() {
 									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 										className: "flex items-center gap-1 overflow-x-auto pb-0.5 no-scrollbar text-xs",
 										children: POSE_CATEGORIES.map((cat) => {
-											const active = poseStanceFilter === cat.id;
-											return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+											const active = poseCategoryFilter === cat.id;
+											const count = cat.id === "all" ? POSE_LIBRARY.length : POSE_LIBRARY.filter((p) => p.category === cat.id).length;
+											return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 												type: "button",
-												onClick: () => setPoseStanceFilter(cat.id),
-												className: cn("h-7 shrink-0 rounded-full px-2.5 text-[11px] font-medium transition-all", active ? "bg-primary text-primary-fg shadow-xs" : "border border-border bg-bg text-muted hover:text-foreground"),
-												children: cat.label
+												onClick: () => setPoseCategoryFilter(cat.id),
+												className: cn("h-7 shrink-0 rounded-full px-2.5 text-[11px] font-medium transition-all flex items-center gap-1", active ? "bg-primary text-primary-fg shadow-xs" : "border border-border bg-bg text-muted hover:text-foreground"),
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: cat.label }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													className: cn("text-[9px] px-1 rounded-full", active ? "bg-black/30 text-white" : "text-muted"),
+													children: count
+												})]
 											}, cat.id);
 										})
 									})
 								]
 							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 								className: "min-h-0 flex-1 overflow-y-auto p-2.5",
-								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-									className: cn("grid gap-2", assetDensity === "compact" ? "grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-1.5" : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2"),
-									children: poseShelfLooks.filter((look) => {
-										if (!lookSearch.trim()) return true;
-										const q = lookSearch.toLowerCase();
-										return look.name.toLowerCase().includes(q) || look.subtitle && look.subtitle.toLowerCase().includes(q) || look.posture && look.posture.toLowerCase().includes(q) || look.id.toLowerCase().includes(q);
-									}).map((look) => {
-										const on = lookIsApplied(doc, look, slot);
-										return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-											type: "button",
-											onClick: () => onApplyLook(look),
-											"aria-pressed": on,
-											className: cn("group overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60", on ? "border-amber-500 ring-2 ring-amber-500/40 shadow-xs" : "border-border"),
-											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-												className: "aspect-[4/5] bg-bg relative",
-												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PoseCardVisual, {
-													image: look.image,
-													id: look.id,
-													name: look.name,
-													subtitle: look.subtitle,
-													category: look.category,
-													stance: look.stance,
-													badge: look.badge,
-													active: on
-												})
-											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-												className: "p-1.5",
-												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-													className: "flex items-center justify-between gap-1",
-													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-														className: "text-[11px] font-semibold truncate group-hover:text-primary",
-														children: look.name
-													}), on && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "h-3 w-3 text-amber-500 shrink-0" })]
-												}), look.subtitle && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-													className: "text-[9px] text-muted truncate",
-													children: look.subtitle
-												})]
-											})]
-										}, look.id);
-									})
+								children: displayedPoses.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "py-12 text-center text-xs text-muted",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "mx-auto size-8 opacity-30 mb-2" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
+										"No poses match \"",
+										poseSearch,
+										"\"."
+									] })]
+								}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: cn("grid", assetDensity === "compact" ? "grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-1.5" : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2"),
+									children: displayedPoses.map((pose) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PoseCard, {
+										pose,
+										applied: isPoseApplied(doc, pose, slot),
+										density: assetDensity,
+										onSelect: () => handleSelectPose(pose)
+									}, pose.id))
 								})
 							})] }),
 							assetTab === "lighting" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 								className: "shrink-0 border-b border-border bg-surface/30 px-3 py-2 space-y-2",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "flex items-center justify-between gap-2",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-										className: "text-xs text-muted",
-										children: "Lighting architecture (key origin, shadow depth, practicals)"
-									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-										type: "button",
-										onClick: () => setLightingGalleryOpen(true),
-										className: "flex shrink-0 items-center gap-1 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-400 hover:bg-amber-500/20 transition-all shadow-xs",
-										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SunMedium, { className: "size-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Studio (27)" })]
-									})]
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "relative",
-									children: [
-										/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Search, { className: "absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted" }),
-										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-											type: "text",
-											value: lookSearch,
-											onChange: (e) => setLookSearch(e.target.value),
-											placeholder: "Search 27 lighting setups (e.g. rembrandt, chiaroscuro, neon)...",
-											className: "w-full rounded-md border border-border bg-bg py-1.5 pl-8 pr-7 text-xs text-foreground placeholder-muted focus:border-primary focus:outline-none"
-										}),
-										lookSearch && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex items-center justify-between gap-2",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+											className: "text-xs text-muted",
+											children: "Lighting architecture (style, key fixture, shadow depth)"
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 											type: "button",
-											onClick: () => setLookSearch(""),
-											className: "absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground",
-											children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "size-3.5" })
+											onClick: () => setLightingGalleryOpen(true),
+											className: "flex shrink-0 items-center gap-1 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-400 hover:bg-amber-500/20 transition-all shadow-xs",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SunMedium, { className: "size-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+												"Studio (",
+												LIGHTING_LIBRARY.length,
+												")"
+											] })]
+										})]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "relative",
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Search, { className: "absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted" }),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+												type: "text",
+												value: lightingSearch,
+												onChange: (e) => setLightingSearch(e.target.value),
+												placeholder: "Search 27 lighting setups (e.g. rembrandt, chiaroscuro, neon)...",
+												className: "w-full rounded-md border border-border bg-bg py-1.5 pl-8 pr-7 text-xs text-foreground placeholder-muted focus:border-primary focus:outline-none"
+											}),
+											lightingSearch && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+												type: "button",
+												onClick: () => setLightingSearch(""),
+												className: "absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "size-3.5" })
+											})
+										]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "flex items-center gap-1 overflow-x-auto pb-0.5 no-scrollbar text-xs",
+										children: LIGHTING_CATEGORIES.map((cat) => {
+											const active = lightingCategoryFilter === cat.id;
+											const count = cat.id === "all" ? LIGHTING_LIBRARY.length : LIGHTING_LIBRARY.filter((item) => item.category === cat.id).length;
+											return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+												type: "button",
+												onClick: () => setLightingCategoryFilter(cat.id),
+												className: cn("h-7 shrink-0 rounded-full px-2.5 text-[11px] font-medium transition-all flex items-center gap-1", active ? "bg-primary text-primary-fg shadow-xs" : "border border-border bg-bg text-muted hover:text-foreground"),
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: cat.label.replace(/\s*\(\d+\)/, "") }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													className: cn("text-[9px] px-1 rounded-full", active ? "bg-black/30 text-white" : "text-muted"),
+													children: count
+												})]
+											}, cat.id);
 										})
-									]
-								})]
+									})
+								]
 							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 								className: "min-h-0 flex-1 overflow-y-auto p-2.5",
-								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-									className: cn("grid gap-2", assetDensity === "compact" ? "grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-1.5" : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2"),
-									children: lightingShelfLooks.filter((look) => {
-										if (!lookSearch.trim()) return true;
-										const q = lookSearch.toLowerCase();
-										return look.name.toLowerCase().includes(q) || look.style && look.style.toLowerCase().includes(q) || look.fixture && look.fixture.toLowerCase().includes(q) || look.id.toLowerCase().includes(q);
-									}).map((look) => {
-										const on = lookIsApplied(doc, look, slot);
-										return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-											type: "button",
-											onClick: () => onApplyLook(look),
-											"aria-pressed": on,
-											className: cn("group overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60", on ? "border-amber-500 ring-2 ring-amber-500/40 shadow-xs" : "border-border"),
-											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-												className: "aspect-[4/5] bg-bg relative",
-												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PoseCardVisual, {
-													image: look.image,
-													id: look.id,
-													name: look.name,
-													subtitle: look.subtitle,
-													category: look.category,
-													stance: look.stance,
-													badge: look.badge,
-													active: on
-												})
-											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-												className: "p-1.5",
-												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-													className: "flex items-center justify-between gap-1",
-													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-														className: "text-[11px] font-semibold truncate group-hover:text-primary",
-														children: look.name
-													}), on && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "h-3 w-3 text-amber-500 shrink-0" })]
-												}), look.subtitle && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-													className: "text-[9px] text-muted truncate",
-													children: look.subtitle
-												})]
-											})]
-										}, look.id);
-									})
+								children: displayedLighting.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "py-12 text-center text-xs text-muted",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SunMedium, { className: "mx-auto size-8 opacity-30 mb-2" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
+										"No lighting setups match \"",
+										lightingSearch,
+										"\"."
+									] })]
+								}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: cn("grid", assetDensity === "compact" ? "grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-1.5" : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2"),
+									children: displayedLighting.map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LightingCard, {
+										item,
+										applied: isLightingApplied(doc, item),
+										density: assetDensity,
+										onSelect: () => handleSelectLighting(item)
+									}, item.id))
 								})
 							})] }),
 							assetTab === "camera" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 								className: "shrink-0 border-b border-border bg-surface/30 px-3 py-2 space-y-2",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "flex items-center justify-between gap-2",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-										className: "text-xs text-muted",
-										children: "Framing doctrine, elevation & lens optics"
-									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-										type: "button",
-										onClick: () => setCameraGalleryOpen(true),
-										className: "flex shrink-0 items-center gap-1 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20 transition-all shadow-xs",
-										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Camera, { className: "size-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Studio (27)" })]
-									})]
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "relative",
-									children: [
-										/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Search, { className: "absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted" }),
-										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-											type: "text",
-											value: lookSearch,
-											onChange: (e) => setLookSearch(e.target.value),
-											placeholder: "Search 27 camera angles (e.g. low angle, dutch, 85mm)...",
-											className: "w-full rounded-md border border-border bg-bg py-1.5 pl-8 pr-7 text-xs text-foreground placeholder-muted focus:border-primary focus:outline-none"
-										}),
-										lookSearch && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex items-center justify-between gap-2",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+											className: "text-xs text-muted",
+											children: "Framing doctrine, elevation & lens optics"
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 											type: "button",
-											onClick: () => setLookSearch(""),
-											className: "absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground",
-											children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "size-3.5" })
+											onClick: () => setCameraGalleryOpen(true),
+											className: "flex shrink-0 items-center gap-1 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20 transition-all shadow-xs",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Camera, { className: "size-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+												"Studio (",
+												CAMERA_LIBRARY.length,
+												")"
+											] })]
+										})]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "relative",
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Search, { className: "absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted" }),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+												type: "text",
+												value: cameraSearch,
+												onChange: (e) => setCameraSearch(e.target.value),
+												placeholder: "Search 27 camera angles (e.g. low angle, dutch, 85mm)...",
+												className: "w-full rounded-md border border-border bg-bg py-1.5 pl-8 pr-7 text-xs text-foreground placeholder-muted focus:border-primary focus:outline-none"
+											}),
+											cameraSearch && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+												type: "button",
+												onClick: () => setCameraSearch(""),
+												className: "absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "size-3.5" })
+											})
+										]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "flex items-center gap-1 overflow-x-auto pb-0.5 no-scrollbar text-xs",
+										children: CAMERA_CATEGORIES.map((cat) => {
+											const active = cameraCategoryFilter === cat.id;
+											const count = cat.id === "all" ? CAMERA_LIBRARY.length : CAMERA_LIBRARY.filter((item) => item.category === cat.id).length;
+											return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+												type: "button",
+												onClick: () => setCameraCategoryFilter(cat.id),
+												className: cn("h-7 shrink-0 rounded-full px-2.5 text-[11px] font-medium transition-all flex items-center gap-1", active ? "bg-primary text-primary-fg shadow-xs" : "border border-border bg-bg text-muted hover:text-foreground"),
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: cat.label.replace(/\s*\(\d+\)/, "") }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													className: cn("text-[9px] px-1 rounded-full", active ? "bg-black/30 text-white" : "text-muted"),
+													children: count
+												})]
+											}, cat.id);
 										})
-									]
-								})]
+									})
+								]
 							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 								className: "min-h-0 flex-1 overflow-y-auto p-2.5",
-								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-									className: cn("grid gap-2", assetDensity === "compact" ? "grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-1.5" : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2"),
-									children: cameraShelfLooks.filter((look) => {
-										if (!lookSearch.trim()) return true;
-										const q = lookSearch.toLowerCase();
-										return look.name.toLowerCase().includes(q) || look.principle && look.principle.toLowerCase().includes(q) || look.axis && look.axis.toLowerCase().includes(q) || look.lens && look.lens.toLowerCase().includes(q) || look.id.toLowerCase().includes(q);
-									}).map((look) => {
-										const on = lookIsApplied(doc, look, slot);
-										return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-											type: "button",
-											onClick: () => onApplyLook(look),
-											"aria-pressed": on,
-											className: cn("group overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60", on ? "border-emerald-500 ring-2 ring-emerald-500/40 shadow-xs" : "border-border"),
-											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-												className: "aspect-[4/5] bg-bg relative",
-												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PoseCardVisual, {
-													image: look.image,
-													id: look.id,
-													name: look.name,
-													subtitle: look.subtitle,
-													category: look.category,
-													stance: look.stance,
-													badge: look.badge,
-													active: on
-												})
-											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-												className: "p-1.5",
-												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-													className: "flex items-center justify-between gap-1",
-													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-														className: "text-[11px] font-semibold truncate group-hover:text-primary",
-														children: look.name
-													}), on && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "h-3 w-3 text-emerald-500 shrink-0" })]
-												}), look.subtitle && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-													className: "text-[9px] text-muted truncate",
-													children: look.subtitle
-												})]
-											})]
-										}, look.id);
-									})
+								children: displayedCamera.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "py-12 text-center text-xs text-muted",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Camera, { className: "mx-auto size-8 opacity-30 mb-2" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
+										"No camera angles match \"",
+										cameraSearch,
+										"\"."
+									] })]
+								}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: cn("grid", assetDensity === "compact" ? "grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-1.5" : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2"),
+									children: displayedCamera.map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CameraCard, {
+										item,
+										applied: isCameraApplied(doc, item),
+										density: assetDensity,
+										onSelect: () => handleSelectCamera(item)
+									}, item.id))
 								})
 							})] }),
 							assetTab === "saved" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [

@@ -261,8 +261,10 @@ export const LOOK_FILTERS = [
   { id: "cinematic", label: "Cinematic" },
   { id: "couples", label: "Couples & Duos" },
   { id: "action", label: "Action" },
+  { id: "fantasy", label: "Fantasy" },
   { id: "sitting", label: "Sitting" },
   { id: "reclining", label: "Floor" },
+  { id: "casual", label: "Casual" },
   { id: "pose", label: "All Poses" },
   { id: "light", label: "Light" },
   { id: "setting", label: "Setting" },
@@ -271,7 +273,7 @@ export const LOOK_FILTERS = [
 
 export type LookFilter = (typeof LOOK_FILTERS)[number]["id"];
 
-export function looksFor(filter: LookFilter): Look[] {
+export function looksFor(filter: LookFilter | string): Look[] {
   if (filter === "adult") return LOOKS.filter((look) => look.adult);
   if (filter === "pose") return LOOKS.filter((look) => look.kind === "pose" && !look.adult);
   if (filter === "knights") return LOOKS.filter((look) => look.category === "knights");
@@ -280,11 +282,15 @@ export function looksFor(filter: LookFilter): Look[] {
   if (filter === "cinematic") return LOOKS.filter((look) => look.category === "cinematic");
   if (filter === "couples") return LOOKS.filter((look) => look.category === "couples");
   if (filter === "action") return LOOKS.filter((look) => look.category === "action");
+  if (filter === "fantasy") return LOOKS.filter((look) => look.category === "fantasy");
   if (filter === "sitting") return LOOKS.filter((look) => look.category === "sitting" && !look.adult);
   if (filter === "reclining") return LOOKS.filter((look) => look.category === "reclining" && !look.adult);
+  if (filter === "casual") return LOOKS.filter((look) => look.category === "casual");
   if (filter === "wardrobe") return LOOKS.filter((look) => look.kind === "wardrobe");
+  if (filter === "light") return LOOKS.filter((look) => look.kind === "light");
+  if (filter === "angle") return LOOKS.filter((look) => look.kind === "angle");
   if (filter === "all") return LOOKS.filter((look) => !look.adult);
-  return LOOKS.filter((look) => look.kind === filter);
+  return LOOKS.filter((look) => look.kind === filter || look.category === filter);
 }
 
 export function customOutfitToLook(outfit: WardrobeOutfit): Look {

@@ -645,6 +645,7 @@ export const POSE_LIBRARY: PoseItem[] = [
     subtitle: "Summoner Ritual · Staff Planted",
     category: "fantasy",
     stance: "standing",
+    image: "/poses/pose_anime_p001.jpg",
     posture: "Both hands gripping tall gnarled wizard staff planted before them, robes billowing, chanting with glowing arcane aura.",
     props: ["carved wooden wizard staff"],
     tags: ["fantasy", "mage", "staff", "summoning", "wizard"],
@@ -655,6 +656,7 @@ export const POSE_LIBRARY: PoseItem[] = [
     subtitle: "Runic Circle · Palms Outward",
     category: "fantasy",
     stance: "standing",
+    image: "/poses/pose_anime_p002.jpg",
     posture: "Standing with feet planted wide, both palms pushed forward at chest height framing glowing holographic runic magic circle.",
     tags: ["fantasy", "magic", "spell circle", "rune", "caster"],
   },
@@ -664,6 +666,7 @@ export const POSE_LIBRARY: PoseItem[] = [
     subtitle: "Divine Supplication · Clasped Hands",
     category: "fantasy",
     stance: "kneeling",
+    image: "/poses/pose_anime_p003.jpg",
     posture: "Kneeling on both knees, hands tightly clasped before heart in solemn prayer, eyes closed, gentle divine light from above.",
     tags: ["fantasy", "cleric", "prayer", "holy", "kneeling"],
   },
@@ -675,6 +678,7 @@ export const POSE_LIBRARY: PoseItem[] = [
     subtitle: "Cozy Warmth · Steam Rising",
     category: "casual",
     stance: "sitting",
+    image: "/poses/pose_model_01.jpg",
     posture: "Seated comfortably, holding steaming ceramic mug with both hands cupped around warmth, blowing softly at surface.",
     props: ["ceramic coffee mug"],
     tags: ["casual", "coffee", "mug", "cozy", "warm"],
@@ -685,6 +689,7 @@ export const POSE_LIBRARY: PoseItem[] = [
     subtitle: "Urban Chill · Hands Buried",
     category: "casual",
     stance: "standing",
+    image: "/poses/pose_model_02.jpg",
     posture: "Walking slowly down sidewalk, both hands tucked into hoodie front pouch pocket, hood pulled up, shoulders slightly slouched.",
     props: ["oversized hoodie"],
     tags: ["casual", "hoodie", "urban", "street", "chill"],
@@ -695,6 +700,7 @@ export const POSE_LIBRARY: PoseItem[] = [
     subtitle: "Everyday Habit · One Hand Screen",
     category: "casual",
     stance: "standing",
+    image: "/poses/pose_model_03.jpg",
     posture: "Standing on one hip, looking down at smartphone held in right hand with thumb scrolling, slight smile on lips.",
     props: ["smartphone"],
     tags: ["casual", "phone", "modern", "scrolling", "everyday"],
@@ -705,6 +711,7 @@ export const POSE_LIBRARY: PoseItem[] = [
     subtitle: "Relaxed Bar · Elbow on Surface",
     category: "casual",
     stance: "standing",
+    image: "/poses/pose_model_04.jpg",
     posture: "Leaning sideways against high wooden counter, one elbow propped on surface supporting weight, smiling conversation posture.",
     props: ["wooden cafe counter"],
     tags: ["casual", "cafe", "counter", "bar", "talking"],
@@ -1124,4 +1131,12 @@ export function filterPoses(options: {
       pose.tags.some((t) => t.toLowerCase().includes(q))
     );
   });
+}
+
+import type { PromptDoc } from "./model.ts";
+
+export function isPoseApplied(doc: PromptDoc, pose: PoseItem, subjectIndex: number): boolean {
+  const current = doc.subjects[subjectIndex]?.kinetic_posture;
+  if (!current) return false;
+  return current.trim().toLowerCase() === pose.posture.trim().toLowerCase();
 }

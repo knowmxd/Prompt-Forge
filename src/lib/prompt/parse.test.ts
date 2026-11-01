@@ -29,7 +29,7 @@ describe("parsePrompt", () => {
     );
     assert.equal(result.doc.aesthetic_dna.medium_format, "cinematic dark fantasy oil painting");
     assert.equal(
-      result.doc.aesthetic_dna.lighting_architecture.accent_and_practicals.rim_or_kicker,
+      result.doc.aesthetic_dna.lighting_architecture.lighting_style,
       "dramatic rim lighting",
     );
     assert.equal(result.doc.aesthetic_dna.optics.lens_type_and_focal_length, "85mm lens");
@@ -52,7 +52,7 @@ describe("parsePrompt", () => {
       /rose petals/,
     );
     assert.match(result.doc.scene_composition.environmental_staging.location_context, /cathedral/);
-    assert.match(result.doc.aesthetic_dna.lighting_architecture.accent_and_practicals.rim_or_kicker, /rim/);
+    assert.match(result.doc.aesthetic_dna.lighting_architecture.lighting_style, /rim/);
     assert.match(result.doc.aesthetic_dna.optics.lens_type_and_focal_length, /85mm/);
     assert.match(result.doc.aesthetic_dna.optics.aperture_and_dof, /f\/1\.4/);
     assert.match(result.doc.anti_cliche_exclusions.join(", "), /bad hands/);

@@ -1,5 +1,5 @@
 import { n as createMiddleware } from "./ssr.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/storage-Btoi1Ksw.js
+//#region node_modules/.nitro/vite/services/ssr/assets/storage-B2z-ArVt.js
 /**
 * Auth middleware for server functions — the standard way to get the caller's
 * verified user id. When deployed the session cookie is same-origin and rides
@@ -119,11 +119,9 @@ var CLUSTERS = [
 		group: "Aesthetic DNA",
 		label: "Lighting",
 		fields: [
-			text("aesthetic_dna.lighting_architecture.lighting_style", "Lighting style", "Rembrandt, chiaroscuro, split, volumetric, golden hour"),
-			text("aesthetic_dna.lighting_architecture.key_source.fixture_or_origin", "Fixture or origin", "softbox, direct sun, candle flame, neon tube"),
-			text("aesthetic_dna.lighting_architecture.key_source.angle_and_elevation", "Angle & elevation", "45° camera-left, high overhead, 90° lateral side rake"),
-			text("aesthetic_dna.lighting_architecture.fill_and_negative_space.shadow_depth", "Shadow depth", "rich penumbra, deep carved shadows, soft open fill"),
-			text("aesthetic_dna.lighting_architecture.accent_and_practicals.practical_sources", "Practical sources", "candles, neon signage, streetlamps, crystal caustics")
+			text("aesthetic_dna.lighting_architecture.lighting_style", "Lighting style & atmosphere", "Rembrandt, chiaroscuro, split, volumetric, golden hour, neon noir"),
+			text("aesthetic_dna.lighting_architecture.key_source.fixture_or_origin", "Key light & fixture", "softbox, direct sun, candle flame, neon tube, streetlamp"),
+			text("aesthetic_dna.lighting_architecture.fill_and_negative_space.shadow_depth", "Shadow depth & contrast", "rich penumbra, deep carved shadows, soft open fill")
 		]
 	},
 	{
@@ -283,11 +281,7 @@ function emptyDoc() {
 					fill_mechanism: "",
 					shadow_depth: ""
 				},
-				accent_and_practicals: {
-					rim_or_kicker: "",
-					practical_sources: "",
-					color_temperature_balance: ""
-				}
+				accent_and_practicals: { practical_sources: "" }
 			},
 			color_science: {
 				dominant_palette: [],
@@ -401,7 +395,6 @@ function toPromptLine(doc) {
 	push(doc.scene_composition.environmental_staging.location_context);
 	push(doc.scene_composition.framing_doctrine.spatial_planes.foreground_obstruction);
 	push(doc.aesthetic_dna.lighting_architecture.lighting_style);
-	push(doc.aesthetic_dna.lighting_architecture.accent_and_practicals.rim_or_kicker);
 	push(doc.aesthetic_dna.optics.lens_type_and_focal_length);
 	push(doc.aesthetic_dna.optics.aperture_and_dof);
 	push(doc.scene_composition.framing_doctrine.named_principle);
@@ -500,23 +493,17 @@ function routeLighting(text, doc) {
 	const key = [];
 	const fill = [];
 	const shadow = [];
-	const rim = [];
 	const practical = [];
-	const temp = [];
-	for (const bit of bits(text)) if (/\brim\b|\bkicker\b/i.test(bit)) rim.push(bit);
-	else if (/\b(neon|candles?|fire|lantern|practicals?)\b/i.test(bit)) practical.push(bit);
+	for (const bit of bits(text)) if (/\b(neon|candles?|fire|lantern|practicals?|lamp|streetlamp)\b/i.test(bit)) practical.push(bit);
 	else if (/\bfill\b/i.test(bit)) fill.push(bit);
 	else if (/\b(shadow|low[- ]key|chiaroscuro)\b/i.test(bit)) shadow.push(bit);
-	else if (/\b(warm|cool|kelvin|tungsten|daylight)\b/i.test(bit)) temp.push(bit);
-	else if (/\b(golden hour|key light|sun|window|moonlight|moon)\b/i.test(bit)) key.push(bit);
+	else if (/\b(golden hour|key light|sun|window|moonlight|moon|softbox|fresnel)\b/i.test(bit)) key.push(bit);
 	else style.push(bit);
 	light.lighting_style = join(style);
 	light.key_source.fixture_or_origin = join(key);
 	light.fill_and_negative_space.fill_mechanism = join(fill);
 	light.fill_and_negative_space.shadow_depth = join(shadow);
-	light.accent_and_practicals.rim_or_kicker = join(rim);
 	light.accent_and_practicals.practical_sources = join(practical);
-	light.accent_and_practicals.color_temperature_balance = join(temp);
 }
 function docFromFlat(fields) {
 	const doc = emptyDoc();
@@ -626,9 +613,7 @@ function coerceDoc(value) {
 			const accent = light.accent_and_practicals;
 			if (accent && typeof accent === "object" && !Array.isArray(accent)) {
 				const practical = accent;
-				doc.aesthetic_dna.lighting_architecture.accent_and_practicals.rim_or_kicker = asString(practical.rim_or_kicker);
 				doc.aesthetic_dna.lighting_architecture.accent_and_practicals.practical_sources = asString(practical.practical_sources);
-				doc.aesthetic_dna.lighting_architecture.accent_and_practicals.color_temperature_balance = asString(practical.color_temperature_balance);
 			}
 		}
 		const color = aesthetic.color_science;

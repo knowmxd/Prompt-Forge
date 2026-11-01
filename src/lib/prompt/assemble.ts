@@ -117,25 +117,19 @@ function routeLighting(text: string, doc: PromptDoc) {
   const key: string[] = [];
   const fill: string[] = [];
   const shadow: string[] = [];
-  const rim: string[] = [];
   const practical: string[] = [];
-  const temp: string[] = [];
   for (const bit of bits(text)) {
-    if (/\brim\b|\bkicker\b/i.test(bit)) rim.push(bit);
-    else if (/\b(neon|candles?|fire|lantern|practicals?)\b/i.test(bit)) practical.push(bit);
+    if (/\b(neon|candles?|fire|lantern|practicals?|lamp|streetlamp)\b/i.test(bit)) practical.push(bit);
     else if (/\bfill\b/i.test(bit)) fill.push(bit);
     else if (/\b(shadow|low[- ]key|chiaroscuro)\b/i.test(bit)) shadow.push(bit);
-    else if (/\b(warm|cool|kelvin|tungsten|daylight)\b/i.test(bit)) temp.push(bit);
-    else if (/\b(golden hour|key light|sun|window|moonlight|moon)\b/i.test(bit)) key.push(bit);
+    else if (/\b(golden hour|key light|sun|window|moonlight|moon|softbox|fresnel)\b/i.test(bit)) key.push(bit);
     else style.push(bit);
   }
   light.lighting_style = join(style);
   light.key_source.fixture_or_origin = join(key);
   light.fill_and_negative_space.fill_mechanism = join(fill);
   light.fill_and_negative_space.shadow_depth = join(shadow);
-  light.accent_and_practicals.rim_or_kicker = join(rim);
   light.accent_and_practicals.practical_sources = join(practical);
-  light.accent_and_practicals.color_temperature_balance = join(temp);
 }
 
 export function docFromFlat(fields: PromptFields): PromptDoc {
@@ -283,14 +277,9 @@ export function coerceDoc(value: unknown): PromptDoc {
       const accent = light.accent_and_practicals;
       if (accent && typeof accent === "object" && !Array.isArray(accent)) {
         const practical = accent as Record<string, unknown>;
-        doc.aesthetic_dna.lighting_architecture.accent_and_practicals.rim_or_kicker = asString(
-          practical.rim_or_kicker,
-        );
         doc.aesthetic_dna.lighting_architecture.accent_and_practicals.practical_sources = asString(
           practical.practical_sources,
         );
-        doc.aesthetic_dna.lighting_architecture.accent_and_practicals.color_temperature_balance =
-          asString(practical.color_temperature_balance);
       }
     }
     const color = aesthetic.color_science;
