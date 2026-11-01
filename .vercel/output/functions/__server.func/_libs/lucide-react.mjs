@@ -337,6 +337,62 @@ var Funnel = createLucideIcon("funnel", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Grid3x3 = createLucideIcon("grid-3x3", [
+	["rect", {
+		width: "18",
+		height: "18",
+		x: "3",
+		y: "3",
+		rx: "2",
+		key: "afitv7"
+	}],
+	["path", {
+		d: "M3 9h18",
+		key: "1pudct"
+	}],
+	["path", {
+		d: "M3 15h18",
+		key: "5xshup"
+	}],
+	["path", {
+		d: "M9 3v18",
+		key: "fh3hqa"
+	}],
+	["path", {
+		d: "M15 3v18",
+		key: "14nvp0"
+	}]
+]);
+/**
+* @license lucide-react v0.510.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var Grid2x2 = createLucideIcon("grid-2x2", [
+	["path", {
+		d: "M12 3v18",
+		key: "108xh3"
+	}],
+	["path", {
+		d: "M3 12h18",
+		key: "1i2n21"
+	}],
+	["rect", {
+		x: "3",
+		y: "3",
+		width: "18",
+		height: "18",
+		rx: "2",
+		key: "h1oib"
+	}]
+]);
+/**
+* @license lucide-react v0.510.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var ImagePlus = createLucideIcon("image-plus", [
 	["path", {
 		d: "M16 5h6",
@@ -711,4 +767,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { Bookmark as A, Copy as C, ChevronDown as D, ChevronUp as E, Check as O, Download as S, CircleAlert as T, Funnel as _, Tag as a, FileText as b, Shirt as c, Minimize2 as d, Maximize2 as f, ImagePlus as g, Image as h, Trash2 as i, BookmarkPlus as j, Camera as k, Search as l, Layers as m, Upload as n, SunMedium as o, Library as p, TriangleAlert as r, Sparkles as s, X as t, Plus as u, FolderInput as v, Code as w, FilePlus as x, Flame as y };
+export { Check as A, FilePlus as C, CircleAlert as D, Code as E, Bookmark as M, BookmarkPlus as N, ChevronUp as O, FileText as S, Copy as T, Grid2x2 as _, Tag as a, FolderInput as b, Shirt as c, Minimize2 as d, Maximize2 as f, ImagePlus as g, Image as h, Trash2 as i, Camera as j, ChevronDown as k, Search as l, Layers as m, Upload as n, SunMedium as o, Library as p, TriangleAlert as r, Sparkles as s, X as t, Plus as u, Grid3x3 as v, Download as w, Flame as x, Funnel as y };

@@ -4,8 +4,8 @@ import { i as signOut, t as authClient } from "./client-IWHfIGH2.mjs";
 import { a as getServerFnById, i as TSS_SERVER_FUNCTION, r as createServerFn } from "./ssr.mjs";
 import { A as saveSnippets, C as loadLibrary, D as saveCharacters, E as saveBookmarks, F as toPromptLine, N as titleFromDoc, O as saveDraft, P as toJson, S as loadDraft, T as resolvePath, _ as getAt, b as loadBookmarks, c as clusterHasContent, d as docFromFlat, g as filledKeys, h as emptySubject, i as authMiddleware, j as setAt, k as saveLibrary, l as coerceDoc, m as emptyFields, n as CLUSTER_GROUPS, p as emptyDoc, r as SECTION_KEYS, s as clusterById, t as CLUSTERS, u as countFilled, v as isNativeDoc, w as loadSnippets, x as loadCharacters } from "./storage-Btoi1Ksw.mjs";
 import { a as hasGateSessionMarker } from "./server-CW2nNadZ.mjs";
-import { A as Bookmark, C as Copy, D as ChevronDown, E as ChevronUp, O as Check, S as Download, T as CircleAlert, _ as Funnel, a as Tag, b as FileText, c as Shirt, d as Minimize2, f as Maximize2, g as ImagePlus, h as Image$1, i as Trash2, j as BookmarkPlus, k as Camera, l as Search, m as Layers, n as Upload, o as SunMedium, p as Library, s as Sparkles, t as X, u as Plus, v as FolderInput, w as Code, x as FilePlus, y as Flame } from "../_libs/lucide-react.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-0i6Xa-ca.js
+import { A as Check, C as FilePlus, D as CircleAlert, E as Code, M as Bookmark, N as BookmarkPlus, O as ChevronUp, S as FileText, T as Copy, _ as Grid2x2, a as Tag, b as FolderInput, c as Shirt, d as Minimize2, f as Maximize2, g as ImagePlus, h as Image$1, i as Trash2, j as Camera, k as ChevronDown, l as Search, m as Layers, n as Upload, o as SunMedium, p as Library, s as Sparkles, t as X, u as Plus, v as Grid3x3, w as Download, x as Flame, y as Funnel } from "../_libs/lucide-react.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-COrT59ZB.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 /**
@@ -740,7 +740,7 @@ var FIGURES = {
 		]
 	})
 };
-var POSE_CATEGORIES = [
+var POSE_CATEGORIES$1 = [
 	{
 		id: "all",
 		label: "All Poses"
@@ -13568,6 +13568,17 @@ function isWardrobeOutfitApplied(doc, outfit, slotIndex) {
 	if (topItems.length > 0 && topItems[0] && !arch.layering_system.base_layer.includes(topItems[0])) return false;
 	return true;
 }
+function isWardrobeItemApplied(doc, item, slotIndex) {
+	const arch = doc.subjects[slotIndex]?.wardrobe_architecture;
+	if (!arch) return false;
+	const p = item.prompt.trim().toLowerCase();
+	if (!p) return false;
+	if (item.slot === "outerwear") return (arch.layering_system?.outerwear || "").toLowerCase().includes(p);
+	if (item.slot === "layer_top") return (arch.layering_system?.mid_layer || "").toLowerCase().includes(p);
+	if (item.slot === "top" || item.slot === "bottom" || item.slot === "dress_onepiece") return (arch.layering_system?.base_layer || "").toLowerCase().includes(p);
+	if (item.slot === "shoes") return (arch.footwear || "").toLowerCase().includes(p);
+	return (arch.accessories ?? []).some((acc) => acc.toLowerCase().includes(p));
+}
 function filterWardrobeItems(items, query, slot = "all", styleTag) {
 	const q = query.trim().toLowerCase();
 	return items.filter((item) => {
@@ -13787,68 +13798,6 @@ var LOOKS = ALL_DRAFTS.map((look) => ({
 		limbs: []
 	}
 }));
-var LOOK_FILTERS = [
-	{
-		id: "all",
-		label: "All"
-	},
-	{
-		id: "wardrobe",
-		label: "Wardrobe"
-	},
-	{
-		id: "angle",
-		label: "Camera & Angles"
-	},
-	{
-		id: "knights",
-		label: "Knights"
-	},
-	{
-		id: "modeling",
-		label: "Photoshoot"
-	},
-	{
-		id: "paintings",
-		label: "Fine Art"
-	},
-	{
-		id: "cinematic",
-		label: "Cinematic"
-	},
-	{
-		id: "couples",
-		label: "Couples & Duos"
-	},
-	{
-		id: "action",
-		label: "Action"
-	},
-	{
-		id: "sitting",
-		label: "Sitting"
-	},
-	{
-		id: "reclining",
-		label: "Floor"
-	},
-	{
-		id: "pose",
-		label: "All Poses"
-	},
-	{
-		id: "light",
-		label: "Light"
-	},
-	{
-		id: "setting",
-		label: "Setting"
-	},
-	{
-		id: "adult",
-		label: "Adult"
-	}
-];
 function looksFor(filter) {
 	if (filter === "adult") return LOOKS.filter((look) => look.adult);
 	if (filter === "pose") return LOOKS.filter((look) => look.kind === "pose" && !look.adult);
@@ -14153,7 +14102,7 @@ function PoseCatalogModal({ isOpen, onClose, onSelectPose, activePosture }) {
 				className: "shrink-0 border-b border-neutral-800/80 bg-neutral-950/80 px-6 py-3",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 					className: "flex flex-wrap items-center gap-2",
-					children: POSE_CATEGORIES.map((cat) => {
+					children: POSE_CATEGORIES$1.map((cat) => {
 						const count = categoryCounts[cat.id] ?? 0;
 						const isSelected = category === cat.id;
 						return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
@@ -17425,6 +17374,249 @@ var FILTERS = [
 		label: "Notes"
 	}
 ];
+var WARDROBE_SLOT_PILLS = [
+	{
+		id: "all",
+		label: "All Pieces"
+	},
+	{
+		id: "top",
+		label: "Tops"
+	},
+	{
+		id: "outerwear",
+		label: "Outerwear"
+	},
+	{
+		id: "bottom",
+		label: "Bottoms"
+	},
+	{
+		id: "shoes",
+		label: "Footwear"
+	},
+	{
+		id: "headwear",
+		label: "Headwear"
+	},
+	{
+		id: "jewelry",
+		label: "Jewelry"
+	},
+	{
+		id: "bag",
+		label: "Bags"
+	},
+	{
+		id: "accessory",
+		label: "Accessories"
+	},
+	{
+		id: "neckwear",
+		label: "Neckwear"
+	},
+	{
+		id: "eyewear",
+		label: "Eyewear"
+	},
+	{
+		id: "belt_waist",
+		label: "Belts"
+	},
+	{
+		id: "dress_onepiece",
+		label: "Dresses"
+	},
+	{
+		id: "layer_top",
+		label: "Mid-Layers"
+	},
+	{
+		id: "legwear",
+		label: "Legwear"
+	}
+];
+var POSE_CATEGORIES = [
+	{
+		id: "pose",
+		label: "All Poses"
+	},
+	{
+		id: "modeling",
+		label: "Photoshoot"
+	},
+	{
+		id: "sitting",
+		label: "Sitting"
+	},
+	{
+		id: "reclining",
+		label: "Floor"
+	},
+	{
+		id: "action",
+		label: "Action"
+	},
+	{
+		id: "paintings",
+		label: "Fine Art"
+	},
+	{
+		id: "knights",
+		label: "Knights"
+	},
+	{
+		id: "couples",
+		label: "Couples"
+	},
+	{
+		id: "cinematic",
+		label: "Cinematic"
+	}
+];
+function WardrobeItemCard({ item, applied, density, onSelect }) {
+	if (density === "compact") return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+		type: "button",
+		onClick: onSelect,
+		title: `${item.name} (${item.slot}) - Click to apply to active subject`,
+		"aria-pressed": applied,
+		className: cn("group relative flex flex-col overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-xs", applied ? "border-emerald-500 ring-2 ring-emerald-500/40" : "border-border"),
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "relative aspect-square w-full bg-neutral-900/40 overflow-hidden",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CatalogItemImage, { item }),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "absolute top-1 left-1 rounded bg-black/75 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-neutral-300",
+					children: item.slot.replace("dress_onepiece", "dress").replace("belt_waist", "belt").slice(0, 5)
+				}),
+				applied && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-emerald-500 text-white shadow",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "size-2.5 stroke-[3]" })
+				}),
+				item.is_custom && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "absolute bottom-1 right-1 rounded bg-purple-500/90 px-1 py-0.5 text-[8px] font-bold uppercase text-white",
+					children: "Custom"
+				})
+			]
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "p-1.5",
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "text-[11px] font-medium leading-tight text-foreground truncate group-hover:text-primary",
+				children: item.name
+			})
+		})]
+	});
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+		type: "button",
+		onClick: onSelect,
+		"aria-pressed": applied,
+		className: cn("group relative flex flex-col overflow-hidden rounded-xl border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-md", applied ? "border-emerald-500 ring-2 ring-emerald-500/40" : "border-border"),
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "relative aspect-[4/3] w-full bg-neutral-900/40 overflow-hidden",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CatalogItemImage, { item }),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "absolute top-1.5 left-1.5 rounded-md bg-black/80 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neutral-200",
+					children: item.slot.replace("_", " ")
+				}),
+				applied && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-emerald-500 text-white shadow-md",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "size-3 stroke-[3]" })
+				}),
+				item.is_custom && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "absolute bottom-1.5 right-1.5 rounded bg-purple-500/90 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white",
+					children: "Custom"
+				})
+			]
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "p-2.5 flex-1 flex flex-col justify-between",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", {
+				className: "text-xs font-semibold leading-snug text-foreground line-clamp-2 group-hover:text-primary",
+				children: item.name
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+				className: "mt-1 text-[10px] text-muted line-clamp-1 capitalize",
+				children: [item.colors[0] ? `${item.colors[0]} · ` : "", item.subcategory.replace("_", " ")]
+			})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "mt-2 flex items-center justify-between pt-1 border-t border-border/50",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "text-[9px] font-medium text-faint",
+					children: item.style_tags[0] ? `#${item.style_tags[0].replace("_", " ")}` : item.slot
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: cn("text-[10px] font-semibold", applied ? "text-emerald-500" : "text-primary group-hover:underline"),
+					children: applied ? "Applied" : "+ Apply"
+				})]
+			})]
+		})]
+	});
+}
+function WardrobeOutfitCard({ outfit, applied, density, onSelect }) {
+	const pieceCount = outfit.item_ids?.length || 0;
+	if (density === "compact") return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+		type: "button",
+		onClick: onSelect,
+		title: `${outfit.name} - Click to apply full outfit`,
+		"aria-pressed": applied,
+		className: cn("group relative flex flex-col overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-xs", applied ? "border-rose-500 ring-2 ring-rose-500/40" : "border-border"),
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "relative aspect-square w-full bg-neutral-900/40 overflow-hidden",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CatalogOutfitImage, { outfit }),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "absolute top-1 left-1 rounded bg-rose-500/90 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-white",
+					children: "Outfit"
+				}),
+				applied && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-rose-500 text-white shadow",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "size-2.5 stroke-[3]" })
+				})
+			]
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "p-1.5",
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "text-[11px] font-medium leading-tight text-foreground truncate group-hover:text-primary",
+				children: outfit.name
+			})
+		})]
+	});
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+		type: "button",
+		onClick: onSelect,
+		"aria-pressed": applied,
+		className: cn("group relative flex flex-col overflow-hidden rounded-xl border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-md", applied ? "border-rose-500 ring-2 ring-rose-500/40" : "border-border"),
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "relative aspect-[4/3] w-full bg-neutral-900/40 overflow-hidden",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CatalogOutfitImage, { outfit }),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "absolute top-1.5 left-1.5 rounded-md bg-rose-500/90 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white",
+					children: "Full Look"
+				}),
+				applied && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-rose-500 text-white shadow-md",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "size-3 stroke-[3]" })
+				})
+			]
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "p-2.5 flex-1 flex flex-col justify-between",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", {
+				className: "text-xs font-semibold leading-snug text-foreground line-clamp-2 group-hover:text-primary",
+				children: outfit.name
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "mt-1 text-[10px] text-muted line-clamp-1",
+				children: pieceCount ? `${pieceCount} pieces` : "Preset outfit"
+			})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "mt-2 flex items-center justify-between pt-1 border-t border-border/50",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "text-[9px] font-medium text-faint",
+					children: outfit.style_tags[0] ? `#${outfit.style_tags[0].replace("_", " ")}` : "Preset"
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: cn("text-[10px] font-semibold", applied ? "text-rose-400" : "text-primary group-hover:underline"),
+					children: applied ? "Applied" : "+ Apply Outfit"
+				})]
+			})]
+		})]
+	});
+}
 function cn(...parts) {
 	return parts.filter(Boolean).join(" ");
 }
@@ -17555,6 +17747,14 @@ function PromptForge() {
 	const [bookmarks, setBookmarks] = (0, import_react.useState)([]);
 	const [assetFilter, setAssetFilter] = (0, import_react.useState)("all");
 	const [assetShelf, setAssetShelf] = (0, import_react.useState)("saved");
+	const [assetTab, setAssetTab] = (0, import_react.useState)("wardrobe");
+	const [wardrobeTab, setWardrobeTab] = (0, import_react.useState)("pieces");
+	const [wardrobeSlot, setWardrobeSlot] = (0, import_react.useState)("all");
+	const [wardrobeSearch, setWardrobeSearch] = (0, import_react.useState)("");
+	const [customItems, setCustomItems] = (0, import_react.useState)([]);
+	const [assetDensity, setAssetDensity] = (0, import_react.useState)("compact");
+	const [assetFullscreen, setAssetFullscreen] = (0, import_react.useState)(false);
+	const [poseStanceFilter, setPoseStanceFilter] = (0, import_react.useState)("pose");
 	const [lookFilter, setLookFilter] = (0, import_react.useState)("pose");
 	const [poseGalleryOpen, setPoseGalleryOpen] = (0, import_react.useState)(false);
 	const [cameraGalleryOpen, setCameraGalleryOpen] = (0, import_react.useState)(false);
@@ -17579,19 +17779,66 @@ function PromptForge() {
 	const slot = Math.min(subjectIndex, Math.max(doc.subjects.length - 1, 0));
 	const active = clusterById(cluster);
 	(0, import_react.useEffect)(() => {
-		async function refreshCustomOutfits() {
-			const outfits = await loadCustomOutfits();
+		async function refreshCustom() {
+			const [items, outfits] = await Promise.all([loadCustomItems(), loadCustomOutfits()]);
+			setCustomItems(items);
 			setCustomOutfits(outfits);
 		}
-		refreshCustomOutfits();
-		window.addEventListener(CUSTOM_LIBRARY_CHANGE_EVENT, refreshCustomOutfits);
-		return () => window.removeEventListener(CUSTOM_LIBRARY_CHANGE_EVENT, refreshCustomOutfits);
+		refreshCustom();
+		window.addEventListener(CUSTOM_LIBRARY_CHANGE_EVENT, refreshCustom);
+		return () => window.removeEventListener(CUSTOM_LIBRARY_CHANGE_EVENT, refreshCustom);
 	}, []);
-	const shelfLooks = (0, import_react.useMemo)(() => {
+	const allWardrobeItems = (0, import_react.useMemo)(() => {
+		return combineWardrobeItems(WARDROBE_ITEMS, customItems);
+	}, [customItems]);
+	const allWardrobeOutfits = (0, import_react.useMemo)(() => {
+		return combineWardrobeOutfits(WARDROBE_OUTFITS, customOutfits);
+	}, [customOutfits]);
+	const wardrobeSlotCounts = (0, import_react.useMemo)(() => {
+		const counts = { all: allWardrobeItems.length };
+		for (const item of allWardrobeItems) counts[item.slot] = (counts[item.slot] || 0) + 1;
+		return counts;
+	}, [allWardrobeItems]);
+	const displayedWardrobeItems = (0, import_react.useMemo)(() => {
+		return filterWardrobeItems(allWardrobeItems, wardrobeSearch, wardrobeSlot);
+	}, [
+		allWardrobeItems,
+		wardrobeSearch,
+		wardrobeSlot
+	]);
+	const displayedWardrobeOutfits = (0, import_react.useMemo)(() => {
+		return filterWardrobeOutfits(allWardrobeOutfits, wardrobeSearch);
+	}, [allWardrobeOutfits, wardrobeSearch]);
+	function handleSelectWardrobeItem(item) {
+		const updated = applyWardrobeItem(doc, item, slot);
+		setDoc(updated);
+		setUntouched(false);
+		const slotLabel = item.slot.replace("_", " ");
+		const who = doc.subjects[slot]?.subject_id.trim() || `Subject ${slot + 1}`;
+		setStatus(`Applied ${item.name} to ${who} (${slotLabel}).`);
+	}
+	function handleSelectWardrobeOutfit(outfit) {
+		const updated = applyWardrobeOutfit(doc, outfit, slot);
+		setDoc(updated);
+		setUntouched(false);
+		setAppliedOutfitId(outfit.id);
+		const who = doc.subjects[slot]?.subject_id.trim() || `Subject ${slot + 1}`;
+		setStatus(`Applied ${outfit.name} to ${who} (full outfit).`);
+	}
+	(0, import_react.useMemo)(() => {
 		const base = looksFor(lookFilter);
 		if (lookFilter === "wardrobe" && customOutfits.length > 0) return [...customOutfits.map(customOutfitToLook), ...base];
 		return base;
 	}, [lookFilter, customOutfits]);
+	const poseShelfLooks = (0, import_react.useMemo)(() => {
+		return looksFor(poseStanceFilter);
+	}, [poseStanceFilter]);
+	const lightingShelfLooks = (0, import_react.useMemo)(() => {
+		return looksFor("light");
+	}, []);
+	const cameraShelfLooks = (0, import_react.useMemo)(() => {
+		return looksFor("angle");
+	}, []);
 	(0, import_react.useEffect)(() => {
 		if (isPending) return;
 		let cancelled = false;
@@ -18383,35 +18630,82 @@ function PromptForge() {
 										})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 											className: "flex items-center gap-2",
 											children: [
-												(cluster === "framing" || cluster === "optics") && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-													type: "button",
-													onClick: () => setCameraGalleryOpen(true),
-													className: "flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20 transition-all shadow-sm",
-													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Camera, { className: "size-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Camera Gallery" })]
+												(cluster === "framing" || cluster === "optics") && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+													className: "flex flex-wrap items-center gap-1.5",
+													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+														type: "button",
+														onClick: () => {
+															setPane("assets");
+															setAssetTab("camera");
+															if (narrow()) setAssetFullscreen(true);
+														},
+														className: "flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-400 hover:bg-emerald-500/20 transition-all shadow-sm",
+														children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Camera, { className: "size-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Browse Camera (27)" })]
+													}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+														type: "button",
+														onClick: () => setCameraGalleryOpen(true),
+														className: "flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs font-semibold text-muted hover:text-foreground transition-all shadow-sm",
+														children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Modal" })
+													})]
 												}),
-												cluster === "key" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-													type: "button",
-													onClick: () => setLightingGalleryOpen(true),
-													className: "flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-400 hover:bg-amber-500/20 transition-all shadow-sm",
-													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SunMedium, { className: "size-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Lighting Studio (27)" })]
+												cluster === "key" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+													className: "flex flex-wrap items-center gap-1.5",
+													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+														type: "button",
+														onClick: () => {
+															setPane("assets");
+															setAssetTab("lighting");
+															if (narrow()) setAssetFullscreen(true);
+														},
+														className: "flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-xs font-bold text-amber-400 hover:bg-amber-500/20 transition-all shadow-sm",
+														children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SunMedium, { className: "size-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Browse Lighting (27)" })]
+													}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+														type: "button",
+														onClick: () => setLightingGalleryOpen(true),
+														className: "flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs font-semibold text-muted hover:text-foreground transition-all shadow-sm",
+														children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Modal" })
+													})]
 												}),
-												cluster === "posture" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-													type: "button",
-													onClick: () => setPoseGalleryOpen(true),
-													className: "flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-400 hover:bg-amber-500/20 transition-all shadow-sm",
-													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "size-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Pose Gallery" })]
+												cluster === "posture" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+													className: "flex flex-wrap items-center gap-1.5",
+													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+														type: "button",
+														onClick: () => {
+															setPane("assets");
+															setAssetTab("poses");
+															if (narrow()) setAssetFullscreen(true);
+														},
+														className: "flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-xs font-bold text-amber-400 hover:bg-amber-500/20 transition-all shadow-sm",
+														children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "size-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Browse Poses (36)" })]
+													}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+														type: "button",
+														onClick: () => setPoseGalleryOpen(true),
+														className: "flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs font-semibold text-muted hover:text-foreground transition-all shadow-sm",
+														children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Modal" })
+													})]
 												}),
-												cluster === "wardrobe" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-													type: "button",
-													onClick: () => setWardrobeGalleryOpen(true),
-													className: "flex items-center gap-1.5 rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-400 hover:bg-rose-500/20 transition-all shadow-sm",
-													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Shirt, { className: "size-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-														"Wardrobe Studio (",
-														WARDROBE_ITEMS.length,
-														" Pieces & ",
-														WARDROBE_OUTFITS.length,
-														" Outfits)"
-													] })]
+												cluster === "wardrobe" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+													className: "flex flex-wrap items-center gap-1.5",
+													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+														type: "button",
+														onClick: () => {
+															setPane("assets");
+															setAssetTab("wardrobe");
+															setWardrobeTab("pieces");
+															if (narrow()) setAssetFullscreen(true);
+														},
+														className: "flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 transition-all shadow-sm",
+														children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Shirt, { className: "size-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Browse 294 Pieces in Asset Bar" })]
+													}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+														type: "button",
+														onClick: () => setWardrobeGalleryOpen(true),
+														className: "flex items-center gap-1.5 rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-400 hover:bg-rose-500/20 transition-all shadow-sm",
+														children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Layers, { className: "size-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+															"Studio Modal (",
+															WARDROBE_OUTFITS.length,
+															" Outfits)"
+														] })]
+													})]
 												}),
 												/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 													type: "button",
@@ -18449,296 +18743,629 @@ function PromptForge() {
 						})
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("aside", {
-						className: cn("min-h-0 min-w-0 flex-col border-border lg:flex lg:w-72 lg:shrink-0 lg:border-l", pane === "assets" ? "flex" : "hidden lg:flex"),
+						className: cn("min-h-0 min-w-0 flex-col border-border bg-bg transition-all", assetFullscreen ? "fixed inset-0 z-50 flex h-dvh w-dvw overflow-hidden bg-bg" : pane === "assets" ? "flex flex-1" : "hidden lg:flex lg:w-84 xl:w-96 lg:shrink-0 lg:border-l"),
 						children: [
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "shrink-0 px-4 pt-4",
-								children: [
-									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
-										className: "text-base font-medium",
-										children: "Assets"
-									}),
-									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-										className: "mt-3 grid grid-cols-2 gap-2",
+								className: "shrink-0 border-b border-border bg-raised/50 px-3 py-2.5",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex items-center justify-between gap-2",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "min-w-0 flex-1",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "flex items-center gap-1.5",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
+												className: "text-sm font-bold tracking-tight text-foreground",
+												children: "Asset Library"
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary",
+												children: assetTab === "wardrobe" ? `${allWardrobeItems.length} Pieces · ${allWardrobeOutfits.length} Outfits` : assetTab === "poses" ? "36+ Poses" : assetTab === "lighting" ? "27 Setups" : assetTab === "camera" ? "27 Angles" : "Saved"
+											})]
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+											className: "truncate text-[10px] text-muted",
+											children: ["Target: ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "font-medium text-foreground",
+												children: doc.subjects[slot]?.subject_id.trim() || `Subject ${slot + 1}`
+											})]
+										})]
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex shrink-0 items-center gap-1",
 										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 											type: "button",
-											"aria-pressed": assetShelf === "saved",
-											onClick: () => setAssetShelf("saved"),
-											className: cn("h-11 rounded-md text-sm font-medium", assetShelf === "saved" ? "bg-primary text-primary-fg" : "border border-border bg-surface text-muted"),
-											children: "Saved"
+											onClick: () => setAssetDensity(assetDensity === "compact" ? "comfortable" : "compact"),
+											className: "flex size-8 items-center justify-center rounded-md border border-border bg-surface text-muted hover:border-primary/50 hover:text-foreground transition-all",
+											title: assetDensity === "compact" ? "Switch to Comfortable View (2-column)" : "Switch to Compact View (3-column)",
+											children: assetDensity === "compact" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Grid2x2, { className: "size-3.5" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Grid3x3, { className: "size-3.5" })
 										}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 											type: "button",
-											"aria-pressed": assetShelf === "looks",
-											onClick: () => setAssetShelf("looks"),
-											className: cn("h-11 rounded-md text-sm font-medium", assetShelf === "looks" ? "bg-primary text-primary-fg" : "border border-border bg-surface text-muted"),
-											children: "Looks"
+											onClick: () => setAssetFullscreen(!assetFullscreen),
+											className: cn("flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold transition-all shadow-xs", assetFullscreen ? "bg-primary text-primary-fg" : "border border-border bg-surface text-muted hover:border-primary/50 hover:text-foreground"),
+											title: assetFullscreen ? "Exit Fullscreen" : "Fullscreen View",
+											children: assetFullscreen ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Minimize2, { className: "size-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "text-[11px]",
+												children: "Exit"
+											})] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Maximize2, { className: "size-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "text-[11px] hidden sm:inline",
+												children: "Expand"
+											})] })
 										})]
-									}),
-									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-										className: "mt-2 text-sm text-muted",
-										children: assetShelf === "looks" ? lookFilter === "pose" || lookFilter === "adult" ? `A click writes the pose onto ${doc.subjects[slot]?.subject_id.trim() || `Subject ${slot + 1}`}.` : "A click writes the angle, light, or setting. The person stays as they are." : "Pick cards across tags. Apply drops them into this prompt in the order you chose."
-									})
-								]
-							}),
-							assetShelf === "looks" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-								className: "flex shrink-0 gap-2 overflow-x-auto px-4 py-3",
-								children: LOOK_FILTERS.map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-									type: "button",
-									onClick: () => setLookFilter(item.id),
-									"aria-pressed": lookFilter === item.id,
-									className: cn("h-11 shrink-0 rounded-full px-3 text-sm font-medium", lookFilter === item.id ? "bg-primary text-primary-fg" : "border border-border bg-surface text-muted"),
-									children: item.label
-								}, item.id))
-							}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-								className: "flex shrink-0 gap-2 overflow-x-auto px-4 py-3",
-								children: [
-									{
-										id: "all",
-										label: "All"
-									},
-									...knownTags.map((tag) => ({
-										id: tag.toLowerCase(),
-										label: tag
-									})),
-									{
-										id: "pieces",
-										label: "Pieces"
-									}
-								].map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-									type: "button",
-									onClick: () => setAssetFilter(item.id),
-									"aria-pressed": assetFilter === item.id,
-									className: cn("h-11 shrink-0 rounded-full px-3 text-sm font-medium", assetFilter === item.id ? "bg-primary text-primary-fg" : "border border-border bg-surface text-muted"),
-									children: item.label
-								}, item.id))
-							}), assetFilter === "pieces" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-								className: "flex shrink-0 gap-2 overflow-x-auto px-4 pb-3",
-								children: FILTERS.map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-									type: "button",
-									onClick: () => setFilter(item.id),
-									className: cn("h-11 shrink-0 rounded-full px-3 text-sm font-medium", filter === item.id ? "bg-primary text-primary-fg" : "border border-border bg-surface text-muted"),
-									children: item.label
-								}, item.id))
-							}) : null] }),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-								className: cn("min-h-0 flex-1 overflow-y-auto px-4 pb-3", assetShelf === "looks" ? "" : "space-y-2"),
-								children: assetShelf === "looks" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "space-y-3",
+									})]
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "mt-2.5 flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar",
 									children: [
-										lookFilter === "angle" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+										{
+											id: "wardrobe",
+											label: "Wardrobe",
+											icon: Shirt,
+											count: allWardrobeItems.length
+										},
+										{
+											id: "poses",
+											label: "Poses",
+											icon: Sparkles,
+											count: 36
+										},
+										{
+											id: "lighting",
+											label: "Light",
+											icon: SunMedium,
+											count: 27
+										},
+										{
+											id: "camera",
+											label: "Camera",
+											icon: Camera,
+											count: 27
+										},
+										{
+											id: "saved",
+											label: "Saved",
+											icon: Bookmark
+										}
+									].map((tab) => {
+										const Icon = tab.icon;
+										const active = assetTab === tab.id;
+										return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 											type: "button",
-											onClick: () => setCameraGalleryOpen(true),
-											className: "flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2.5 text-xs font-bold text-emerald-400 hover:bg-emerald-500/20 transition-all shadow-sm",
-											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Camera, { className: "h-4 w-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Browse Camera & Optics Gallery (27 Angles)" })]
-										}) : lookFilter === "light" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-											type: "button",
-											onClick: () => setLightingGalleryOpen(true),
-											className: "flex w-full items-center justify-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-xs font-bold text-amber-400 hover:bg-amber-500/20 transition-all shadow-sm",
-											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SunMedium, { className: "h-4 w-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Browse Visual Lighting Studio (27 Setups)" })]
-										}) : lookFilter === "wardrobe" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-											type: "button",
-											onClick: () => setWardrobeGalleryOpen(true),
-											className: "flex w-full items-center justify-center gap-2 rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-2.5 text-xs font-bold text-rose-400 hover:bg-rose-500/20 transition-all shadow-sm",
-											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Shirt, { className: "h-4 w-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-												"Browse Wardrobe Studio (",
-												WARDROBE_ITEMS.length,
-												" Pieces & ",
-												WARDROBE_OUTFITS.length,
-												" Outfits)"
-											] })]
-										}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-											type: "button",
-											onClick: () => setPoseGalleryOpen(true),
-											className: "flex w-full items-center justify-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-xs font-bold text-amber-400 hover:bg-amber-500/20 transition-all shadow-sm",
-											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "h-4 w-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Browse Full Pose Gallery (Large View)" })]
-										}),
-										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-											className: "relative",
+											onClick: () => setAssetTab(tab.id),
+											"aria-pressed": active,
+											className: cn("flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold transition-all", active ? "bg-primary text-primary-fg shadow-xs" : "border border-border bg-surface text-muted hover:border-primary/40 hover:text-foreground"),
 											children: [
-												/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Search, { className: "absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted" }),
-												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-													type: "text",
-													value: lookSearch,
-													onChange: (e) => setLookSearch(e.target.value),
-													placeholder: "Search in shelf (e.g. rembrandt, low angle, 85mm)...",
-													className: "w-full rounded-md border border-border bg-bg py-1.5 pl-8 pr-3 text-xs text-foreground placeholder-muted focus:border-primary focus:outline-none"
-												}),
-												lookSearch && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-													type: "button",
-													onClick: () => setLookSearch(""),
-													className: "absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-foreground",
-													children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "h-3 w-3" })
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { className: "size-3.5" }),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: tab.label }),
+												tab.count !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													className: cn("rounded px-1 text-[9px] font-bold tabular-nums", active ? "bg-black/25 text-white" : "bg-neutral-800/60 text-muted"),
+													children: tab.count
 												})
 											]
-										}),
-										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-											className: "grid grid-cols-2 gap-2",
-											children: shelfLooks.filter((look) => {
-												if (!lookSearch.trim()) return true;
-												const q = lookSearch.toLowerCase();
-												return look.name.toLowerCase().includes(q) || look.subtitle && look.subtitle.toLowerCase().includes(q) || look.posture && look.posture.toLowerCase().includes(q) || look.principle && look.principle.toLowerCase().includes(q) || look.axis && look.axis.toLowerCase().includes(q) || look.style && look.style.toLowerCase().includes(q) || look.fixture && look.fixture.toLowerCase().includes(q) || look.badge && look.badge.toLowerCase().includes(q) || look.id.toLowerCase().includes(q);
-											}).map((look) => {
-												const on = lookIsApplied(doc, look, slot);
-												return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-													type: "button",
-													onClick: () => onApplyLook(look),
-													"aria-pressed": on,
-													className: cn("group overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60", on ? "border-primary ring-1 ring-primary/40 shadow-sm" : "border-border"),
-													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-														className: "aspect-[4/5] bg-bg relative",
-														children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PoseCardVisual, {
-															image: look.image,
-															id: look.id,
-															name: look.name,
-															subtitle: look.subtitle,
-															category: look.category,
-															stance: look.stance,
-															badge: look.badge,
-															active: on
-														})
-													}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-														className: "p-2",
-														children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-															className: "flex items-center justify-between gap-1",
-															children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-																className: "text-xs font-semibold truncate group-hover:text-primary",
-																children: look.name
-															}), on && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "h-3 w-3 text-primary shrink-0" })]
-														}), look.subtitle && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-															className: "text-[10px] text-muted truncate mt-0.5",
-															children: look.subtitle
-														})]
-													})]
-												}, look.id);
-											})
-										})
-									]
-								}) : assetFilter === "pieces" ? snippets.map((snippet) => {
-									const key = `s:${snippet.id}`;
-									return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AssetCard, {
-										eyebrow: snippet.category === "note" ? "Note" : clusterById(snippet.category).label,
-										title: snippet.title,
-										body: snippet.body,
-										picked: picked.includes(key),
-										onPick: () => togglePick(key),
-										onDelete: snippet.custom ? () => removeSnippet(snippet.id) : void 0
-									}, snippet.id);
-								}) : shownBookmarks.length === 0 && (assetFilter !== "all" || characters.length === 0) ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-									className: "text-sm text-muted",
-									children: assetFilter === "all" ? "Nothing bookmarked yet. Use Bookmark on the open section. A subject saves the whole person. Any other section saves just that block." : "Nothing uses that tag yet."
-								}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [shownBookmarks.map((bookmark) => {
-									const key = `b:${bookmark.id}`;
-									const body = bookmark.kind === "subject" && bookmark.subject ? characterBlurb(bookmark.subject) : sectionBlurb(bookmark.fields);
-									return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AssetCard, {
-										eyebrow: bookmark.kind === "subject" ? "Subject" : clusterById(bookmark.cluster).label,
-										title: bookmark.name,
-										body: body || "No details yet",
-										tags: bookmark.tags,
-										imageId: bookmark.hasImage ? bookmark.id : void 0,
-										remote: Boolean(userId),
-										picked: picked.includes(key),
-										onPick: () => togglePick(key),
-										onDelete: () => removeBookmark(bookmark.id)
-									}, bookmark.id);
-								}), assetFilter === "all" ? characters.map((character) => {
-									const key = `c:${character.id}`;
-									return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AssetCard, {
-										eyebrow: "Character",
-										title: character.name,
-										body: characterBlurb(character.subject) || "No details yet",
-										picked: picked.includes(key),
-										onPick: () => togglePick(key),
-										onDelete: () => removeCharacter(character.id)
-									}, character.id);
-								}) : null] })
+										}, tab.id);
+									})
+								})]
 							}),
-							assetShelf === "saved" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "shrink-0 border-t border-border",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "flex items-center gap-2 px-3 py-2",
-									children: [
-										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-											className: "mr-auto text-sm text-muted tabular-nums",
-											children: [picked.length, " selected"]
-										}),
-										picked.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							assetTab === "wardrobe" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "shrink-0 border-b border-border bg-surface/30 px-3 py-2 space-y-2",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex items-center justify-between gap-2",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "grid grid-cols-2 gap-1.5 rounded-lg border border-border bg-bg p-0.5 flex-1 max-w-xs",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+												type: "button",
+												onClick: () => setWardrobeTab("pieces"),
+												className: cn("flex items-center justify-center gap-1.5 rounded-md py-1 text-xs font-bold transition-all", wardrobeTab === "pieces" ? "bg-primary text-primary-fg shadow-xs" : "text-muted hover:text-foreground"),
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Shirt, { className: "size-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+													"Pieces (",
+													allWardrobeItems.length,
+													")"
+												] })]
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+												type: "button",
+												onClick: () => setWardrobeTab("outfits"),
+												className: cn("flex items-center justify-center gap-1.5 rounded-md py-1 text-xs font-bold transition-all", wardrobeTab === "outfits" ? "bg-primary text-primary-fg shadow-xs" : "text-muted hover:text-foreground"),
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Layers, { className: "size-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+													"Outfits (",
+													allWardrobeOutfits.length,
+													")"
+												] })]
+											})]
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 											type: "button",
-											className: "btn btn-ghost",
-											onClick: () => setPicked([]),
-											children: "Clear"
-										}) : null,
-										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-											type: "button",
-											className: "btn btn-primary",
-											disabled: picked.length === 0,
-											onClick: applySelected,
-											children: "Apply"
-										})
-									]
-								}), assetFilter === "pieces" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-									className: "border-t border-border p-3",
-									children: adding ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
-										className: "space-y-2",
-										onSubmit: (event) => {
-											event.preventDefault();
-											addSnippet();
-										},
+											onClick: () => setWardrobeGalleryOpen(true),
+											className: "flex shrink-0 items-center gap-1 rounded-lg border border-rose-500/40 bg-rose-500/10 px-2.5 py-1.5 text-xs font-semibold text-rose-400 hover:bg-rose-500/20 transition-all shadow-xs",
+											title: "Open Fullscreen Wardrobe Studio & Custom Item Uploader",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "size-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Studio" })]
+										})]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "relative",
 										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Search, { className: "absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted" }),
 											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-												"aria-label": "Snippet title",
-												value: draftTitle,
-												onChange: (event) => setDraftTitle(event.target.value),
-												placeholder: "Title",
-												className: "field"
+												type: "text",
+												value: wardrobeSearch,
+												onChange: (e) => setWardrobeSearch(e.target.value),
+												placeholder: wardrobeTab === "pieces" ? "Search 294 pieces (e.g. leather, boots, cargo, hoodie)..." : "Search 49 outfits (e.g. archive, coquette, streetwear)...",
+												className: "w-full rounded-md border border-border bg-bg py-1.5 pl-8 pr-7 text-xs text-foreground placeholder-muted focus:border-primary focus:outline-none"
 											}),
-											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
-												"aria-label": "Snippet cluster",
-												value: draftCategory,
-												onChange: (event) => setDraftCategory(event.target.value),
-												className: "field",
-												children: [CLUSTERS.map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("option", {
-													value: item.id,
-													children: [
-														item.group,
-														" — ",
-														item.label
-													]
-												}, item.id)), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
-													value: "note",
-													children: "Note — inserts into the open field"
-												})]
-											}),
-											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", {
-												"aria-label": "Snippet text",
-												value: draftBody,
-												onChange: (event) => setDraftBody(event.target.value),
-												placeholder: "Reusable text",
-												rows: 3,
-												className: "field resize-y"
-											}),
-											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-												className: "flex gap-2",
-												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-													type: "submit",
-													className: "btn btn-primary flex-1",
-													disabled: !draftTitle.trim() || !draftBody.trim(),
-													children: "Save snippet"
-												}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-													type: "button",
-													className: "btn btn-ghost",
-													onClick: () => setAdding(false),
-													children: "Cancel"
-												})]
+											wardrobeSearch && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+												type: "button",
+												onClick: () => setWardrobeSearch(""),
+												className: "absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "size-3.5" })
 											})
 										]
-									}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-										type: "button",
-										className: "btn btn-ghost w-full",
-										onClick: () => setAdding(true),
-										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Plus, { className: "size-4" }), "New snippet"]
+									}),
+									wardrobeTab === "pieces" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "flex items-center gap-1 overflow-x-auto pb-0.5 no-scrollbar text-xs",
+										children: WARDROBE_SLOT_PILLS.map((pill) => {
+											const count = wardrobeSlotCounts[pill.id] ?? 0;
+											const active = wardrobeSlot === pill.id;
+											return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+												type: "button",
+												onClick: () => setWardrobeSlot(pill.id),
+												className: cn("h-7 shrink-0 rounded-full px-2.5 text-[11px] font-medium transition-all", active ? "bg-primary text-primary-fg shadow-xs" : "border border-border bg-bg text-muted hover:text-foreground"),
+												children: [
+													pill.label,
+													" (",
+													count,
+													")"
+												]
+											}, pill.id);
+										})
 									})
-								}) : null]
-							}) : null
+								]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "min-h-0 flex-1 overflow-y-auto p-2.5",
+								children: wardrobeTab === "pieces" ? displayedWardrobeItems.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "py-12 text-center text-xs text-muted",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Shirt, { className: "mx-auto size-8 opacity-30 mb-2" }),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
+											"No clothing pieces match \"",
+											wardrobeSearch,
+											"\"."
+										] }),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+											type: "button",
+											onClick: () => {
+												setWardrobeSearch("");
+												setWardrobeSlot("all");
+											},
+											className: "mt-2 text-xs font-semibold text-primary underline",
+											children: "Reset filters"
+										})
+									]
+								}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: cn("grid", assetDensity === "compact" ? "grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-1.5" : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2"),
+									children: displayedWardrobeItems.map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(WardrobeItemCard, {
+										item,
+										applied: isWardrobeItemApplied(doc, item, slot),
+										density: assetDensity,
+										onSelect: () => handleSelectWardrobeItem(item)
+									}, item.id))
+								}) : displayedWardrobeOutfits.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "py-12 text-center text-xs text-muted",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Layers, { className: "mx-auto size-8 opacity-30 mb-2" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
+										"No outfits match \"",
+										wardrobeSearch,
+										"\"."
+									] })]
+								}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: cn("grid", assetDensity === "compact" ? "grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-1.5" : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2"),
+									children: displayedWardrobeOutfits.map((outfit) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(WardrobeOutfitCard, {
+										outfit,
+										applied: isWardrobeOutfitApplied(doc, outfit, slot),
+										density: assetDensity,
+										onSelect: () => handleSelectWardrobeOutfit(outfit)
+									}, outfit.id))
+								})
+							})] }),
+							assetTab === "poses" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "shrink-0 border-b border-border bg-surface/30 px-3 py-2 space-y-2",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex items-center justify-between gap-2",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+											className: "text-xs text-muted",
+											children: ["Kinetic postures for ", doc.subjects[slot]?.subject_id.trim() || `Subject ${slot + 1}`]
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+											type: "button",
+											onClick: () => setPoseGalleryOpen(true),
+											className: "flex shrink-0 items-center gap-1 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-400 hover:bg-amber-500/20 transition-all shadow-xs",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "size-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Large Gallery" })]
+										})]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "relative",
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Search, { className: "absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted" }),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+												type: "text",
+												value: lookSearch,
+												onChange: (e) => setLookSearch(e.target.value),
+												placeholder: "Search 36+ poses (e.g. leaning, action, sitting)...",
+												className: "w-full rounded-md border border-border bg-bg py-1.5 pl-8 pr-7 text-xs text-foreground placeholder-muted focus:border-primary focus:outline-none"
+											}),
+											lookSearch && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+												type: "button",
+												onClick: () => setLookSearch(""),
+												className: "absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "size-3.5" })
+											})
+										]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "flex items-center gap-1 overflow-x-auto pb-0.5 no-scrollbar text-xs",
+										children: POSE_CATEGORIES.map((cat) => {
+											const active = poseStanceFilter === cat.id;
+											return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+												type: "button",
+												onClick: () => setPoseStanceFilter(cat.id),
+												className: cn("h-7 shrink-0 rounded-full px-2.5 text-[11px] font-medium transition-all", active ? "bg-primary text-primary-fg shadow-xs" : "border border-border bg-bg text-muted hover:text-foreground"),
+												children: cat.label
+											}, cat.id);
+										})
+									})
+								]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "min-h-0 flex-1 overflow-y-auto p-2.5",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: cn("grid gap-2", assetDensity === "compact" ? "grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-1.5" : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2"),
+									children: poseShelfLooks.filter((look) => {
+										if (!lookSearch.trim()) return true;
+										const q = lookSearch.toLowerCase();
+										return look.name.toLowerCase().includes(q) || look.subtitle && look.subtitle.toLowerCase().includes(q) || look.posture && look.posture.toLowerCase().includes(q) || look.id.toLowerCase().includes(q);
+									}).map((look) => {
+										const on = lookIsApplied(doc, look, slot);
+										return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+											type: "button",
+											onClick: () => onApplyLook(look),
+											"aria-pressed": on,
+											className: cn("group overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60", on ? "border-amber-500 ring-2 ring-amber-500/40 shadow-xs" : "border-border"),
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												className: "aspect-[4/5] bg-bg relative",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PoseCardVisual, {
+													image: look.image,
+													id: look.id,
+													name: look.name,
+													subtitle: look.subtitle,
+													category: look.category,
+													stance: look.stance,
+													badge: look.badge,
+													active: on
+												})
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "p-1.5",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+													className: "flex items-center justify-between gap-1",
+													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+														className: "text-[11px] font-semibold truncate group-hover:text-primary",
+														children: look.name
+													}), on && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "h-3 w-3 text-amber-500 shrink-0" })]
+												}), look.subtitle && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+													className: "text-[9px] text-muted truncate",
+													children: look.subtitle
+												})]
+											})]
+										}, look.id);
+									})
+								})
+							})] }),
+							assetTab === "lighting" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "shrink-0 border-b border-border bg-surface/30 px-3 py-2 space-y-2",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex items-center justify-between gap-2",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+										className: "text-xs text-muted",
+										children: "Lighting architecture (key origin, shadow depth, practicals)"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+										type: "button",
+										onClick: () => setLightingGalleryOpen(true),
+										className: "flex shrink-0 items-center gap-1 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-400 hover:bg-amber-500/20 transition-all shadow-xs",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SunMedium, { className: "size-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Studio (27)" })]
+									})]
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "relative",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Search, { className: "absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted" }),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+											type: "text",
+											value: lookSearch,
+											onChange: (e) => setLookSearch(e.target.value),
+											placeholder: "Search 27 lighting setups (e.g. rembrandt, chiaroscuro, neon)...",
+											className: "w-full rounded-md border border-border bg-bg py-1.5 pl-8 pr-7 text-xs text-foreground placeholder-muted focus:border-primary focus:outline-none"
+										}),
+										lookSearch && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+											type: "button",
+											onClick: () => setLookSearch(""),
+											className: "absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground",
+											children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "size-3.5" })
+										})
+									]
+								})]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "min-h-0 flex-1 overflow-y-auto p-2.5",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: cn("grid gap-2", assetDensity === "compact" ? "grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-1.5" : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2"),
+									children: lightingShelfLooks.filter((look) => {
+										if (!lookSearch.trim()) return true;
+										const q = lookSearch.toLowerCase();
+										return look.name.toLowerCase().includes(q) || look.style && look.style.toLowerCase().includes(q) || look.fixture && look.fixture.toLowerCase().includes(q) || look.id.toLowerCase().includes(q);
+									}).map((look) => {
+										const on = lookIsApplied(doc, look, slot);
+										return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+											type: "button",
+											onClick: () => onApplyLook(look),
+											"aria-pressed": on,
+											className: cn("group overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60", on ? "border-amber-500 ring-2 ring-amber-500/40 shadow-xs" : "border-border"),
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												className: "aspect-[4/5] bg-bg relative",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PoseCardVisual, {
+													image: look.image,
+													id: look.id,
+													name: look.name,
+													subtitle: look.subtitle,
+													category: look.category,
+													stance: look.stance,
+													badge: look.badge,
+													active: on
+												})
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "p-1.5",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+													className: "flex items-center justify-between gap-1",
+													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+														className: "text-[11px] font-semibold truncate group-hover:text-primary",
+														children: look.name
+													}), on && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "h-3 w-3 text-amber-500 shrink-0" })]
+												}), look.subtitle && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+													className: "text-[9px] text-muted truncate",
+													children: look.subtitle
+												})]
+											})]
+										}, look.id);
+									})
+								})
+							})] }),
+							assetTab === "camera" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "shrink-0 border-b border-border bg-surface/30 px-3 py-2 space-y-2",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex items-center justify-between gap-2",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+										className: "text-xs text-muted",
+										children: "Framing doctrine, elevation & lens optics"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+										type: "button",
+										onClick: () => setCameraGalleryOpen(true),
+										className: "flex shrink-0 items-center gap-1 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20 transition-all shadow-xs",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Camera, { className: "size-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Studio (27)" })]
+									})]
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "relative",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Search, { className: "absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted" }),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+											type: "text",
+											value: lookSearch,
+											onChange: (e) => setLookSearch(e.target.value),
+											placeholder: "Search 27 camera angles (e.g. low angle, dutch, 85mm)...",
+											className: "w-full rounded-md border border-border bg-bg py-1.5 pl-8 pr-7 text-xs text-foreground placeholder-muted focus:border-primary focus:outline-none"
+										}),
+										lookSearch && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+											type: "button",
+											onClick: () => setLookSearch(""),
+											className: "absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground",
+											children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "size-3.5" })
+										})
+									]
+								})]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "min-h-0 flex-1 overflow-y-auto p-2.5",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: cn("grid gap-2", assetDensity === "compact" ? "grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-1.5" : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2"),
+									children: cameraShelfLooks.filter((look) => {
+										if (!lookSearch.trim()) return true;
+										const q = lookSearch.toLowerCase();
+										return look.name.toLowerCase().includes(q) || look.principle && look.principle.toLowerCase().includes(q) || look.axis && look.axis.toLowerCase().includes(q) || look.lens && look.lens.toLowerCase().includes(q) || look.id.toLowerCase().includes(q);
+									}).map((look) => {
+										const on = lookIsApplied(doc, look, slot);
+										return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+											type: "button",
+											onClick: () => onApplyLook(look),
+											"aria-pressed": on,
+											className: cn("group overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60", on ? "border-emerald-500 ring-2 ring-emerald-500/40 shadow-xs" : "border-border"),
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												className: "aspect-[4/5] bg-bg relative",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PoseCardVisual, {
+													image: look.image,
+													id: look.id,
+													name: look.name,
+													subtitle: look.subtitle,
+													category: look.category,
+													stance: look.stance,
+													badge: look.badge,
+													active: on
+												})
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "p-1.5",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+													className: "flex items-center justify-between gap-1",
+													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+														className: "text-[11px] font-semibold truncate group-hover:text-primary",
+														children: look.name
+													}), on && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "h-3 w-3 text-emerald-500 shrink-0" })]
+												}), look.subtitle && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+													className: "text-[9px] text-muted truncate",
+													children: look.subtitle
+												})]
+											})]
+										}, look.id);
+									})
+								})
+							})] }),
+							assetTab === "saved" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "shrink-0 border-b border-border bg-surface/30 px-3 py-2 space-y-2",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "flex items-center gap-1 overflow-x-auto pb-0.5 no-scrollbar text-xs",
+										children: [
+											{
+												id: "all",
+												label: "All Saved"
+											},
+											...knownTags.map((tag) => ({
+												id: tag.toLowerCase(),
+												label: tag
+											})),
+											{
+												id: "pieces",
+												label: "Snippets"
+											}
+										].map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+											type: "button",
+											onClick: () => setAssetFilter(item.id),
+											"aria-pressed": assetFilter === item.id,
+											className: cn("h-7 shrink-0 rounded-full px-2.5 text-[11px] font-medium transition-all", assetFilter === item.id ? "bg-primary text-primary-fg shadow-xs" : "border border-border bg-bg text-muted hover:text-foreground"),
+											children: item.label
+										}, item.id))
+									}), assetFilter === "pieces" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "flex items-center gap-1 overflow-x-auto pb-0.5 no-scrollbar text-xs",
+										children: FILTERS.map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+											type: "button",
+											onClick: () => setFilter(item.id),
+											className: cn("h-6 shrink-0 rounded-full px-2 text-[10px] font-medium transition-all", filter === item.id ? "bg-primary text-primary-fg shadow-xs" : "border border-border bg-bg text-muted hover:text-foreground"),
+											children: item.label
+										}, item.id))
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "min-h-0 flex-1 overflow-y-auto p-2.5 space-y-2",
+									children: assetFilter === "pieces" ? snippets.map((snippet) => {
+										const key = `s:${snippet.id}`;
+										return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AssetCard, {
+											eyebrow: snippet.category === "note" ? "Note" : clusterById(snippet.category).label,
+											title: snippet.title,
+											body: snippet.body,
+											picked: picked.includes(key),
+											onPick: () => togglePick(key),
+											onDelete: snippet.custom ? () => removeSnippet(snippet.id) : void 0
+										}, snippet.id);
+									}) : shownBookmarks.length === 0 && (assetFilter !== "all" || characters.length === 0) ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+										className: "py-8 text-center text-xs text-muted",
+										children: assetFilter === "all" ? "Nothing bookmarked yet. Use Bookmark on any open section in Structure." : "Nothing uses that tag yet."
+									}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [shownBookmarks.map((bookmark) => {
+										const key = `b:${bookmark.id}`;
+										const body = bookmark.kind === "subject" && bookmark.subject ? characterBlurb(bookmark.subject) : sectionBlurb(bookmark.fields);
+										return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AssetCard, {
+											eyebrow: bookmark.kind === "subject" ? "Subject" : clusterById(bookmark.cluster).label,
+											title: bookmark.name,
+											body: body || "No details yet",
+											tags: bookmark.tags,
+											imageId: bookmark.hasImage ? bookmark.id : void 0,
+											remote: Boolean(userId),
+											picked: picked.includes(key),
+											onPick: () => togglePick(key),
+											onDelete: () => removeBookmark(bookmark.id)
+										}, bookmark.id);
+									}), assetFilter === "all" && characters.map((character) => {
+										const key = `c:${character.id}`;
+										return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AssetCard, {
+											eyebrow: "Character",
+											title: character.name,
+											body: characterBlurb(character.subject) || "No details yet",
+											picked: picked.includes(key),
+											onPick: () => togglePick(key),
+											onDelete: () => removeCharacter(character.id)
+										}, character.id);
+									})] })
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "shrink-0 border-t border-border bg-raised/30 p-2.5",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex items-center gap-2",
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+												className: "mr-auto text-xs text-muted tabular-nums",
+												children: [picked.length, " selected"]
+											}),
+											picked.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+												type: "button",
+												className: "btn btn-ghost text-xs",
+												onClick: () => setPicked([]),
+												children: "Clear"
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+												type: "button",
+												className: "btn btn-primary text-xs",
+												disabled: picked.length === 0,
+												onClick: applySelected,
+												children: "Apply Selected"
+											})
+										]
+									}), assetFilter === "pieces" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "mt-2 border-t border-border pt-2",
+										children: adding ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
+											className: "space-y-1.5",
+											onSubmit: (event) => {
+												event.preventDefault();
+												addSnippet();
+											},
+											children: [
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+													"aria-label": "Snippet title",
+													value: draftTitle,
+													onChange: (event) => setDraftTitle(event.target.value),
+													placeholder: "Title",
+													className: "field text-xs py-1"
+												}),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+													"aria-label": "Snippet cluster",
+													value: draftCategory,
+													onChange: (event) => setDraftCategory(event.target.value),
+													className: "field text-xs py-1",
+													children: [CLUSTERS.map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("option", {
+														value: item.id,
+														children: [
+															item.group,
+															" — ",
+															item.label
+														]
+													}, item.id)), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+														value: "note",
+														children: "Note — inserts into the open field"
+													})]
+												}),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", {
+													"aria-label": "Snippet text",
+													value: draftBody,
+													onChange: (event) => setDraftBody(event.target.value),
+													placeholder: "Reusable text",
+													rows: 2,
+													className: "field resize-y text-xs"
+												}),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+													className: "flex gap-2",
+													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+														type: "submit",
+														className: "btn btn-primary flex-1 text-xs",
+														disabled: !draftTitle.trim() || !draftBody.trim(),
+														children: "Save snippet"
+													}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+														type: "button",
+														className: "btn btn-ghost text-xs",
+														onClick: () => setAdding(false),
+														children: "Cancel"
+													})]
+												})
+											]
+										}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+											type: "button",
+											className: "btn btn-ghost w-full text-xs",
+											onClick: () => setAdding(true),
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Plus, { className: "size-3.5" }), "New snippet"]
+										})
+									})]
+								})
+							] })
 						]
 					})
 				]

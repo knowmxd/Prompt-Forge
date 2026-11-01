@@ -44,7 +44,7 @@ type WardrobeCatalogModalProps = {
   activeFootwear?: string;
 };
 
-function CatalogItemImage({ item }: { item: WardrobeItem }) {
+export function CatalogItemImage({ item }: { item: WardrobeItem }) {
   const [hasError, setHasError] = useState(false);
 
   if (hasError) {
@@ -76,7 +76,7 @@ function CatalogItemImage({ item }: { item: WardrobeItem }) {
   );
 }
 
-function CatalogOutfitImage({ outfit }: { outfit: WardrobeOutfit }) {
+export function CatalogOutfitImage({ outfit }: { outfit: WardrobeOutfit }) {
   const [hasError, setHasError] = useState(false);
 
   if (hasError) {

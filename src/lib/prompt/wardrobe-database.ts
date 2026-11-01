@@ -13869,6 +13869,31 @@ export function isWardrobeOutfitApplied(
   return true;
 }
 
+export function isWardrobeItemApplied(
+  doc: PromptDoc,
+  item: WardrobeItem,
+  slotIndex: number,
+): boolean {
+  const arch = doc.subjects[slotIndex]?.wardrobe_architecture;
+  if (!arch) return false;
+  const p = item.prompt.trim().toLowerCase();
+  if (!p) return false;
+
+  if (item.slot === "outerwear") {
+    return (arch.layering_system?.outerwear || "").toLowerCase().includes(p);
+  }
+  if (item.slot === "layer_top") {
+    return (arch.layering_system?.mid_layer || "").toLowerCase().includes(p);
+  }
+  if (item.slot === "top" || item.slot === "bottom" || item.slot === "dress_onepiece") {
+    return (arch.layering_system?.base_layer || "").toLowerCase().includes(p);
+  }
+  if (item.slot === "shoes") {
+    return (arch.footwear || "").toLowerCase().includes(p);
+  }
+  return (arch.accessories ?? []).some((acc) => acc.toLowerCase().includes(p));
+}
+
 export function filterWardrobeItems(
   items: WardrobeItem[],
   query: string,

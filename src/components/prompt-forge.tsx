@@ -13,7 +13,10 @@ import {
   Copy,
   FilePlus,
   Flame,
+  Grid2X2,
+  Grid3X3,
   ImagePlus,
+  Layers,
   Library,
   Maximize2,
   Minimize2,
@@ -34,16 +37,31 @@ import { CameraCatalogModal } from "@/components/camera-catalog-modal";
 import { type CameraItem } from "@/lib/prompt/camera-database";
 import { LightingCatalogModal } from "@/components/lighting-catalog-modal";
 import { type LightingItem } from "@/lib/prompt/lighting-database";
-import { WardrobeCatalogModal } from "@/components/wardrobe-catalog-modal";
+import {
+  WardrobeCatalogModal,
+  CatalogItemImage,
+  CatalogOutfitImage,
+} from "@/components/wardrobe-catalog-modal";
 import {
   applyWardrobeItem,
   applyWardrobeOutfit,
+  isWardrobeItemApplied,
+  isWardrobeOutfitApplied,
+  filterWardrobeItems,
+  filterWardrobeOutfits,
+  combineWardrobeItems,
+  combineWardrobeOutfits,
   WARDROBE_ITEMS,
   WARDROBE_OUTFITS,
   type WardrobeItem,
   type WardrobeOutfit,
+  type WardrobeSlot,
 } from "@/lib/prompt/wardrobe-database";
-import { loadCustomOutfits, CUSTOM_LIBRARY_CHANGE_EVENT } from "@/lib/prompt/custom-library-store";
+import {
+  loadCustomItems,
+  loadCustomOutfits,
+  CUSTOM_LIBRARY_CHANGE_EVENT,
+} from "@/lib/prompt/custom-library-store";
 import { deleteImage, fileToThumbnail, loadImage, saveImage } from "@/lib/prompt/images";
 import { parsePrompt } from "@/lib/prompt/parse";
 import { SEED_SNIPPETS } from "@/lib/prompt/snippets";
@@ -103,8 +121,223 @@ const FILTERS: Array<{ id: "all" | SnippetCategory; label: string }> = [
 ];
 
 type Pane = "source" | "forge" | "assets";
+type AssetTab = "wardrobe" | "poses" | "lighting" | "camera" | "saved";
 type Copied = "json" | "line" | null;
 type JsonMode = "peek" | "full" | "hidden";
+
+const WARDROBE_SLOT_PILLS: Array<{ id: WardrobeSlot | "all"; label: string }> = [
+  { id: "all", label: "All Pieces" },
+  { id: "top", label: "Tops" },
+  { id: "outerwear", label: "Outerwear" },
+  { id: "bottom", label: "Bottoms" },
+  { id: "shoes", label: "Footwear" },
+  { id: "headwear", label: "Headwear" },
+  { id: "jewelry", label: "Jewelry" },
+  { id: "bag", label: "Bags" },
+  { id: "accessory", label: "Accessories" },
+  { id: "neckwear", label: "Neckwear" },
+  { id: "eyewear", label: "Eyewear" },
+  { id: "belt_waist", label: "Belts" },
+  { id: "dress_onepiece", label: "Dresses" },
+  { id: "layer_top", label: "Mid-Layers" },
+  { id: "legwear", label: "Legwear" },
+];
+
+const POSE_CATEGORIES: Array<{ id: LookFilter; label: string }> = [
+  { id: "pose", label: "All Poses" },
+  { id: "modeling", label: "Photoshoot" },
+  { id: "sitting", label: "Sitting" },
+  { id: "reclining", label: "Floor" },
+  { id: "action", label: "Action" },
+  { id: "paintings", label: "Fine Art" },
+  { id: "knights", label: "Knights" },
+  { id: "couples", label: "Couples" },
+  { id: "cinematic", label: "Cinematic" },
+];
+
+function WardrobeItemCard({
+  item,
+  applied,
+  density,
+  onSelect,
+}: {
+  item: WardrobeItem;
+  applied: boolean;
+  density: "comfortable" | "compact";
+  onSelect: () => void;
+}) {
+  if (density === "compact") {
+    return (
+      <button
+        type="button"
+        onClick={onSelect}
+        title={`${item.name} (${item.slot}) - Click to apply to active subject`}
+        aria-pressed={applied}
+        className={cn(
+          "group relative flex flex-col overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-xs",
+          applied ? "border-emerald-500 ring-2 ring-emerald-500/40" : "border-border",
+        )}
+      >
+        <div className="relative aspect-square w-full bg-neutral-900/40 overflow-hidden">
+          <CatalogItemImage item={item} />
+          <span className="absolute top-1 left-1 rounded bg-black/75 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-neutral-300">
+            {item.slot.replace("dress_onepiece", "dress").replace("belt_waist", "belt").slice(0, 5)}
+          </span>
+          {applied && (
+            <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-emerald-500 text-white shadow">
+              <Check className="size-2.5 stroke-[3]" />
+            </span>
+          )}
+          {item.is_custom && (
+            <span className="absolute bottom-1 right-1 rounded bg-purple-500/90 px-1 py-0.5 text-[8px] font-bold uppercase text-white">
+              Custom
+            </span>
+          )}
+        </div>
+        <div className="p-1.5">
+          <p className="text-[11px] font-medium leading-tight text-foreground truncate group-hover:text-primary">
+            {item.name}
+          </p>
+        </div>
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={applied}
+      className={cn(
+        "group relative flex flex-col overflow-hidden rounded-xl border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-md",
+        applied ? "border-emerald-500 ring-2 ring-emerald-500/40" : "border-border",
+      )}
+    >
+      <div className="relative aspect-[4/3] w-full bg-neutral-900/40 overflow-hidden">
+        <CatalogItemImage item={item} />
+        <span className="absolute top-1.5 left-1.5 rounded-md bg-black/80 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neutral-200">
+          {item.slot.replace("_", " ")}
+        </span>
+        {applied && (
+          <span className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-emerald-500 text-white shadow-md">
+            <Check className="size-3 stroke-[3]" />
+          </span>
+        )}
+        {item.is_custom && (
+          <span className="absolute bottom-1.5 right-1.5 rounded bg-purple-500/90 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">
+            Custom
+          </span>
+        )}
+      </div>
+      <div className="p-2.5 flex-1 flex flex-col justify-between">
+        <div>
+          <h4 className="text-xs font-semibold leading-snug text-foreground line-clamp-2 group-hover:text-primary">
+            {item.name}
+          </h4>
+          <p className="mt-1 text-[10px] text-muted line-clamp-1 capitalize">
+            {item.colors[0] ? `${item.colors[0]} · ` : ""}{item.subcategory.replace("_", " ")}
+          </p>
+        </div>
+        <div className="mt-2 flex items-center justify-between pt-1 border-t border-border/50">
+          <span className="text-[9px] font-medium text-faint">
+            {item.style_tags[0] ? `#${item.style_tags[0].replace("_", " ")}` : item.slot}
+          </span>
+          <span className={cn("text-[10px] font-semibold", applied ? "text-emerald-500" : "text-primary group-hover:underline")}>
+            {applied ? "Applied" : "+ Apply"}
+          </span>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function WardrobeOutfitCard({
+  outfit,
+  applied,
+  density,
+  onSelect,
+}: {
+  outfit: WardrobeOutfit;
+  applied: boolean;
+  density: "comfortable" | "compact";
+  onSelect: () => void;
+}) {
+  const pieceCount = outfit.item_ids?.length || 0;
+
+  if (density === "compact") {
+    return (
+      <button
+        type="button"
+        onClick={onSelect}
+        title={`${outfit.name} - Click to apply full outfit`}
+        aria-pressed={applied}
+        className={cn(
+          "group relative flex flex-col overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-xs",
+          applied ? "border-rose-500 ring-2 ring-rose-500/40" : "border-border",
+        )}
+      >
+        <div className="relative aspect-square w-full bg-neutral-900/40 overflow-hidden">
+          <CatalogOutfitImage outfit={outfit} />
+          <span className="absolute top-1 left-1 rounded bg-rose-500/90 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-white">
+            Outfit
+          </span>
+          {applied && (
+            <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-rose-500 text-white shadow">
+              <Check className="size-2.5 stroke-[3]" />
+            </span>
+          )}
+        </div>
+        <div className="p-1.5">
+          <p className="text-[11px] font-medium leading-tight text-foreground truncate group-hover:text-primary">
+            {outfit.name}
+          </p>
+        </div>
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={applied}
+      className={cn(
+        "group relative flex flex-col overflow-hidden rounded-xl border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-md",
+        applied ? "border-rose-500 ring-2 ring-rose-500/40" : "border-border",
+      )}
+    >
+      <div className="relative aspect-[4/3] w-full bg-neutral-900/40 overflow-hidden">
+        <CatalogOutfitImage outfit={outfit} />
+        <span className="absolute top-1.5 left-1.5 rounded-md bg-rose-500/90 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
+          Full Look
+        </span>
+        {applied && (
+          <span className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-rose-500 text-white shadow-md">
+            <Check className="size-3 stroke-[3]" />
+          </span>
+        )}
+      </div>
+      <div className="p-2.5 flex-1 flex flex-col justify-between">
+        <div>
+          <h4 className="text-xs font-semibold leading-snug text-foreground line-clamp-2 group-hover:text-primary">
+            {outfit.name}
+          </h4>
+          <p className="mt-1 text-[10px] text-muted line-clamp-1">
+            {pieceCount ? `${pieceCount} pieces` : "Preset outfit"}
+          </p>
+        </div>
+        <div className="mt-2 flex items-center justify-between pt-1 border-t border-border/50">
+          <span className="text-[9px] font-medium text-faint">
+            {outfit.style_tags[0] ? `#${outfit.style_tags[0].replace("_", " ")}` : "Preset"}
+          </span>
+          <span className={cn("text-[10px] font-semibold", applied ? "text-rose-400" : "text-primary group-hover:underline")}>
+            {applied ? "Applied" : "+ Apply Outfit"}
+          </span>
+        </div>
+      </div>
+    </button>
+  );
+}
 
 function cn(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(" ");
@@ -268,6 +501,14 @@ export function PromptForge() {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [assetFilter, setAssetFilter] = useState("all");
   const [assetShelf, setAssetShelf] = useState<"saved" | "looks">("saved");
+  const [assetTab, setAssetTab] = useState<AssetTab>("wardrobe");
+  const [wardrobeTab, setWardrobeTab] = useState<"pieces" | "outfits">("pieces");
+  const [wardrobeSlot, setWardrobeSlot] = useState<WardrobeSlot | "all">("all");
+  const [wardrobeSearch, setWardrobeSearch] = useState("");
+  const [customItems, setCustomItems] = useState<WardrobeItem[]>([]);
+  const [assetDensity, setAssetDensity] = useState<"comfortable" | "compact">("compact");
+  const [assetFullscreen, setAssetFullscreen] = useState(false);
+  const [poseStanceFilter, setPoseStanceFilter] = useState<LookFilter>("pose");
   const [lookFilter, setLookFilter] = useState<LookFilter>("pose");
   const [poseGalleryOpen, setPoseGalleryOpen] = useState(false);
   const [cameraGalleryOpen, setCameraGalleryOpen] = useState(false);
@@ -293,16 +534,59 @@ export function PromptForge() {
   const slot = Math.min(subjectIndex, Math.max(doc.subjects.length - 1, 0));
   const active = clusterById(cluster);
 
-  // Subscribe to custom library changes for the Looks shelf
+  // Subscribe to custom library changes for items and outfits
   useEffect(() => {
-    async function refreshCustomOutfits() {
-      const outfits = await loadCustomOutfits();
+    async function refreshCustom() {
+      const [items, outfits] = await Promise.all([loadCustomItems(), loadCustomOutfits()]);
+      setCustomItems(items);
       setCustomOutfits(outfits);
     }
-    refreshCustomOutfits();
-    window.addEventListener(CUSTOM_LIBRARY_CHANGE_EVENT, refreshCustomOutfits);
-    return () => window.removeEventListener(CUSTOM_LIBRARY_CHANGE_EVENT, refreshCustomOutfits);
+    refreshCustom();
+    window.addEventListener(CUSTOM_LIBRARY_CHANGE_EVENT, refreshCustom);
+    return () => window.removeEventListener(CUSTOM_LIBRARY_CHANGE_EVENT, refreshCustom);
   }, []);
+
+  const allWardrobeItems = useMemo(() => {
+    return combineWardrobeItems(WARDROBE_ITEMS, customItems);
+  }, [customItems]);
+
+  const allWardrobeOutfits = useMemo(() => {
+    return combineWardrobeOutfits(WARDROBE_OUTFITS, customOutfits);
+  }, [customOutfits]);
+
+  const wardrobeSlotCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: allWardrobeItems.length };
+    for (const item of allWardrobeItems) {
+      counts[item.slot] = (counts[item.slot] || 0) + 1;
+    }
+    return counts;
+  }, [allWardrobeItems]);
+
+  const displayedWardrobeItems = useMemo(() => {
+    return filterWardrobeItems(allWardrobeItems, wardrobeSearch, wardrobeSlot);
+  }, [allWardrobeItems, wardrobeSearch, wardrobeSlot]);
+
+  const displayedWardrobeOutfits = useMemo(() => {
+    return filterWardrobeOutfits(allWardrobeOutfits, wardrobeSearch);
+  }, [allWardrobeOutfits, wardrobeSearch]);
+
+  function handleSelectWardrobeItem(item: WardrobeItem) {
+    const updated = applyWardrobeItem(doc, item, slot);
+    setDoc(updated);
+    setUntouched(false);
+    const slotLabel = item.slot.replace("_", " ");
+    const who = doc.subjects[slot]?.subject_id.trim() || `Subject ${slot + 1}`;
+    setStatus(`Applied ${item.name} to ${who} (${slotLabel}).`);
+  }
+
+  function handleSelectWardrobeOutfit(outfit: WardrobeOutfit) {
+    const updated = applyWardrobeOutfit(doc, outfit, slot);
+    setDoc(updated);
+    setUntouched(false);
+    setAppliedOutfitId(outfit.id);
+    const who = doc.subjects[slot]?.subject_id.trim() || `Subject ${slot + 1}`;
+    setStatus(`Applied ${outfit.name} to ${who} (full outfit).`);
+  }
 
   const shelfLooks = useMemo(() => {
     const base = looksFor(lookFilter);
@@ -312,6 +596,18 @@ export function PromptForge() {
     }
     return base;
   }, [lookFilter, customOutfits]);
+
+  const poseShelfLooks = useMemo(() => {
+    return looksFor(poseStanceFilter);
+  }, [poseStanceFilter]);
+
+  const lightingShelfLooks = useMemo(() => {
+    return looksFor("light");
+  }, []);
+
+  const cameraShelfLooks = useMemo(() => {
+    return looksFor("angle");
+  }, []);
 
   useEffect(() => {
     if (isPending) return;
@@ -1086,44 +1382,98 @@ export function PromptForge() {
                 </div>
                 <div className="flex items-center gap-2">
                   {(cluster === "framing" || cluster === "optics") && (
-                    <button
-                      type="button"
-                      onClick={() => setCameraGalleryOpen(true)}
-                      className="flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20 transition-all shadow-sm"
-                    >
-                      <Camera className="size-3.5" />
-                      <span>Camera Gallery</span>
-                    </button>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPane("assets");
+                          setAssetTab("camera");
+                          if (narrow()) setAssetFullscreen(true);
+                        }}
+                        className="flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-400 hover:bg-emerald-500/20 transition-all shadow-sm"
+                      >
+                        <Camera className="size-3.5" />
+                        <span>Browse Camera (27)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCameraGalleryOpen(true)}
+                        className="flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs font-semibold text-muted hover:text-foreground transition-all shadow-sm"
+                      >
+                        <span>Modal</span>
+                      </button>
+                    </div>
                   )}
                   {cluster === "key" && (
-                    <button
-                      type="button"
-                      onClick={() => setLightingGalleryOpen(true)}
-                      className="flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-400 hover:bg-amber-500/20 transition-all shadow-sm"
-                    >
-                      <SunMedium className="size-3.5" />
-                      <span>Lighting Studio (27)</span>
-                    </button>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPane("assets");
+                          setAssetTab("lighting");
+                          if (narrow()) setAssetFullscreen(true);
+                        }}
+                        className="flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-xs font-bold text-amber-400 hover:bg-amber-500/20 transition-all shadow-sm"
+                      >
+                        <SunMedium className="size-3.5" />
+                        <span>Browse Lighting (27)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setLightingGalleryOpen(true)}
+                        className="flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs font-semibold text-muted hover:text-foreground transition-all shadow-sm"
+                      >
+                        <span>Modal</span>
+                      </button>
+                    </div>
                   )}
                   {cluster === "posture" && (
-                    <button
-                      type="button"
-                      onClick={() => setPoseGalleryOpen(true)}
-                      className="flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-400 hover:bg-amber-500/20 transition-all shadow-sm"
-                    >
-                      <Sparkles className="size-3.5" />
-                      <span>Pose Gallery</span>
-                    </button>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPane("assets");
+                          setAssetTab("poses");
+                          if (narrow()) setAssetFullscreen(true);
+                        }}
+                        className="flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-xs font-bold text-amber-400 hover:bg-amber-500/20 transition-all shadow-sm"
+                      >
+                        <Sparkles className="size-3.5" />
+                        <span>Browse Poses (36)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPoseGalleryOpen(true)}
+                        className="flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs font-semibold text-muted hover:text-foreground transition-all shadow-sm"
+                      >
+                        <span>Modal</span>
+                      </button>
+                    </div>
                   )}
                   {cluster === "wardrobe" && (
-                    <button
-                      type="button"
-                      onClick={() => setWardrobeGalleryOpen(true)}
-                      className="flex items-center gap-1.5 rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-400 hover:bg-rose-500/20 transition-all shadow-sm"
-                    >
-                      <Shirt className="size-3.5" />
-                      <span>Wardrobe Studio ({WARDROBE_ITEMS.length} Pieces & {WARDROBE_OUTFITS.length} Outfits)</span>
-                    </button>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPane("assets");
+                          setAssetTab("wardrobe");
+                          setWardrobeTab("pieces");
+                          if (narrow()) setAssetFullscreen(true);
+                        }}
+                        className="flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 transition-all shadow-sm"
+                      >
+                        <Shirt className="size-3.5" />
+                        <span>Browse 294 Pieces in Asset Bar</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setWardrobeGalleryOpen(true)}
+                        className="flex items-center gap-1.5 rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-400 hover:bg-rose-500/20 transition-all shadow-sm"
+                      >
+                        <Layers className="size-3.5" />
+                        <span>Studio Modal ({WARDROBE_OUTFITS.length} Outfits)</span>
+                      </button>
+                    </div>
                   )}
                   <button type="button" className="btn btn-ghost" aria-label="Bookmark this section" onClick={openBookmark}>
                     <BookmarkPlus className="size-4" />
@@ -1154,165 +1504,347 @@ export function PromptForge() {
 
         <aside
           className={cn(
-            "min-h-0 min-w-0 flex-col border-border lg:flex lg:w-72 lg:shrink-0 lg:border-l",
-            pane === "assets" ? "flex" : "hidden lg:flex",
+            "min-h-0 min-w-0 flex-col border-border bg-bg transition-all",
+            assetFullscreen
+              ? "fixed inset-0 z-50 flex h-dvh w-dvw overflow-hidden bg-bg"
+              : pane === "assets"
+                ? "flex flex-1"
+                : "hidden lg:flex lg:w-84 xl:w-96 lg:shrink-0 lg:border-l",
           )}
         >
-          <div className="shrink-0 px-4 pt-4">
-            <h2 className="text-base font-medium">Assets</h2>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                aria-pressed={assetShelf === "saved"}
-                onClick={() => setAssetShelf("saved")}
-                className={cn(
-                  "h-11 rounded-md text-sm font-medium",
-                  assetShelf === "saved" ? "bg-primary text-primary-fg" : "border border-border bg-surface text-muted",
-                )}
-              >
-                Saved
-              </button>
-              <button
-                type="button"
-                aria-pressed={assetShelf === "looks"}
-                onClick={() => setAssetShelf("looks")}
-                className={cn(
-                  "h-11 rounded-md text-sm font-medium",
-                  assetShelf === "looks" ? "bg-primary text-primary-fg" : "border border-border bg-surface text-muted",
-                )}
-              >
-                Looks
-              </button>
-            </div>
-            <p className="mt-2 text-sm text-muted">
-              {assetShelf === "looks"
-                ? lookFilter === "pose" || lookFilter === "adult"
-                  ? `A click writes the pose onto ${doc.subjects[slot]?.subject_id.trim() || `Subject ${slot + 1}`}.`
-                  : "A click writes the angle, light, or setting. The person stays as they are."
-                : "Pick cards across tags. Apply drops them into this prompt in the order you chose."}
-            </p>
-          </div>
-          {assetShelf === "looks" ? (
-            <div className="flex shrink-0 gap-2 overflow-x-auto px-4 py-3">
-              {LOOK_FILTERS.map((item) => (
+          {/* Header */}
+          <div className="shrink-0 border-b border-border bg-raised/50 px-3 py-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <h2 className="text-sm font-bold tracking-tight text-foreground">Asset Library</h2>
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                    {assetTab === "wardrobe"
+                      ? `${allWardrobeItems.length} Pieces · ${allWardrobeOutfits.length} Outfits`
+                      : assetTab === "poses"
+                        ? "36+ Poses"
+                        : assetTab === "lighting"
+                          ? "27 Setups"
+                          : assetTab === "camera"
+                            ? "27 Angles"
+                            : "Saved"}
+                  </span>
+                </div>
+                <p className="truncate text-[10px] text-muted">
+                  Target: <span className="font-medium text-foreground">{doc.subjects[slot]?.subject_id.trim() || `Subject ${slot + 1}`}</span>
+                </p>
+              </div>
+
+              {/* View Density & Fullscreen Controls */}
+              <div className="flex shrink-0 items-center gap-1">
                 <button
-                  key={item.id}
                   type="button"
-                  onClick={() => setLookFilter(item.id)}
-                  aria-pressed={lookFilter === item.id}
-                  className={cn(
-                    "h-11 shrink-0 rounded-full px-3 text-sm font-medium",
-                    lookFilter === item.id ? "bg-primary text-primary-fg" : "border border-border bg-surface text-muted",
-                  )}
+                  onClick={() => setAssetDensity(assetDensity === "compact" ? "comfortable" : "compact")}
+                  className="flex size-8 items-center justify-center rounded-md border border-border bg-surface text-muted hover:border-primary/50 hover:text-foreground transition-all"
+                  title={assetDensity === "compact" ? "Switch to Comfortable View (2-column)" : "Switch to Compact View (3-column)"}
                 >
-                  {item.label}
+                  {assetDensity === "compact" ? <Grid2X2 className="size-3.5" /> : <Grid3X3 className="size-3.5" />}
                 </button>
-              ))}
+                <button
+                  type="button"
+                  onClick={() => setAssetFullscreen(!assetFullscreen)}
+                  className={cn(
+                    "flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold transition-all shadow-xs",
+                    assetFullscreen
+                      ? "bg-primary text-primary-fg"
+                      : "border border-border bg-surface text-muted hover:border-primary/50 hover:text-foreground",
+                  )}
+                  title={assetFullscreen ? "Exit Fullscreen" : "Fullscreen View"}
+                >
+                  {assetFullscreen ? (
+                    <>
+                      <Minimize2 className="size-3.5" />
+                      <span className="text-[11px]">Exit</span>
+                    </>
+                  ) : (
+                    <>
+                      <Maximize2 className="size-3.5" />
+                      <span className="text-[11px] hidden sm:inline">Expand</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
-          ) : (
+
+            {/* Top-Level Asset Category Navigation Pills */}
+            <div className="mt-2.5 flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+              {[
+                { id: "wardrobe" as const, label: "Wardrobe", icon: Shirt, count: allWardrobeItems.length },
+                { id: "poses" as const, label: "Poses", icon: Sparkles, count: 36 },
+                { id: "lighting" as const, label: "Light", icon: SunMedium, count: 27 },
+                { id: "camera" as const, label: "Camera", icon: Camera, count: 27 },
+                { id: "saved" as const, label: "Saved", icon: BookmarkIcon },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                const active = assetTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setAssetTab(tab.id)}
+                    aria-pressed={active}
+                    className={cn(
+                      "flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold transition-all",
+                      active
+                        ? "bg-primary text-primary-fg shadow-xs"
+                        : "border border-border bg-surface text-muted hover:border-primary/40 hover:text-foreground",
+                    )}
+                  >
+                    <Icon className="size-3.5" />
+                    <span>{tab.label}</span>
+                    {tab.count !== undefined && (
+                      <span className={cn(
+                        "rounded px-1 text-[9px] font-bold tabular-nums",
+                        active ? "bg-black/25 text-white" : "bg-neutral-800/60 text-muted",
+                      )}>
+                        {tab.count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* TAB 1: WARDROBE (Pieces & Outfits) */}
+          {assetTab === "wardrobe" && (
             <>
-          <div className="flex shrink-0 gap-2 overflow-x-auto px-4 py-3">
-            {[
-              { id: "all", label: "All" },
-              ...knownTags.map((tag) => ({ id: tag.toLowerCase(), label: tag })),
-              { id: "pieces", label: "Pieces" },
-            ].map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setAssetFilter(item.id)}
-                aria-pressed={assetFilter === item.id}
-                className={cn(
-                  "h-11 shrink-0 rounded-full px-3 text-sm font-medium",
-                  assetFilter === item.id ? "bg-primary text-primary-fg" : "border border-border bg-surface text-muted",
-                )}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-          {assetFilter === "pieces" ? (
-            <div className="flex shrink-0 gap-2 overflow-x-auto px-4 pb-3">
-              {FILTERS.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setFilter(item.id)}
-                  className={cn(
-                    "h-11 shrink-0 rounded-full px-3 text-sm font-medium",
-                    filter === item.id ? "bg-primary text-primary-fg" : "border border-border bg-surface text-muted",
-                  )}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          ) : null}
-            </>
-          )}
-          <div className={cn("min-h-0 flex-1 overflow-y-auto px-4 pb-3", assetShelf === "looks" ? "" : "space-y-2")}>
-            {assetShelf === "looks" ? (
-              <div className="space-y-3">
-                {lookFilter === "angle" ? (
-                  <button
-                    type="button"
-                    onClick={() => setCameraGalleryOpen(true)}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2.5 text-xs font-bold text-emerald-400 hover:bg-emerald-500/20 transition-all shadow-sm"
-                  >
-                    <Camera className="h-4 w-4" />
-                    <span>Browse Camera & Optics Gallery (27 Angles)</span>
-                  </button>
-                ) : lookFilter === "light" ? (
-                  <button
-                    type="button"
-                    onClick={() => setLightingGalleryOpen(true)}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-xs font-bold text-amber-400 hover:bg-amber-500/20 transition-all shadow-sm"
-                  >
-                    <SunMedium className="h-4 w-4" />
-                    <span>Browse Visual Lighting Studio (27 Setups)</span>
-                  </button>
-                ) : lookFilter === "wardrobe" ? (
+              <div className="shrink-0 border-b border-border bg-surface/30 px-3 py-2 space-y-2">
+                {/* Pieces vs Outfits sub-switcher */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="grid grid-cols-2 gap-1.5 rounded-lg border border-border bg-bg p-0.5 flex-1 max-w-xs">
+                    <button
+                      type="button"
+                      onClick={() => setWardrobeTab("pieces")}
+                      className={cn(
+                        "flex items-center justify-center gap-1.5 rounded-md py-1 text-xs font-bold transition-all",
+                        wardrobeTab === "pieces"
+                          ? "bg-primary text-primary-fg shadow-xs"
+                          : "text-muted hover:text-foreground",
+                      )}
+                    >
+                      <Shirt className="size-3.5" />
+                      <span>Pieces ({allWardrobeItems.length})</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setWardrobeTab("outfits")}
+                      className={cn(
+                        "flex items-center justify-center gap-1.5 rounded-md py-1 text-xs font-bold transition-all",
+                        wardrobeTab === "outfits"
+                          ? "bg-primary text-primary-fg shadow-xs"
+                          : "text-muted hover:text-foreground",
+                      )}
+                    >
+                      <Layers className="size-3.5" />
+                      <span>Outfits ({allWardrobeOutfits.length})</span>
+                    </button>
+                  </div>
+
                   <button
                     type="button"
                     onClick={() => setWardrobeGalleryOpen(true)}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-2.5 text-xs font-bold text-rose-400 hover:bg-rose-500/20 transition-all shadow-sm"
+                    className="flex shrink-0 items-center gap-1 rounded-lg border border-rose-500/40 bg-rose-500/10 px-2.5 py-1.5 text-xs font-semibold text-rose-400 hover:bg-rose-500/20 transition-all shadow-xs"
+                    title="Open Fullscreen Wardrobe Studio & Custom Item Uploader"
                   >
-                    <Shirt className="h-4 w-4" />
-                    <span>Browse Wardrobe Studio ({WARDROBE_ITEMS.length} Pieces & {WARDROBE_OUTFITS.length} Outfits)</span>
+                    <Sparkles className="size-3.5" />
+                    <span>Studio</span>
                   </button>
+                </div>
+
+                {/* Search input */}
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted" />
+                  <input
+                    type="text"
+                    value={wardrobeSearch}
+                    onChange={(e) => setWardrobeSearch(e.target.value)}
+                    placeholder={
+                      wardrobeTab === "pieces"
+                        ? "Search 294 pieces (e.g. leather, boots, cargo, hoodie)..."
+                        : "Search 49 outfits (e.g. archive, coquette, streetwear)..."
+                    }
+                    className="w-full rounded-md border border-border bg-bg py-1.5 pl-8 pr-7 text-xs text-foreground placeholder-muted focus:border-primary focus:outline-none"
+                  />
+                  {wardrobeSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setWardrobeSearch("")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Slot Filter Chips for Pieces */}
+                {wardrobeTab === "pieces" && (
+                  <div className="flex items-center gap-1 overflow-x-auto pb-0.5 no-scrollbar text-xs">
+                    {WARDROBE_SLOT_PILLS.map((pill) => {
+                      const count = wardrobeSlotCounts[pill.id] ?? 0;
+                      const active = wardrobeSlot === pill.id;
+                      return (
+                        <button
+                          key={pill.id}
+                          type="button"
+                          onClick={() => setWardrobeSlot(pill.id)}
+                          className={cn(
+                            "h-7 shrink-0 rounded-full px-2.5 text-[11px] font-medium transition-all",
+                            active
+                              ? "bg-primary text-primary-fg shadow-xs"
+                              : "border border-border bg-bg text-muted hover:text-foreground",
+                          )}
+                        >
+                          {pill.label} ({count})
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Scrollable Grid of Pieces or Outfits */}
+              <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
+                {wardrobeTab === "pieces" ? (
+                  displayedWardrobeItems.length === 0 ? (
+                    <div className="py-12 text-center text-xs text-muted">
+                      <Shirt className="mx-auto size-8 opacity-30 mb-2" />
+                      <p>No clothing pieces match "{wardrobeSearch}".</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setWardrobeSearch("");
+                          setWardrobeSlot("all");
+                        }}
+                        className="mt-2 text-xs font-semibold text-primary underline"
+                      >
+                        Reset filters
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      className={cn(
+                        "grid",
+                        assetDensity === "compact"
+                          ? "grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-1.5"
+                          : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2",
+                      )}
+                    >
+                      {displayedWardrobeItems.map((item) => (
+                        <WardrobeItemCard
+                          key={item.id}
+                          item={item}
+                          applied={isWardrobeItemApplied(doc, item, slot)}
+                          density={assetDensity}
+                          onSelect={() => handleSelectWardrobeItem(item)}
+                        />
+                      ))}
+                    </div>
+                  )
+                ) : displayedWardrobeOutfits.length === 0 ? (
+                  <div className="py-12 text-center text-xs text-muted">
+                    <Layers className="mx-auto size-8 opacity-30 mb-2" />
+                    <p>No outfits match "{wardrobeSearch}".</p>
+                  </div>
                 ) : (
+                  <div
+                    className={cn(
+                      "grid",
+                      assetDensity === "compact"
+                        ? "grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-1.5"
+                        : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2",
+                    )}
+                  >
+                    {displayedWardrobeOutfits.map((outfit) => (
+                      <WardrobeOutfitCard
+                        key={outfit.id}
+                        outfit={outfit}
+                        applied={isWardrobeOutfitApplied(doc, outfit, slot)}
+                        density={assetDensity}
+                        onSelect={() => handleSelectWardrobeOutfit(outfit)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* TAB 2: POSES */}
+          {assetTab === "poses" && (
+            <>
+              <div className="shrink-0 border-b border-border bg-surface/30 px-3 py-2 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs text-muted">
+                    Kinetic postures for {doc.subjects[slot]?.subject_id.trim() || `Subject ${slot + 1}`}
+                  </p>
                   <button
                     type="button"
                     onClick={() => setPoseGalleryOpen(true)}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-xs font-bold text-amber-400 hover:bg-amber-500/20 transition-all shadow-sm"
+                    className="flex shrink-0 items-center gap-1 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-400 hover:bg-amber-500/20 transition-all shadow-xs"
                   >
-                    <Sparkles className="h-4 w-4" />
-                    <span>Browse Full Pose Gallery (Large View)</span>
+                    <Sparkles className="size-3.5" />
+                    <span>Large Gallery</span>
                   </button>
-                )}
+                </div>
 
                 <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted" />
+                  <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted" />
                   <input
                     type="text"
                     value={lookSearch}
                     onChange={(e) => setLookSearch(e.target.value)}
-                    placeholder="Search in shelf (e.g. rembrandt, low angle, 85mm)..."
-                    className="w-full rounded-md border border-border bg-bg py-1.5 pl-8 pr-3 text-xs text-foreground placeholder-muted focus:border-primary focus:outline-none"
+                    placeholder="Search 36+ poses (e.g. leaning, action, sitting)..."
+                    className="w-full rounded-md border border-border bg-bg py-1.5 pl-8 pr-7 text-xs text-foreground placeholder-muted focus:border-primary focus:outline-none"
                   />
                   {lookSearch && (
                     <button
                       type="button"
                       onClick={() => setLookSearch("")}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-foreground"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground"
                     >
-                      <X className="h-3 w-3" />
+                      <X className="size-3.5" />
                     </button>
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
-                  {shelfLooks
+                <div className="flex items-center gap-1 overflow-x-auto pb-0.5 no-scrollbar text-xs">
+                  {POSE_CATEGORIES.map((cat) => {
+                    const active = poseStanceFilter === cat.id;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setPoseStanceFilter(cat.id)}
+                        className={cn(
+                          "h-7 shrink-0 rounded-full px-2.5 text-[11px] font-medium transition-all",
+                          active
+                            ? "bg-primary text-primary-fg shadow-xs"
+                            : "border border-border bg-bg text-muted hover:text-foreground",
+                        )}
+                      >
+                        {cat.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
+                <div
+                  className={cn(
+                    "grid gap-2",
+                    assetDensity === "compact"
+                      ? "grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-1.5"
+                      : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2",
+                  )}
+                >
+                  {poseShelfLooks
                     .filter((look) => {
                       if (!lookSearch.trim()) return true;
                       const q = lookSearch.toLowerCase();
@@ -1320,11 +1852,6 @@ export function PromptForge() {
                         look.name.toLowerCase().includes(q) ||
                         (look.subtitle && look.subtitle.toLowerCase().includes(q)) ||
                         (look.posture && look.posture.toLowerCase().includes(q)) ||
-                        (look.principle && look.principle.toLowerCase().includes(q)) ||
-                        (look.axis && look.axis.toLowerCase().includes(q)) ||
-                        (look.style && look.style.toLowerCase().includes(q)) ||
-                        (look.fixture && look.fixture.toLowerCase().includes(q)) ||
-                        (look.badge && look.badge.toLowerCase().includes(q)) ||
                         look.id.toLowerCase().includes(q)
                       );
                     })
@@ -1338,7 +1865,7 @@ export function PromptForge() {
                           aria-pressed={on}
                           className={cn(
                             "group overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60",
-                            on ? "border-primary ring-1 ring-primary/40 shadow-sm" : "border-border",
+                            on ? "border-amber-500 ring-2 ring-amber-500/40 shadow-xs" : "border-border",
                           )}
                         >
                           <div className="aspect-[4/5] bg-bg relative">
@@ -1353,13 +1880,13 @@ export function PromptForge() {
                               active={on}
                             />
                           </div>
-                          <div className="p-2">
+                          <div className="p-1.5">
                             <div className="flex items-center justify-between gap-1">
-                              <p className="text-xs font-semibold truncate group-hover:text-primary">{look.name}</p>
-                              {on && <Check className="h-3 w-3 text-primary shrink-0" />}
+                              <p className="text-[11px] font-semibold truncate group-hover:text-primary">{look.name}</p>
+                              {on && <Check className="h-3 w-3 text-amber-500 shrink-0" />}
                             </div>
                             {look.subtitle && (
-                              <p className="text-[10px] text-muted truncate mt-0.5">{look.subtitle}</p>
+                              <p className="text-[9px] text-muted truncate">{look.subtitle}</p>
                             )}
                           </div>
                         </button>
@@ -1367,144 +1894,406 @@ export function PromptForge() {
                     })}
                 </div>
               </div>
-            ) : assetFilter === "pieces" ? (
-              snippets.map((snippet) => {
-                const key = `s:${snippet.id}`;
-                return (
-                  <AssetCard
-                    key={snippet.id}
-                    eyebrow={snippet.category === "note" ? "Note" : clusterById(snippet.category).label}
-                    title={snippet.title}
-                    body={snippet.body}
-                    picked={picked.includes(key)}
-                    onPick={() => togglePick(key)}
-                    onDelete={snippet.custom ? () => removeSnippet(snippet.id) : undefined}
+            </>
+          )}
+
+          {/* TAB 3: LIGHTING */}
+          {assetTab === "lighting" && (
+            <>
+              <div className="shrink-0 border-b border-border bg-surface/30 px-3 py-2 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs text-muted">
+                    Lighting architecture (key origin, shadow depth, practicals)
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setLightingGalleryOpen(true)}
+                    className="flex shrink-0 items-center gap-1 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-400 hover:bg-amber-500/20 transition-all shadow-xs"
+                  >
+                    <SunMedium className="size-3.5" />
+                    <span>Studio (27)</span>
+                  </button>
+                </div>
+
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted" />
+                  <input
+                    type="text"
+                    value={lookSearch}
+                    onChange={(e) => setLookSearch(e.target.value)}
+                    placeholder="Search 27 lighting setups (e.g. rembrandt, chiaroscuro, neon)..."
+                    className="w-full rounded-md border border-border bg-bg py-1.5 pl-8 pr-7 text-xs text-foreground placeholder-muted focus:border-primary focus:outline-none"
                   />
-                );
-              })
-            ) : shownBookmarks.length === 0 && (assetFilter !== "all" || characters.length === 0) ? (
-              <p className="text-sm text-muted">
-                {assetFilter === "all"
-                  ? "Nothing bookmarked yet. Use Bookmark on the open section. A subject saves the whole person. Any other section saves just that block."
-                  : "Nothing uses that tag yet."}
-              </p>
-            ) : (
-              <>
-                {shownBookmarks.map((bookmark) => {
-                  const key = `b:${bookmark.id}`;
-                  const body =
-                    bookmark.kind === "subject" && bookmark.subject
-                      ? characterBlurb(bookmark.subject)
-                      : sectionBlurb(bookmark.fields);
-                  return (
-                    <AssetCard
-                      key={bookmark.id}
-                      eyebrow={bookmark.kind === "subject" ? "Subject" : clusterById(bookmark.cluster).label}
-                      title={bookmark.name}
-                      body={body || "No details yet"}
-                      tags={bookmark.tags}
-                      imageId={bookmark.hasImage ? bookmark.id : undefined}
-                      remote={Boolean(userId)}
-                      picked={picked.includes(key)}
-                      onPick={() => togglePick(key)}
-                      onDelete={() => removeBookmark(bookmark.id)}
-                    />
-                  );
-                })}
-                {assetFilter === "all"
-                  ? characters.map((character) => {
-                      const key = `c:${character.id}`;
+                  {lookSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setLookSearch("")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
+                <div
+                  className={cn(
+                    "grid gap-2",
+                    assetDensity === "compact"
+                      ? "grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-1.5"
+                      : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2",
+                  )}
+                >
+                  {lightingShelfLooks
+                    .filter((look) => {
+                      if (!lookSearch.trim()) return true;
+                      const q = lookSearch.toLowerCase();
                       return (
-                        <AssetCard
-                          key={character.id}
-                          eyebrow="Character"
-                          title={character.name}
-                          body={characterBlurb(character.subject) || "No details yet"}
-                          picked={picked.includes(key)}
-                          onPick={() => togglePick(key)}
-                          onDelete={() => removeCharacter(character.id)}
-                        />
+                        look.name.toLowerCase().includes(q) ||
+                        (look.style && look.style.toLowerCase().includes(q)) ||
+                        (look.fixture && look.fixture.toLowerCase().includes(q)) ||
+                        look.id.toLowerCase().includes(q)
                       );
                     })
-                  : null}
-              </>
-            )}
-          </div>
-          {assetShelf === "saved" ? (
-          <div className="shrink-0 border-t border-border">
-            <div className="flex items-center gap-2 px-3 py-2">
-              <p className="mr-auto text-sm text-muted tabular-nums">{picked.length} selected</p>
-              {picked.length > 0 ? (
-                <button type="button" className="btn btn-ghost" onClick={() => setPicked([])}>
-                  Clear
-                </button>
-              ) : null}
-              <button type="button" className="btn btn-primary" disabled={picked.length === 0} onClick={applySelected}>
-                Apply
-              </button>
-            </div>
-            {assetFilter === "pieces" ? (
-              <div className="border-t border-border p-3">
-                {adding ? (
-                  <form
-                    className="space-y-2"
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      addSnippet();
-                    }}
+                    .map((look) => {
+                      const on = lookIsApplied(doc, look, slot);
+                      return (
+                        <button
+                          key={look.id}
+                          type="button"
+                          onClick={() => onApplyLook(look)}
+                          aria-pressed={on}
+                          className={cn(
+                            "group overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60",
+                            on ? "border-amber-500 ring-2 ring-amber-500/40 shadow-xs" : "border-border",
+                          )}
+                        >
+                          <div className="aspect-[4/5] bg-bg relative">
+                            <PoseCardVisual
+                              image={look.image}
+                              id={look.id}
+                              name={look.name}
+                              subtitle={look.subtitle}
+                              category={look.category}
+                              stance={look.stance}
+                              badge={look.badge}
+                              active={on}
+                            />
+                          </div>
+                          <div className="p-1.5">
+                            <div className="flex items-center justify-between gap-1">
+                              <p className="text-[11px] font-semibold truncate group-hover:text-primary">{look.name}</p>
+                              {on && <Check className="h-3 w-3 text-amber-500 shrink-0" />}
+                            </div>
+                            {look.subtitle && (
+                              <p className="text-[9px] text-muted truncate">{look.subtitle}</p>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* TAB 4: CAMERA & ANGLES */}
+          {assetTab === "camera" && (
+            <>
+              <div className="shrink-0 border-b border-border bg-surface/30 px-3 py-2 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs text-muted">
+                    Framing doctrine, elevation & lens optics
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setCameraGalleryOpen(true)}
+                    className="flex shrink-0 items-center gap-1 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20 transition-all shadow-xs"
                   >
-                    <input
-                      aria-label="Snippet title"
-                      value={draftTitle}
-                      onChange={(event) => setDraftTitle(event.target.value)}
-                      placeholder="Title"
-                      className="field"
-                    />
-                    <select
-                      aria-label="Snippet cluster"
-                      value={draftCategory}
-                      onChange={(event) => setDraftCategory(event.target.value as SnippetCategory)}
-                      className="field"
-                    >
-                      {CLUSTERS.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {item.group} — {item.label}
-                        </option>
-                      ))}
-                      <option value="note">Note — inserts into the open field</option>
-                    </select>
-                    <textarea
-                      aria-label="Snippet text"
-                      value={draftBody}
-                      onChange={(event) => setDraftBody(event.target.value)}
-                      placeholder="Reusable text"
-                      rows={3}
-                      className="field resize-y"
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        type="submit"
-                        className="btn btn-primary flex-1"
-                        disabled={!draftTitle.trim() || !draftBody.trim()}
-                      >
-                        Save snippet
-                      </button>
-                      <button type="button" className="btn btn-ghost" onClick={() => setAdding(false)}>
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
-                ) : (
-                  <button type="button" className="btn btn-ghost w-full" onClick={() => setAdding(true)}>
-                    <Plus className="size-4" />
-                    New snippet
+                    <Camera className="size-3.5" />
+                    <span>Studio (27)</span>
                   </button>
+                </div>
+
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted" />
+                  <input
+                    type="text"
+                    value={lookSearch}
+                    onChange={(e) => setLookSearch(e.target.value)}
+                    placeholder="Search 27 camera angles (e.g. low angle, dutch, 85mm)..."
+                    className="w-full rounded-md border border-border bg-bg py-1.5 pl-8 pr-7 text-xs text-foreground placeholder-muted focus:border-primary focus:outline-none"
+                  />
+                  {lookSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setLookSearch("")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
+                <div
+                  className={cn(
+                    "grid gap-2",
+                    assetDensity === "compact"
+                      ? "grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-1.5"
+                      : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2",
+                  )}
+                >
+                  {cameraShelfLooks
+                    .filter((look) => {
+                      if (!lookSearch.trim()) return true;
+                      const q = lookSearch.toLowerCase();
+                      return (
+                        look.name.toLowerCase().includes(q) ||
+                        (look.principle && look.principle.toLowerCase().includes(q)) ||
+                        (look.axis && look.axis.toLowerCase().includes(q)) ||
+                        (look.lens && look.lens.toLowerCase().includes(q)) ||
+                        look.id.toLowerCase().includes(q)
+                      );
+                    })
+                    .map((look) => {
+                      const on = lookIsApplied(doc, look, slot);
+                      return (
+                        <button
+                          key={look.id}
+                          type="button"
+                          onClick={() => onApplyLook(look)}
+                          aria-pressed={on}
+                          className={cn(
+                            "group overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60",
+                            on ? "border-emerald-500 ring-2 ring-emerald-500/40 shadow-xs" : "border-border",
+                          )}
+                        >
+                          <div className="aspect-[4/5] bg-bg relative">
+                            <PoseCardVisual
+                              image={look.image}
+                              id={look.id}
+                              name={look.name}
+                              subtitle={look.subtitle}
+                              category={look.category}
+                              stance={look.stance}
+                              badge={look.badge}
+                              active={on}
+                            />
+                          </div>
+                          <div className="p-1.5">
+                            <div className="flex items-center justify-between gap-1">
+                              <p className="text-[11px] font-semibold truncate group-hover:text-primary">{look.name}</p>
+                              {on && <Check className="h-3 w-3 text-emerald-500 shrink-0" />}
+                            </div>
+                            {look.subtitle && (
+                              <p className="text-[9px] text-muted truncate">{look.subtitle}</p>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* TAB 5: SAVED & BOOKMARKS */}
+          {assetTab === "saved" && (
+            <>
+              <div className="shrink-0 border-b border-border bg-surface/30 px-3 py-2 space-y-2">
+                <div className="flex items-center gap-1 overflow-x-auto pb-0.5 no-scrollbar text-xs">
+                  {[
+                    { id: "all", label: "All Saved" },
+                    ...knownTags.map((tag) => ({ id: tag.toLowerCase(), label: tag })),
+                    { id: "pieces", label: "Snippets" },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setAssetFilter(item.id)}
+                      aria-pressed={assetFilter === item.id}
+                      className={cn(
+                        "h-7 shrink-0 rounded-full px-2.5 text-[11px] font-medium transition-all",
+                        assetFilter === item.id
+                          ? "bg-primary text-primary-fg shadow-xs"
+                          : "border border-border bg-bg text-muted hover:text-foreground",
+                      )}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+
+                {assetFilter === "pieces" && (
+                  <div className="flex items-center gap-1 overflow-x-auto pb-0.5 no-scrollbar text-xs">
+                    {FILTERS.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setFilter(item.id)}
+                        className={cn(
+                          "h-6 shrink-0 rounded-full px-2 text-[10px] font-medium transition-all",
+                          filter === item.id
+                            ? "bg-primary text-primary-fg shadow-xs"
+                            : "border border-border bg-bg text-muted hover:text-foreground",
+                        )}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
-            ) : null}
-          </div>
-          ) : null}
+
+              <div className="min-h-0 flex-1 overflow-y-auto p-2.5 space-y-2">
+                {assetFilter === "pieces" ? (
+                  snippets.map((snippet) => {
+                    const key = `s:${snippet.id}`;
+                    return (
+                      <AssetCard
+                        key={snippet.id}
+                        eyebrow={snippet.category === "note" ? "Note" : clusterById(snippet.category).label}
+                        title={snippet.title}
+                        body={snippet.body}
+                        picked={picked.includes(key)}
+                        onPick={() => togglePick(key)}
+                        onDelete={snippet.custom ? () => removeSnippet(snippet.id) : undefined}
+                      />
+                    );
+                  })
+                ) : shownBookmarks.length === 0 && (assetFilter !== "all" || characters.length === 0) ? (
+                  <p className="py-8 text-center text-xs text-muted">
+                    {assetFilter === "all"
+                      ? "Nothing bookmarked yet. Use Bookmark on any open section in Structure."
+                      : "Nothing uses that tag yet."}
+                  </p>
+                ) : (
+                  <>
+                    {shownBookmarks.map((bookmark) => {
+                      const key = `b:${bookmark.id}`;
+                      const body =
+                        bookmark.kind === "subject" && bookmark.subject
+                          ? characterBlurb(bookmark.subject)
+                          : sectionBlurb(bookmark.fields);
+                      return (
+                        <AssetCard
+                          key={bookmark.id}
+                          eyebrow={bookmark.kind === "subject" ? "Subject" : clusterById(bookmark.cluster).label}
+                          title={bookmark.name}
+                          body={body || "No details yet"}
+                          tags={bookmark.tags}
+                          imageId={bookmark.hasImage ? bookmark.id : undefined}
+                          remote={Boolean(userId)}
+                          picked={picked.includes(key)}
+                          onPick={() => togglePick(key)}
+                          onDelete={() => removeBookmark(bookmark.id)}
+                        />
+                      );
+                    })}
+                    {assetFilter === "all" &&
+                      characters.map((character) => {
+                        const key = `c:${character.id}`;
+                        return (
+                          <AssetCard
+                            key={character.id}
+                            eyebrow="Character"
+                            title={character.name}
+                            body={characterBlurb(character.subject) || "No details yet"}
+                            picked={picked.includes(key)}
+                            onPick={() => togglePick(key)}
+                            onDelete={() => removeCharacter(character.id)}
+                          />
+                        );
+                      })}
+                  </>
+                )}
+              </div>
+
+              <div className="shrink-0 border-t border-border bg-raised/30 p-2.5">
+                <div className="flex items-center gap-2">
+                  <p className="mr-auto text-xs text-muted tabular-nums">{picked.length} selected</p>
+                  {picked.length > 0 && (
+                    <button type="button" className="btn btn-ghost text-xs" onClick={() => setPicked([])}>
+                      Clear
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="btn btn-primary text-xs"
+                    disabled={picked.length === 0}
+                    onClick={applySelected}
+                  >
+                    Apply Selected
+                  </button>
+                </div>
+
+                {assetFilter === "pieces" && (
+                  <div className="mt-2 border-t border-border pt-2">
+                    {adding ? (
+                      <form
+                        className="space-y-1.5"
+                        onSubmit={(event) => {
+                          event.preventDefault();
+                          addSnippet();
+                        }}
+                      >
+                        <input
+                          aria-label="Snippet title"
+                          value={draftTitle}
+                          onChange={(event) => setDraftTitle(event.target.value)}
+                          placeholder="Title"
+                          className="field text-xs py-1"
+                        />
+                        <select
+                          aria-label="Snippet cluster"
+                          value={draftCategory}
+                          onChange={(event) => setDraftCategory(event.target.value as SnippetCategory)}
+                          className="field text-xs py-1"
+                        >
+                          {CLUSTERS.map((item) => (
+                            <option key={item.id} value={item.id}>
+                              {item.group} — {item.label}
+                            </option>
+                          ))}
+                          <option value="note">Note — inserts into the open field</option>
+                        </select>
+                        <textarea
+                          aria-label="Snippet text"
+                          value={draftBody}
+                          onChange={(event) => setDraftBody(event.target.value)}
+                          placeholder="Reusable text"
+                          rows={2}
+                          className="field resize-y text-xs"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            type="submit"
+                            className="btn btn-primary flex-1 text-xs"
+                            disabled={!draftTitle.trim() || !draftBody.trim()}
+                          >
+                            Save snippet
+                          </button>
+                          <button type="button" className="btn btn-ghost text-xs" onClick={() => setAdding(false)}>
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <button type="button" className="btn btn-ghost w-full text-xs" onClick={() => setAdding(true)}>
+                        <Plus className="size-3.5" />
+                        New snippet
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </aside>
+
       </div>
 
       {bookmarkOpen ? (

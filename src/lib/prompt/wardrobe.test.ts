@@ -8,6 +8,7 @@ import {
   applyWardrobeItem,
   applyWardrobeOutfit,
   isWardrobeOutfitApplied,
+  isWardrobeItemApplied,
   filterWardrobeItems,
   filterWardrobeOutfits,
 } from "./wardrobe-database.ts";
@@ -53,6 +54,15 @@ describe("wardrobe database", () => {
     assert.ok(bag);
     const docWithBag = applyWardrobeItem(docWithBoots, bag, 0);
     assert.ok(docWithBag.subjects[0]!.wardrobe_architecture.accessories.includes(bag.prompt));
+
+    // Verify isWardrobeItemApplied
+    assert.equal(isWardrobeItemApplied(docWithBag, sherpa, 0), true);
+    assert.equal(isWardrobeItemApplied(docWithBag, boots, 0), true);
+    assert.equal(isWardrobeItemApplied(docWithBag, bag, 0), true);
+
+    const unusedCap = WARDROBE_ITEMS.find((i) => i.id === "headwear_balaclava_wrap_white_01")!;
+    assert.ok(unusedCap);
+    assert.equal(isWardrobeItemApplied(docWithBag, unusedCap, 0), false);
   });
 
   it("applies complete outfit preset to all wardrobe architecture fields at once", () => {

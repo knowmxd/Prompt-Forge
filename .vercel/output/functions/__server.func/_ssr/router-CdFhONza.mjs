@@ -3,8 +3,8 @@ import { L as string, N as number, P as object, R as union, j as literal } from 
 import { J as require_react, _ as createFileRoute, b as useRouter, d as Scripts, f as HeadContent, g as lazyRouteComponent, h as Outlet, m as createRouter, v as createRootRoute, x as require_jsx_runtime } from "../_libs/@tanstack/react-router+[...].mjs";
 import { n as auth } from "./server-CW2nNadZ.mjs";
 import { r as TriangleAlert } from "../_libs/lucide-react.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-DgGar8CT.js
-var router_DgGar8CT_exports = /* @__PURE__ */ __exportAll({ getRouter: () => getRouter });
+//#region node_modules/.nitro/vite/services/ssr/assets/router-CdFhONza.js
+var router_CdFhONza_exports = /* @__PURE__ */ __exportAll({ getRouter: () => getRouter });
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var FALLBACK_MESSAGE = "An unexpected error occurred. Try reloading the page.";
@@ -332,7 +332,7 @@ function PreviewHostBridge() {
 	}, [router]);
 	return null;
 }
-var styles_default = "/assets/styles-BbZwD0ky.css";
+var styles_default = "/assets/styles-CJnsOQaG.css";
 var APP_NAME = "Prompt Forge";
 var Route$3 = createRootRoute({
 	head: () => ({
@@ -386,7 +386,7 @@ var Route$3 = createRootRoute({
 		] })]
 	})
 });
-var $$splitComponentImporter$1 = () => import("./routes-0i6Xa-ca.mjs");
+var $$splitComponentImporter$1 = () => import("./routes-COrT59ZB.mjs");
 var Route$2 = createFileRoute("/")({ component: lazyRouteComponent($$splitComponentImporter$1, "component") });
 var $$splitComponentImporter = () => import("./login-CtsvxZf0.mjs");
 var Route$1 = createFileRoute("/login")({ component: lazyRouteComponent($$splitComponentImporter, "component") });
@@ -420,4 +420,4 @@ function getRouter() {
 	});
 }
 //#endregion
-export { getRouter, router_DgGar8CT_exports as t };
+export { getRouter, router_CdFhONza_exports as t };

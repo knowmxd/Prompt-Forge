@@ -1,4 +1,4 @@
-//#region node_modules/.nitro/vite/services/ssr/assets/_tanstack-start-manifest_v-4bO-MOtA.js
+//#region node_modules/.nitro/vite/services/ssr/assets/_tanstack-start-manifest_v-wlSQOvUP.js
 var tsrStartManifest = () => ({ routes: {
 	__root__: {
 		filePath: "/Users/master/Desktop/Prompt-Forge/src/routes/__root.tsx",
@@ -7,22 +7,22 @@ var tsrStartManifest = () => ({ routes: {
 			"/login",
 			"/api/auth/$"
 		],
-		preloads: ["/assets/index-CW4DDcT5.js", "/assets/react-DB-4Zxce.js"],
+		preloads: ["/assets/index-Btdyhm1h.js", "/assets/react-DB-4Zxce.js"],
 		scripts: [{ attrs: {
 			type: "module",
 			async: !0,
-			src: "/assets/index-CW4DDcT5.js"
+			src: "/assets/index-Btdyhm1h.js"
 		} }]
 	},
 	"/": {
 		filePath: "/Users/master/Desktop/Prompt-Forge/src/routes/index.tsx",
 		children: void 0,
-		preloads: ["/assets/routes-Na5bPeOH.js", "/assets/client-cLw6edTc.js"]
+		preloads: ["/assets/routes-C4TA1-mV.js", "/assets/client-cLw6edTc.js"]
 	},
 	"/login": {
 		filePath: "/Users/master/Desktop/Prompt-Forge/src/routes/login.tsx",
 		children: void 0,
-		preloads: ["/assets/login-DKD50umz.js", "/assets/client-cLw6edTc.js"]
+		preloads: ["/assets/login-Ch1E6Ymt.js", "/assets/client-cLw6edTc.js"]
 	}
 } });
 //#endregion
