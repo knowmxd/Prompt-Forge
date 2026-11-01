@@ -6,6 +6,7 @@ import { deleteBookmarkImage, loadBookmarkImage, loadCloud, saveBookmarkImage, s
 import {
   Bookmark as BookmarkIcon,
   BookmarkPlus,
+  Camera,
   Check,
   ChevronDown,
   ChevronUp,
@@ -18,12 +19,29 @@ import {
   Minimize2,
   Plus,
   Search,
+  Shirt,
+  Sparkles,
+  SunMedium,
   Trash2,
   X,
 } from "lucide-react";
 import { applySection, captureFields, fieldsHaveContent, normalizeTag, sectionBlurb } from "@/lib/prompt/bookmarks";
-import { applyLook, lookIsApplied, looksFor, LOOK_FILTERS, type Look, type LookFilter } from "@/lib/prompt/looks";
-import { PoseArt } from "@/components/pose-art";
+import { applyLook, lookIsApplied, looksFor, LOOK_FILTERS, LOOKS, customOutfitToLook, type Look, type LookFilter } from "@/lib/prompt/looks";
+import { PoseCardVisual } from "@/components/pose-art";
+import { PoseCatalogModal } from "@/components/pose-catalog-modal";
+import { type PoseItem } from "@/lib/prompt/pose-database";
+import { CameraCatalogModal } from "@/components/camera-catalog-modal";
+import { type CameraItem } from "@/lib/prompt/camera-database";
+import { LightingCatalogModal } from "@/components/lighting-catalog-modal";
+import { type LightingItem } from "@/lib/prompt/lighting-database";
+import { WardrobeCatalogModal } from "@/components/wardrobe-catalog-modal";
+import {
+  applyWardrobeItem,
+  applyWardrobeOutfit,
+  type WardrobeItem,
+  type WardrobeOutfit,
+} from "@/lib/prompt/wardrobe-database";
+import { loadCustomOutfits, CUSTOM_LIBRARY_CHANGE_EVENT } from "@/lib/prompt/custom-library-store";
 import { deleteImage, fileToThumbnail, loadImage, saveImage } from "@/lib/prompt/images";
 import { parsePrompt } from "@/lib/prompt/parse";
 import { SEED_SNIPPETS } from "@/lib/prompt/snippets";
@@ -75,8 +93,7 @@ const FILTERS: Array<{ id: "all" | SnippetCategory; label: string }> = [
   { id: "all", label: "All" },
   { id: "medium", label: "Medium" },
   { id: "optics", label: "Optics" },
-  { id: "key", label: "Light" },
-  { id: "accent", label: "Accents" },
+  { id: "key", label: "Lighting" },
   { id: "framing", label: "Frame" },
   { id: "wardrobe", label: "Wardrobe" },
   { id: "exclusions", label: "Exclude" },
@@ -250,6 +267,13 @@ export function PromptForge() {
   const [assetFilter, setAssetFilter] = useState("all");
   const [assetShelf, setAssetShelf] = useState<"saved" | "looks">("saved");
   const [lookFilter, setLookFilter] = useState<LookFilter>("pose");
+  const [poseGalleryOpen, setPoseGalleryOpen] = useState(false);
+  const [cameraGalleryOpen, setCameraGalleryOpen] = useState(false);
+  const [lightingGalleryOpen, setLightingGalleryOpen] = useState(false);
+  const [wardrobeGalleryOpen, setWardrobeGalleryOpen] = useState(false);
+  const [appliedOutfitId, setAppliedOutfitId] = useState<string | null>(null);
+  const [customOutfits, setCustomOutfits] = useState<WardrobeOutfit[]>([]);
+  const [lookSearch, setLookSearch] = useState("");
   const [picked, setPicked] = useState<string[]>([]);
   const [bookmarkOpen, setBookmarkOpen] = useState(false);
   const [bookmarkName, setBookmarkName] = useState("");
@@ -266,6 +290,26 @@ export function PromptForge() {
 
   const slot = Math.min(subjectIndex, Math.max(doc.subjects.length - 1, 0));
   const active = clusterById(cluster);
+
+  // Subscribe to custom library changes for the Looks shelf
+  useEffect(() => {
+    async function refreshCustomOutfits() {
+      const outfits = await loadCustomOutfits();
+      setCustomOutfits(outfits);
+    }
+    refreshCustomOutfits();
+    window.addEventListener(CUSTOM_LIBRARY_CHANGE_EVENT, refreshCustomOutfits);
+    return () => window.removeEventListener(CUSTOM_LIBRARY_CHANGE_EVENT, refreshCustomOutfits);
+  }, []);
+
+  const shelfLooks = useMemo(() => {
+    const base = looksFor(lookFilter);
+    if (lookFilter === "wardrobe" && customOutfits.length > 0) {
+      const customLooks = customOutfits.map(customOutfitToLook);
+      return [...customLooks, ...base];
+    }
+    return base;
+  }, [lookFilter, customOutfits]);
 
   useEffect(() => {
     if (isPending) return;
@@ -825,7 +869,11 @@ export function PromptForge() {
       setStatus(`${look.name} applied to the camera.`);
     } else if (look.kind === "light") {
       setCluster("key");
-      setStatus(`${look.name} applied to the key light.`);
+      setStatus(`${look.name} applied to lighting.`);
+    } else if (look.kind === "wardrobe") {
+      setCluster("wardrobe");
+      if (look.outfitId) setAppliedOutfitId(look.outfitId);
+      setStatus(`${look.name} applied to wardrobe.`);
     } else {
       setCluster("environment");
       setStatus(`${look.name} applied to the setting.`);
@@ -1035,6 +1083,46 @@ export function PromptForge() {
                   <h2 className="text-base font-medium">{active.label}</h2>
                 </div>
                 <div className="flex items-center gap-2">
+                  {(cluster === "framing" || cluster === "optics") && (
+                    <button
+                      type="button"
+                      onClick={() => setCameraGalleryOpen(true)}
+                      className="flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20 transition-all shadow-sm"
+                    >
+                      <Camera className="size-3.5" />
+                      <span>Camera Gallery</span>
+                    </button>
+                  )}
+                  {cluster === "key" && (
+                    <button
+                      type="button"
+                      onClick={() => setLightingGalleryOpen(true)}
+                      className="flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-400 hover:bg-amber-500/20 transition-all shadow-sm"
+                    >
+                      <SunMedium className="size-3.5" />
+                      <span>Lighting Studio (27)</span>
+                    </button>
+                  )}
+                  {cluster === "posture" && (
+                    <button
+                      type="button"
+                      onClick={() => setPoseGalleryOpen(true)}
+                      className="flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-400 hover:bg-amber-500/20 transition-all shadow-sm"
+                    >
+                      <Sparkles className="size-3.5" />
+                      <span>Pose Gallery</span>
+                    </button>
+                  )}
+                  {cluster === "wardrobe" && (
+                    <button
+                      type="button"
+                      onClick={() => setWardrobeGalleryOpen(true)}
+                      className="flex items-center gap-1.5 rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-400 hover:bg-rose-500/20 transition-all shadow-sm"
+                    >
+                      <Shirt className="size-3.5" />
+                      <span>Wardrobe Studio (213 Pieces & 49 Outfits)</span>
+                    </button>
+                  )}
                   <button type="button" className="btn btn-ghost" aria-label="Bookmark this section" onClick={openBookmark}>
                     <BookmarkPlus className="size-4" />
                     Bookmark
@@ -1162,27 +1250,120 @@ export function PromptForge() {
           )}
           <div className={cn("min-h-0 flex-1 overflow-y-auto px-4 pb-3", assetShelf === "looks" ? "" : "space-y-2")}>
             {assetShelf === "looks" ? (
-              <div className="grid grid-cols-2 gap-2">
-                {looksFor(lookFilter).map((look) => {
-                  const on = lookIsApplied(doc, look, slot);
-                  return (
+              <div className="space-y-3">
+                {lookFilter === "angle" ? (
+                  <button
+                    type="button"
+                    onClick={() => setCameraGalleryOpen(true)}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2.5 text-xs font-bold text-emerald-400 hover:bg-emerald-500/20 transition-all shadow-sm"
+                  >
+                    <Camera className="h-4 w-4" />
+                    <span>Browse Camera & Optics Gallery (27 Angles)</span>
+                  </button>
+                ) : lookFilter === "light" ? (
+                  <button
+                    type="button"
+                    onClick={() => setLightingGalleryOpen(true)}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-xs font-bold text-amber-400 hover:bg-amber-500/20 transition-all shadow-sm"
+                  >
+                    <SunMedium className="h-4 w-4" />
+                    <span>Browse Visual Lighting Studio (27 Setups)</span>
+                  </button>
+                ) : lookFilter === "wardrobe" ? (
+                  <button
+                    type="button"
+                    onClick={() => setWardrobeGalleryOpen(true)}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-2.5 text-xs font-bold text-rose-400 hover:bg-rose-500/20 transition-all shadow-sm"
+                  >
+                    <Shirt className="h-4 w-4" />
+                    <span>Browse Wardrobe Studio (213 Pieces & 49 Outfits)</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setPoseGalleryOpen(true)}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-xs font-bold text-amber-400 hover:bg-amber-500/20 transition-all shadow-sm"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    <span>Browse Full Pose Gallery (Large View)</span>
+                  </button>
+                )}
+
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted" />
+                  <input
+                    type="text"
+                    value={lookSearch}
+                    onChange={(e) => setLookSearch(e.target.value)}
+                    placeholder="Search in shelf (e.g. rembrandt, low angle, 85mm)..."
+                    className="w-full rounded-md border border-border bg-bg py-1.5 pl-8 pr-3 text-xs text-foreground placeholder-muted focus:border-primary focus:outline-none"
+                  />
+                  {lookSearch && (
                     <button
-                      key={look.id}
                       type="button"
-                      onClick={() => onApplyLook(look)}
-                      aria-pressed={on}
-                      className={cn(
-                        "overflow-hidden rounded-md border bg-surface text-left",
-                        on ? "border-primary" : "border-border",
-                      )}
+                      onClick={() => setLookSearch("")}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-foreground"
                     >
-                      <div className="aspect-[4/5] bg-bg">
-                        <PoseArt art={look.art} />
-                      </div>
-                      <p className="px-2 py-2 text-sm font-medium">{look.name}</p>
+                      <X className="h-3 w-3" />
                     </button>
-                  );
-                })}
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {shelfLooks
+                    .filter((look) => {
+                      if (!lookSearch.trim()) return true;
+                      const q = lookSearch.toLowerCase();
+                      return (
+                        look.name.toLowerCase().includes(q) ||
+                        (look.subtitle && look.subtitle.toLowerCase().includes(q)) ||
+                        (look.posture && look.posture.toLowerCase().includes(q)) ||
+                        (look.principle && look.principle.toLowerCase().includes(q)) ||
+                        (look.axis && look.axis.toLowerCase().includes(q)) ||
+                        (look.style && look.style.toLowerCase().includes(q)) ||
+                        (look.fixture && look.fixture.toLowerCase().includes(q)) ||
+                        (look.badge && look.badge.toLowerCase().includes(q)) ||
+                        look.id.toLowerCase().includes(q)
+                      );
+                    })
+                    .map((look) => {
+                      const on = lookIsApplied(doc, look, slot);
+                      return (
+                        <button
+                          key={look.id}
+                          type="button"
+                          onClick={() => onApplyLook(look)}
+                          aria-pressed={on}
+                          className={cn(
+                            "group overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60",
+                            on ? "border-primary ring-1 ring-primary/40 shadow-sm" : "border-border",
+                          )}
+                        >
+                          <div className="aspect-[4/5] bg-bg relative">
+                            <PoseCardVisual
+                              image={look.image}
+                              id={look.id}
+                              name={look.name}
+                              subtitle={look.subtitle}
+                              category={look.category}
+                              stance={look.stance}
+                              badge={look.badge}
+                              active={on}
+                            />
+                          </div>
+                          <div className="p-2">
+                            <div className="flex items-center justify-between gap-1">
+                              <p className="text-xs font-semibold truncate group-hover:text-primary">{look.name}</p>
+                              {on && <Check className="h-3 w-3 text-primary shrink-0" />}
+                            </div>
+                            {look.subtitle && (
+                              <p className="text-[10px] text-muted truncate mt-0.5">{look.subtitle}</p>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                </div>
               </div>
             ) : assetFilter === "pieces" ? (
               snippets.map((snippet) => {
@@ -1530,6 +1711,99 @@ export function PromptForge() {
           </div>
         </div>
       ) : null}
+      <PoseCatalogModal
+        isOpen={poseGalleryOpen}
+        onClose={() => setPoseGalleryOpen(false)}
+        onSelectPose={(pose: PoseItem) => {
+          const matchedLook = LOOKS.find((l) => l.id === pose.id);
+          if (matchedLook) {
+            onApplyLook(matchedLook);
+          } else {
+            const dynamicLook: Look = {
+              id: pose.id,
+              name: pose.name,
+              kind: "pose",
+              posture: pose.posture,
+              props: pose.props,
+              category: pose.category,
+              stance: pose.stance,
+            };
+            onApplyLook(dynamicLook);
+          }
+        }}
+        activePosture={doc.subjects[slot]?.kinetic_posture}
+      />
+      <CameraCatalogModal
+        isOpen={cameraGalleryOpen}
+        onClose={() => setCameraGalleryOpen(false)}
+        onSelectCamera={(item: CameraItem) => {
+          const matchedLook = LOOKS.find((l) => l.id === item.id);
+          if (matchedLook) {
+            onApplyLook(matchedLook);
+          } else {
+            const dynamicLook: Look = {
+              id: item.id,
+              name: item.name,
+              subtitle: item.subtitle,
+              kind: "angle",
+              principle: item.principle,
+              axis: item.axis,
+              lens: item.lens,
+              dof: item.dof,
+              badge: item.badge,
+            };
+            onApplyLook(dynamicLook);
+          }
+        }}
+        activePrinciple={doc.scene_composition.framing_doctrine.named_principle}
+      />
+      <LightingCatalogModal
+        isOpen={lightingGalleryOpen}
+        onClose={() => setLightingGalleryOpen(false)}
+        onSelectLighting={(item: LightingItem) => {
+          const matchedLook = LOOKS.find((l) => l.id === item.id);
+          if (matchedLook) {
+            onApplyLook(matchedLook);
+          } else {
+            const dynamicLook: Look = {
+              id: item.id,
+              name: item.name,
+              subtitle: item.subtitle,
+              kind: "light",
+              style: item.style,
+              fixture: item.fixture,
+              lightAngle: item.angle,
+              shadow: item.shadow,
+              practical: item.practical,
+              badge: item.badge,
+            };
+            onApplyLook(dynamicLook);
+          }
+        }}
+        activeStyle={doc.aesthetic_dna.lighting_architecture.lighting_style}
+      />
+      <WardrobeCatalogModal
+        isOpen={wardrobeGalleryOpen}
+        onClose={() => setWardrobeGalleryOpen(false)}
+        onSelectOutfit={(outfit: WardrobeOutfit) => {
+          const updated = applyWardrobeOutfit(doc, outfit, slot);
+          setDoc(updated);
+          setAppliedOutfitId(outfit.id);
+          setCluster("wardrobe");
+          setStatus(`${outfit.name} applied to all wardrobe fields.`);
+        }}
+        onSelectItem={(item: WardrobeItem) => {
+          const updated = applyWardrobeItem(doc, item, slot);
+          setDoc(updated);
+          setCluster("wardrobe");
+          const slotLabel = item.slot.replace("_", " ");
+          setStatus(`${item.name} applied to ${slotLabel}.`);
+        }}
+        appliedOutfitId={appliedOutfitId}
+        activeOuterwear={doc.subjects[slot]?.wardrobe_architecture?.layering_system?.outerwear}
+        activeBaseLayer={doc.subjects[slot]?.wardrobe_architecture?.layering_system?.base_layer}
+        activeFootwear={doc.subjects[slot]?.wardrobe_architecture?.footwear}
+      />
     </div>
   );
 }

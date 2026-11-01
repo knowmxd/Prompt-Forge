@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Prompt Forge — How We Built It</title>
+<style>
+  @page { size: Letter; margin: 0.7in 0.75in 0.75in 0.75in; }
+  @page :first { margin: 0; }
+  :root {
+    --ink: #1f1c18; --muted: #6b645a; --paper: #fffdf8; --line: #e6dfd2;
+    --orange: #d9731a; --teal: #14877b; --night: #15130f; --card: #211e18;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: var(--paper); }
+  body { margin: 0; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 10.5pt; line-height: 1.45; color: var(--ink); background: var(--paper); }
+  h1 { font-size: 24pt; line-height: 1.1; margin: 28pt 0 6pt; letter-spacing: -0.02em; padding-top: 14pt; border-top: 2px solid var(--line); page-break-after: avoid; break-after: avoid; }
+  h1 .num { display: block; font-size: 10pt; letter-spacing: 0.18em; text-transform: uppercase; color: var(--orange); margin-bottom: 6pt; font-weight: 700; }
+  h1.first, h1.pb { border-top: none; margin-top: 0; padding-top: 0; }
+  h1.pb { page-break-before: always; break-before: page; }
+  h2 { font-size: 15pt; margin: 20pt 0 6pt; color: var(--ink); page-break-after: avoid; }
+  h3 { font-size: 12pt; margin: 14pt 0 4pt; color: var(--teal); page-break-after: avoid; }
+  p { margin: 0 0 8pt; }
+  .lede { font-size: 13pt; color: var(--muted); margin-bottom: 14pt; }
+  ul, ol { margin: 0 0 8pt 0; padding-left: 18pt; }
+  li { margin-bottom: 3pt; }
+  code, .mono { font-family: Menlo, Consolas, monospace; font-size: 9.5pt; background: #f2ece0; padding: 1pt 4pt; border-radius: 3pt; }
+  pre { font-family: Menlo, Consolas, monospace; font-size: 8.6pt; line-height: 1.45; background: var(--night); color: #efe9dd; padding: 10pt 12pt; border-radius: 8pt; overflow: hidden; white-space: pre-wrap; page-break-inside: avoid; }
+  pre .k { color: #e0883a; } pre .s { color: #8fd6c9; } pre .c { color: #8a8070; }
+  .fig { margin: 10pt 0 14pt; page-break-inside: avoid; }
+  .fig svg, .fig img { width: 100%; height: auto; display: block; border-radius: 8pt; }
+  .fig img.shot { border: 1px solid var(--line); }
+  .cap { font-size: 9pt; color: var(--muted); margin-top: 4pt; text-align: center; font-style: italic; }
+  .jargon { background: #fff3e3; border-left: 4pt solid var(--orange); padding: 8pt 12pt; border-radius: 0 8pt 8pt 0; margin: 10pt 0; page-break-inside: avoid; font-size: 10.5pt; }
+  .jargon b.t { color: var(--orange); text-transform: uppercase; letter-spacing: 0.1em; font-size: 8.5pt; display: block; margin-bottom: 2pt; }
+  .analogy { background: #e8f6f3; border-left: 4pt solid var(--teal); padding: 8pt 12pt; border-radius: 0 8pt 8pt 0; margin: 10pt 0; page-break-inside: avoid; font-size: 10.5pt; }
+  .analogy b.t { color: var(--teal); text-transform: uppercase; letter-spacing: 0.1em; font-size: 8.5pt; display: block; margin-bottom: 2pt; }
+  .warn { background: #fdeceb; border-left: 4pt solid #c0453a; padding: 8pt 12pt; border-radius: 0 8pt 8pt 0; margin: 10pt 0; page-break-inside: avoid; font-size: 10.5pt; }
+  .warn b.t { color: #c0453a; text-transform: uppercase; letter-spacing: 0.1em; font-size: 8.5pt; display: block; margin-bottom: 2pt; }
+  table { width: 100%; border-collapse: collapse; margin: 8pt 0 12pt; font-size: 10pt; page-break-inside: avoid; }
+  th { text-align: left; background: var(--night); color: #f3eee6; padding: 6pt 8pt; font-size: 9pt; letter-spacing: 0.06em; text-transform: uppercase; }
+  td { padding: 6pt 8pt; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:nth-child(even) td { background: #faf6ec; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12pt; }
+  .three { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8pt; }
+  .stat { background: var(--night); color: #f3eee6; border-radius: 10pt; padding: 10pt 12pt; text-align: center; }
+  .stat .n { font-size: 24pt; font-weight: 800; color: #e0883a; line-height: 1; }
+  .stat .l { font-size: 8.5pt; color: #b9b0a0; letter-spacing: 0.06em; text-transform: uppercase; margin-top: 3pt; }
+  .toc a { color: inherit; text-decoration: none; }
+  .toc li { margin-bottom: 5pt; font-size: 11.5pt; }
+  .toc .d { color: var(--muted); font-size: 10pt; }
+
+  /* cover */
+  .cover { height: 11in; width: 8.5in; background: radial-gradient(900px 500px at 20% 10%, #3a2412 0%, transparent 60%), radial-gradient(700px 500px at 90% 90%, #0f3a36 0%, transparent 60%), var(--night); color: #f3eee6; padding: 1.1in 0.9in; page-break-after: always; position: relative; overflow: hidden; }
+  .cover .logo { width: 70pt; height: 70pt; border-radius: 16pt; }
+  .cover h1 { border-top: none; padding-top: 0; font-size: 54pt; margin: 44pt 0 6pt; line-height: 1; letter-spacing: -0.03em; color: #fff; }
+  .cover .sub { font-size: 19pt; color: #e0883a; font-weight: 600; margin-bottom: 26pt; }
+  .cover p { font-size: 12.5pt; color: #cfc6b6; max-width: 5.2in; }
+  .cover .chips { margin-top: 30pt; display: flex; flex-wrap: wrap; gap: 8pt; max-width: 6in; }
+  .cover .chip { border: 1px solid #4a4132; background: #211e18; border-radius: 99pt; padding: 5pt 12pt; font-size: 10pt; color: #e8dfce; }
+  .cover .foot { position: absolute; bottom: 0.7in; left: 0.9in; right: 0.9in; font-size: 9.5pt; color: #8a8070; display: flex; justify-content: space-between; }
+  .cover .grid { position: absolute; right: -0.4in; bottom: 1.3in; width: 3.6in; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6pt; transform: rotate(-6deg); opacity: 0.95; }
+  .cover .grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8pt; border: 1px solid #3a342a; }
+</style>
+</head>
+<body>
+
+<!-- ===================== COVER ===================== -->
+<section class="cover">
+  <img class="logo" src="../../public/favicon.svg" alt="Prompt Forge logo" />
+  <h1>Prompt<br/>Forge</h1>
+  <div class="sub">How we built it — a plain-English guide</div>
+  <p>A tour of the app, the code behind it, the 97-pose studio library, and the 27-angle camera gallery. Written so a high-school reader can follow it, with the real technical words kept in (and explained).</p>
+  <div class="chips">
+    <span class="chip">React 19</span><span class="chip">TypeScript</span><span class="chip">TanStack Start</span><span class="chip">Tailwind v4</span><span class="chip">Vite</span><span class="chip">PostgreSQL</span><span class="chip">74 passing tests</span>
+  </div>
+  <div class="grid">
+    <img src="../../public/poses/pose_knight_02.jpg" alt="" />
+    <img src="../../public/camera/elev_03.jpg" alt="" />
+    <img src="../../public/poses/pose_knight_01.jpg" alt="" />
+    <img src="../../public/camera/lens_05.jpg" alt="" />
+    <img src="../../public/camera/elev_01.jpg" alt="" />
+    <img src="../../public/poses/pose_knight_03.jpg" alt="" />
+  </div>
+  <div class="foot"><span>Build guide · October 31, 2026</span><span>knowmxd / Prompt-Forge</span></div>
+</section>
+
+<!-- ===================== CONTENTS ===================== -->
+<h1 class="first"><span class="num">Start here</span>What’s inside</h1>
+<p class="lede">Eleven short chapters. You can read them in order or jump to the part you care about.</p>
+<ol class="toc">
+  <li><b>What is Prompt Forge?</b> <span class="d">— the problem it solves, in one page</span></li>
+  <li><b>The big picture</b> <span class="d">— paste → parse → edit → copy</span></li>
+  <li><b>The toolbox</b> <span class="d">— the technologies and the map of the project folders</span></li>
+  <li><b>The Prompt Blueprint</b> <span class="d">— the 15 slots every prompt gets sorted into</span></li>
+  <li><b>The parser</b> <span class="d">— how messy text becomes neat structure</span></li>
+  <li><b>The workbench</b> <span class="d">— the screen you actually use</span></li>
+  <li><b>Where your stuff is saved</b> <span class="d">— browser, image vault, and cloud</span></li>
+  <li><b>The Pose Library</b> <span class="d">— out with stick figures, in with 97 studio poses</span></li>
+  <li><b>Camera &amp; Angles</b> <span class="d">— 27 plant-powered lessons in perspective</span></li>
+  <li><b>The “Looks” engine</b> <span class="d">— how one click edits your prompt</span></li>
+  <li><b>How we know it works</b> <span class="d">— tests and quality gates</span></li>
+</ol>
+<p><b>Plus:</b> known rough edges, the roadmap, how to run the project yourself, and a glossary of every technical word.</p>
+
+<h2>Our journey so far</h2>
+<div class="fig">
+<svg viewBox="0 0 760 190" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
+  <rect width="760" height="190" rx="14" fill="#15130f"/>
+  <line x1="70" y1="78" x2="690" y2="78" stroke="#4a4132" stroke-width="3"/>
+  <g font-size="12" fill="#f3eee6" text-anchor="middle">
+    <g><circle cx="70" cy="78" r="16" fill="#e0883a"/><text x="70" y="83" fill="#15130f" font-weight="700">1</text><text x="70" y="115" font-weight="700">Site review</text><text x="70" y="132" fill="#b9b0a0" font-size="10.5">“Explain it like I’m 5”</text></g>
+    <g><circle cx="196" cy="78" r="16" fill="#e0883a"/><text x="196" y="83" fill="#15130f" font-weight="700">2</text><text x="196" y="115" font-weight="700">Stick figures out</text><text x="196" y="132" fill="#b9b0a0" font-size="10.5">Low quality removed</text></g>
+    <g><circle cx="322" cy="78" r="16" fill="#e0883a"/><text x="322" y="83" fill="#15130f" font-weight="700">3</text><text x="322" y="115" font-weight="700">Plan the library</text><text x="322" y="132" fill="#b9b0a0" font-size="10.5">Questions &amp; answers</text></g>
+    <g><circle cx="448" cy="78" r="16" fill="#3fb8a8"/><text x="448" y="83" fill="#15130f" font-weight="700">4</text><text x="448" y="115" font-weight="700">97 studio poses</text><text x="448" y="132" fill="#b9b0a0" font-size="10.5">10 collections</text></g>
+    <g><circle cx="574" cy="78" r="16" fill="#3fb8a8"/><text x="574" y="83" fill="#15130f" font-weight="700">5</text><text x="574" y="115" font-weight="700">27 camera angles</text><text x="574" y="132" fill="#b9b0a0" font-size="10.5">Monstera benchmark</text></g>
+    <g><circle cx="690" cy="78" r="16" fill="none" stroke="#e0883a" stroke-width="2" stroke-dasharray="4 3"/><text x="690" y="83" fill="#e0883a" font-weight="700">?</text><text x="690" y="115" font-weight="700">Up next</text><text x="690" y="132" fill="#b9b0a0" font-size="10.5">Wardrobe &amp; lighting</text></g>
+  </g>
+  <text x="380" y="40" text-anchor="middle" fill="#8a8070" font-size="11" letter-spacing="2">FROM FIRST REVIEW TO TODAY</text>
+  <text x="380" y="172" text-anchor="middle" fill="#6b645a" font-size="10.5">Orange = cleanup &amp; planning · Teal = new content shipped</text>
+</svg>
+</div>
+
+<!-- ===================== 1. WHAT IS IT ===================== -->
+<h1 class="pb"><span class="num">Chapter 1</span>What is Prompt Forge?</h1>
+<p class="lede">A workshop for building really good instructions for AI image generators.</p>
+
+<p>When you ask an AI to make a picture, the words you type are called a <b>prompt</b>. A lazy prompt (“a knight on a cliff”) gets a lazy picture. A great prompt describes the <i>person</i>, the <i>clothes</i>, the <i>pose</i>, the <i>camera</i>, the <i>lighting</i>, the <i>mood</i>, and even what to <i>avoid</i>. That’s a lot to keep track of, and most people forget half of it.</p>
+
+<div class="analogy"><b class="t">Think of it like this</b>
+A prompt is a recipe. Prompt Forge is the recipe card with labeled boxes: <i>Ingredients</i>, <i>Oven temperature</i>, <i>Cooking time</i>. You can’t forget the oven temperature when there’s an empty box staring at you.</div>
+
+<h2>What it does, in four verbs</h2>
+<div class="three">
+  <div class="stat"><div class="n">1</div><div class="l">Paste any messy prompt</div></div>
+  <div class="stat"><div class="n">2</div><div class="l">It sorts the words into slots</div></div>
+  <div class="stat"><div class="n">3</div><div class="l">You edit or click in ready-made looks</div></div>
+</div>
+<p style="margin-top:10pt">…and then <b>4</b>, you copy the finished prompt out as clean <b>JSON</b> (a tidy, labeled text format) and paste it into your image tool.</p>
+
+<h2>What’s been added on top</h2>
+<div class="two">
+  <div class="stat"><div class="n">97</div><div class="l">studio-quality poses<br/>in 10 collections</div></div>
+  <div class="stat"><div class="n">27</div><div class="l">camera angles, framings<br/>and lenses</div></div>
+</div>
+
+<div class="jargon"><b class="t">Jargon check · JSON</b>
+JSON (say “JAY-son”) is a way of writing information as <code>"label": "value"</code> pairs, grouped inside curly braces. Computers love it because it’s predictable; humans can read it too. Example: <code>"lens": "85mm"</code>.</div>
+
+<h2>Who it’s for</h2>
+<p>Artists and photographers who make images with AI and want repeatable, high-quality results: character artists (knights, elves, rangers), portrait and fashion shooters, and anyone who wants a library of proven poses and camera setups to pick from instead of reinventing them every time.</p>
+
+<!-- ===================== 2. BIG PICTURE ===================== -->
+<h1><span class="num">Chapter 2</span>The big picture</h1>
+<p class="lede">Everything the app does fits into four steps.</p>
+
+<div class="fig">
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
+  <rect width="760" height="230" rx="16" fill="#15130f"/>
+  <text x="380" y="22" text-anchor="middle" fill="#8a8070" font-size="11" letter-spacing="3">HOW PROMPT FORGE WORKS</text>
+  <defs><marker id="ah" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#e0883a"/></marker></defs>
+  <g fill="#211e18" stroke="#3a342a" stroke-width="1.5">
+    <rect x="24" y="36" width="142" height="140" rx="14"/><rect x="214" y="36" width="142" height="140" rx="14"/>
+    <rect x="404" y="36" width="142" height="140" rx="14"/><rect x="594" y="36" width="142" height="140" rx="14"/>
+  </g>
+  <g stroke="#e0883a" stroke-width="2.5" marker-end="url(#ah)"><line x1="172" y1="106" x2="208" y2="106"/><line x1="362" y1="106" x2="398" y2="106"/><line x1="552" y1="106" x2="588" y2="106"/></g>
+  <g font-size="14" font-weight="700" fill="#f3eee6" text-anchor="middle">
+    <circle cx="95" cy="56" r="12" fill="#e0883a"/><text x="95" y="61" fill="#15130f" font-size="13">1</text><text x="95" y="88">PASTE</text>
+    <circle cx="285" cy="56" r="12" fill="#e0883a"/><text x="285" y="61" fill="#15130f" font-size="13">2</text><text x="285" y="88">PARSE</text>
+    <circle cx="475" cy="56" r="12" fill="#e0883a"/><text x="475" y="61" fill="#15130f" font-size="13">3</text><text x="475" y="88">EDIT</text>
+    <circle cx="665" cy="56" r="12" fill="#e0883a"/><text x="665" y="61" fill="#15130f" font-size="13">4</text><text x="665" y="88">COPY JSON</text>
+  </g>
+  <!-- icons -->
+  <g fill="#8a8070"><rect x="55" y="104" width="80" height="6" rx="3"/><rect x="55" y="118" width="62" height="6" rx="3"/><rect x="55" y="132" width="74" height="6" rx="3"/><rect x="55" y="146" width="46" height="6" rx="3"/></g>
+  <polygon points="245,104 325,104 293,134 293,158 277,158 277,134" fill="#e0883a"/>
+  <g fill="#3fb8a8"><rect x="433" y="104" width="26" height="18" rx="4"/><rect x="465" y="104" width="26" height="18" rx="4"/><rect x="497" y="104" width="26" height="18" rx="4"/><rect x="433" y="128" width="26" height="18" rx="4"/><rect x="465" y="128" width="26" height="18" rx="4" opacity=".45"/><rect x="497" y="128" width="26" height="18" rx="4"/></g>
+  <text x="665" y="150" text-anchor="middle" font-family="Menlo, monospace" font-size="46" font-weight="700" fill="#e0883a">{ }</text>
+  <g font-size="12" fill="#b9b0a0" text-anchor="middle">
+    <text x="95" y="200">Messy text in</text><text x="285" y="200">Sorted into slots</text><text x="475" y="200">Tweak any field</text><text x="665" y="200">Ready for the AI</text>
+  </g>
+</svg>
+<div class="cap">The whole app in one picture.</div>
+</div>
+
+<h2>Step by step</h2>
+<ol>
+  <li><b>Paste.</b> You drop any prompt into the <i>Source</i> box on the left. Paragraph, comma-separated tags, or existing JSON all work.</li>
+  <li><b>Parse.</b> The app reads it and files each phrase in the right slot (“85mm lens” goes under <i>Optics</i>, “long silver hair” under <i>Hair</i>). <i>Parse</i> just means “read and organize.”</li>
+  <li><b>Edit.</b> Every slot is a text box in the middle of the screen. Fill empty ones, or click a ready-made <b>Look</b> (a pose, camera angle, light, or setting) from the right-hand shelf.</li>
+  <li><b>Copy.</b> A live JSON preview at the bottom updates as you type. One button copies it.</li>
+</ol>
+
+<div class="jargon"><b class="t">Jargon check · Frontend vs. backend</b>
+The <b>frontend</b> is everything you see and click in the browser. The <b>backend</b> is code that runs on a server somewhere else, usually to save data. Prompt Forge is mostly frontend; the backend only wakes up when you sign in to save to the cloud.</div>
+
+<h2>No AI inside the parser</h2>
+<p>An important detail: the parser doesn’t call any AI service. It uses <b>rules</b> (keyword lists and pattern matching) so it’s instant, free, works offline, and gives the same answer every time. The AI you’ll eventually use is the image generator that receives your finished prompt.</p>
+
+<!-- ===================== 3. TOOLBOX ===================== -->
+<h1 class="pb"><span class="num">Chapter 3</span>The toolbox</h1>
+<p class="lede">What the app is made of, from the screen you touch down to the database.</p>
+
+<div class="fig">
+<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
+  <rect width="760" height="320" rx="16" fill="#15130f"/>
+  <text x="380" y="22" text-anchor="middle" fill="#8a8070" font-size="11" letter-spacing="3">THE TOOLBOX UNDER THE HOOD</text>
+  <g font-size="16" font-weight="700" fill="#15130f">
+    <rect x="20" y="36" width="720" height="50" rx="10" fill="#e0883a"/><text x="38" y="67">React 19</text>
+    <rect x="20" y="92" width="720" height="50" rx="10" fill="#3fb8a8"/><text x="38" y="123">Tailwind CSS v4</text>
+    <rect x="20" y="148" width="720" height="50" rx="10" fill="#8f9de6"/><text x="38" y="179">TanStack Start + Router</text>
+    <rect x="20" y="204" width="720" height="50" rx="10" fill="#d1ab52"/><text x="38" y="235">Vite + TypeScript</text>
+    <rect x="20" y="260" width="720" height="50" rx="10" fill="#c97a9b"/><text x="38" y="291">PostgreSQL + Better Auth</text>
+  </g>
+  <g font-size="14" fill="#15130f">
+    <text x="300" y="67">builds the screens, buttons and menus you click</text>
+    <text x="300" y="123">the paint: colors, spacing, the dark theme</text>
+    <text x="300" y="179">pages, plus code that runs on the server</text>
+    <text x="300" y="235">the fast build engine, and a spell-checker for code</text>
+    <text x="300" y="291">the cloud database and the sign-in system</text>
+  </g>
+</svg>
+<div class="cap">Top layer = what you see. Bottom layer = where saved data lives.</div>
+</div>
+
+<table>
+  <tr><th style="width:24%">Tool</th><th>In plain English</th></tr>
+  <tr><td><b>React 19</b></td><td>A library for building screens out of small reusable pieces called <b>components</b>. A pose card is a component; so is the whole workbench.</td></tr>
+  <tr><td><b>TypeScript</b></td><td>JavaScript with labels on everything (“this value is text,” “this one is a list”). The computer checks the labels and catches mistakes before anyone sees them. That check is the <code>typecheck</code> step.</td></tr>
+  <tr><td><b>Tailwind CSS v4</b></td><td>Styling done by adding small class names (like <code>rounded-lg</code>) right on each element, instead of writing a separate stylesheet.</td></tr>
+  <tr><td><b>TanStack Start / Router</b></td><td>The framework that turns the app into real web pages, handles page addresses (routes), and lets us write <b>server functions</b>, code that runs safely on the server.</td></tr>
+  <tr><td><b>Vite</b></td><td>The engine that bundles all the code for the browser. In development it updates the page instantly while you edit (called <b>HMR</b>, hot module replacement).</td></tr>
+  <tr><td><b>PostgreSQL + Better Auth</b></td><td>A database for saved work and a ready-made sign-in system. Only used if someone signs in.</td></tr>
+</table>
+
+<h2>A map of the project</h2>
+<table>
+  <tr><th style="width:36%">Where</th><th>What lives there</th></tr>
+  <tr><td><code>src/components/prompt-forge.tsx</code></td><td>The big one: the whole workbench screen (about 2,000 lines).</td></tr>
+  <tr><td><code>src/components/pose-catalog-modal.tsx</code></td><td>The full-screen Pose Reference Gallery.</td></tr>
+  <tr><td><code>src/components/camera-catalog-modal.tsx</code></td><td>The full-screen Camera &amp; Optics Gallery.</td></tr>
+  <tr><td><code>src/components/pose-art.tsx</code></td><td>The little card that shows one pose or angle thumbnail with its badge.</td></tr>
+  <tr><td><code>src/lib/prompt/model.ts</code></td><td>The blueprint: what a prompt looks like as data.</td></tr>
+  <tr><td><code>src/lib/prompt/parse.ts</code> &amp; <code>assemble.ts</code></td><td>The sorting machine (parser) and the code that files results into the blueprint.</td></tr>
+  <tr><td><code>src/lib/prompt/pose-database.ts</code></td><td>All 97 poses: names, categories, descriptions, images.</td></tr>
+  <tr><td><code>src/lib/prompt/camera-database.ts</code></td><td>All 27 camera angles, framings and lenses.</td></tr>
+  <tr><td><code>src/lib/prompt/looks.ts</code></td><td>Combines poses, angles, lights, settings into one “Look” list and applies them.</td></tr>
+  <tr><td><code>src/lib/prompt/storage.ts</code>, <code>cloud.ts</code>, <code>images.ts</code></td><td>Saving: browser storage, cloud sync, and the photo vault.</td></tr>
+  <tr><td><code>public/poses/</code>, <code>public/camera/</code></td><td>The actual images (pose mannequins; plant camera cards).</td></tr>
+  <tr><td><code>migrations/</code></td><td>Instructions that create the database tables.</td></tr>
+  <tr><td><code>*.test.ts</code> files</td><td>Automatic checks that the logic still works (74 tests).</td></tr>
+</table>
+
+<!-- ===================== 4. BLUEPRINT ===================== -->
+<h1><span class="num">Chapter 4</span>The Prompt Blueprint</h1>
+<p class="lede">Fifteen slots, in four groups. Every prompt gets sorted into the same shape.</p>
+
+<div class="fig">
+<svg viewBox="0 0 760 350" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
+  <rect width="760" height="350" rx="16" fill="#15130f"/>
+  <g fill="#211e18" stroke="#3a342a" stroke-width="1.5"><rect x="20" y="20" width="350" height="150" rx="14"/><rect x="390" y="20" width="350" height="150" rx="14"/><rect x="20" y="185" width="350" height="150" rx="14"/><rect x="390" y="185" width="350" height="150" rx="14"/></g>
+  <g font-size="14" font-weight="700" fill="#e0883a" letter-spacing="1.5"><text x="40" y="50">AESTHETIC DNA · 6 SLOTS</text><text x="410" y="50">SCENE · 3 SLOTS</text><text x="40" y="215">SUBJECT · 4 SLOTS</text><text x="410" y="215">STORY · 2 SLOTS</text></g>
+  <g fill="#3a342a">
+    <rect x="40" y="62" width="75" height="26" rx="13"/><rect x="125" y="62" width="75" height="26" rx="13"/><rect x="210" y="62" width="100" height="26" rx="13"/>
+    <rect x="40" y="96" width="135" height="26" rx="13"/><rect x="185" y="96" width="83" height="26" rx="13"/><rect x="278" y="96" width="67" height="26" rx="13"/>
+    <rect x="410" y="62" width="83" height="26" rx="13"/><rect x="503" y="62" width="75" height="26" rx="13"/><rect x="588" y="62" width="118" height="26" rx="13"/>
+    <rect x="40" y="227" width="83" height="26" rx="13"/><rect x="133" y="227" width="83" height="26" rx="13"/><rect x="226" y="227" width="92" height="26" rx="13"/><rect x="40" y="261" width="118" height="26" rx="13"/>
+    <rect x="410" y="227" width="75" height="26" rx="13"/><rect x="495" y="227" width="109" height="26" rx="13"/>
+  </g>
+  <g font-size="12.5" fill="#f3eee6" text-anchor="middle">
+    <text x="77.5" y="80">Medium</text><text x="162.5" y="80">Optics</text><text x="260" y="80">Key light</text><text x="107.5" y="114">Fill &amp; shadow</text><text x="226.5" y="114">Accents</text><text x="311.5" y="114">Color</text>
+    <text x="451.5" y="80">Framing</text><text x="540.5" y="80">Planes</text><text x="647" y="80">Environment</text>
+    <text x="81.5" y="245">Casting</text><text x="174.5" y="245">Posture</text><text x="272" y="245">Wardrobe</text><text x="99" y="279">Interaction</text>
+    <text x="447.5" y="245">Thesis</text><text x="549.5" y="245">Exclusions</text>
+  </g>
+  <g font-size="11.5" fill="#b9b0a0" font-style="italic">
+    <text x="40" y="150">How the picture looks: lens, light, color</text><text x="410" y="150">Where the camera is and what’s around</text>
+    <text x="40" y="315">Who is in it and what they’re doing</text><text x="410" y="315">The idea behind it and what to avoid</text>
+  </g>
+</svg>
+<div class="cap">The 15 “clusters” you see in the left-hand menu of the workbench.</div>
+</div>
+
+<p>Under the hood each slot is a field inside one big nested JSON object, defined in <code>model.ts</code> as a <b>type</b> called <code>PromptDoc</code>. Here’s a trimmed view of that shape:</p>
+
+<pre><span class="k">"aesthetic_dna"</span>: {
+  <span class="k">"medium_format"</span>: <span class="s">"oil painting"</span>,
+  <span class="k">"optics"</span>: { <span class="k">"lens_type_and_focal_length"</span>: <span class="s">"85mm"</span>, <span class="k">"aperture_and_dof"</span>: <span class="s">"f/1.4"</span> },
+  <span class="k">"lighting_architecture"</span>: { <span class="k">"key_source"</span>: {…}, <span class="k">"accent_and_practicals"</span>: {…} },
+  <span class="k">"color_science"</span>: { <span class="k">"dominant_palette"</span>: [<span class="s">"#8A1C1C"</span>] }
+},
+<span class="k">"scene_composition"</span>: { <span class="k">"framing_doctrine"</span>: {…}, <span class="k">"environmental_staging"</span>: {…} },
+<span class="k">"subjects"</span>: [ { <span class="k">"subject_id"</span>, <span class="k">"casting_and_physique"</span>, <span class="k">"kinetic_posture"</span>, <span class="k">"wardrobe_architecture"</span>… } ],
+<span class="k">"creative_thesis"</span>: {…},
+<span class="k">"anti_cliche_exclusions"</span>: [<span class="s">"no text"</span>, <span class="s">"no watermark"</span>]</pre>
+
+<div class="analogy"><b class="t">Think of it like this</b>
+It’s a filing cabinet with four drawers, and each drawer has folders. “Subjects” is a <i>list</i>, so you can have several characters in one scene, each with their own pose and wardrobe.</div>
+
+<h2>Why a strict shape matters</h2>
+<ul>
+  <li><b>Nothing gets forgotten.</b> Empty slots are visible. The app shows “16 filled” style counters.</li>
+  <li><b>Looks can write to exact spots.</b> A pose card knows to write only into <code>kinetic_posture</code>; an angle card writes into framing and optics. They never overwrite each other.</li>
+  <li><b>Old data still works.</b> A <code>coerceDoc()</code> function repairs older or malformed saves into the current shape instead of crashing.</li>
+</ul>
+
+<!-- ===================== 5. PARSER ===================== -->
+<h1><span class="num">Chapter 5</span>The parser</h1>
+<p class="lede">The sorting machine that turns one messy sentence into 15 tidy slots.</p>
+
+<p>Here’s the sample prompt that ships in the app. We ran the real parser on it. The result below is its actual output, not a mock-up.</p>
+
+<div class="fig">
+<svg viewBox="0 0 760 440" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
+  <rect width="760" height="440" rx="16" fill="#15130f"/>
+  <text x="20" y="28" fill="#8a8070" font-size="11" letter-spacing="2">WHAT YOU PASTED</text>
+  <text x="440" y="28" fill="#8a8070" font-size="11" letter-spacing="2">WHERE THE PARSER FILED IT</text>
+  <defs><marker id="ah2" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8a8070"/></marker></defs>
+  <g font-size="13" fill="#15130f" font-weight="600">
+    <rect x="20" y="40" width="330" height="28" rx="14" fill="#e0883a"/><text x="36" y="59">a young elven ranger</text>
+    <rect x="20" y="76" width="330" height="28" rx="14" fill="#e0883a"/><text x="36" y="95">long silver hair</text>
+    <rect x="20" y="112" width="330" height="28" rx="14" fill="#e0883a"/><text x="36" y="131">piercing blue eyes</text>
+    <rect x="20" y="148" width="330" height="28" rx="14" fill="#e0883a"/><text x="36" y="167">weathered crimson cloak, black leather armor</text>
+    <rect x="20" y="184" width="330" height="28" rx="14" fill="#e0883a"/><text x="36" y="203">standing on a cliff edge, looking out to sea</text>
+    <rect x="20" y="220" width="330" height="28" rx="14" fill="#8f9de6"/><text x="36" y="239">stormy ocean (background)</text>
+    <rect x="20" y="256" width="330" height="28" rx="14" fill="#8f9de6"/><text x="36" y="275">sea spray (in the foreground)</text>
+    <rect x="20" y="292" width="330" height="28" rx="14" fill="#3fb8a8"/><text x="36" y="311">cinematic dark fantasy oil painting</text>
+    <rect x="20" y="328" width="330" height="28" rx="14" fill="#3fb8a8"/><text x="36" y="347">dramatic rim lighting</text>
+    <rect x="20" y="364" width="330" height="28" rx="14" fill="#3fb8a8"/><text x="36" y="383">85mm lens · shallow depth of field</text>
+    <rect x="20" y="400" width="330" height="28" rx="14" fill="#c97a9b"/><text x="36" y="419">no text, no watermark</text>
+  </g>
+  <g stroke="#8a8070" stroke-width="1.6" marker-end="url(#ah2)">
+    <line x1="356" y1="54" x2="430" y2="54"/><line x1="356" y1="90" x2="430" y2="90"/><line x1="356" y1="126" x2="430" y2="126"/><line x1="356" y1="162" x2="430" y2="162"/><line x1="356" y1="198" x2="430" y2="198"/><line x1="356" y1="234" x2="430" y2="234"/><line x1="356" y1="270" x2="430" y2="270"/><line x1="356" y1="306" x2="430" y2="306"/><line x1="356" y1="342" x2="430" y2="342"/><line x1="356" y1="378" x2="430" y2="378"/><line x1="356" y1="414" x2="430" y2="414"/>
+  </g>
+  <g font-size="13" fill="#f3eee6">
+    <text x="440" y="59">Subject › Name</text>
+    <text x="440" y="95">Subject › Casting › Hair</text>
+    <text x="440" y="131">Subject › Casting › Features</text>
+    <text x="440" y="167">Subject › Wardrobe › Outerwear</text>
+    <text x="440" y="203">Subject › Posture</text>
+    <text x="440" y="239">Scene › Environment › Location</text>
+    <text x="440" y="275">Scene › Planes › Foreground</text>
+    <text x="440" y="311">Aesthetic DNA › Medium</text>
+    <text x="440" y="347">Aesthetic DNA › Accents › Rim light</text>
+    <text x="440" y="383">Aesthetic DNA › Optics (lens + DOF)</text>
+    <text x="440" y="419">Exclusions</text>
+  </g>
+</svg>
+<div class="cap">Orange = the person · Blue = the scene · Teal = the look · Pink = things to avoid.</div>
+</div>
+
+<h2>How it decides</h2>
+<ol>
+  <li><b>Detect the format.</b> Is it JSON? Labeled lines (<code>Hair: silver</code>)? Plain sentences? The parser reports which mode it found (<code>json</code>, <code>labeled</code>, <code>freeform</code>) and says things like “Sorted this into 10 sections.”</li>
+  <li><b>Split into phrases</b> at commas, “and,” “with,” and similar joiners.</li>
+  <li><b>Match keywords.</b> Lists of words route phrases: “lens, mm, f/” → Optics; “hair, braid, beard” → Hair; “armor, cloak, boots” → Wardrobe; “no …, without …” → Exclusions.</li>
+  <li><b>Peel off special things.</b> Hex color codes like <code>#8A1C1C</code> go to the palette; Midjourney-style flags and aspect ratios get stripped out of the way.</li>
+  <li><b>File it</b> into the Blueprint using <code>assemble.ts</code>.</li>
+</ol>
+
+<div class="jargon"><b class="t">Jargon check · Regex</b>
+A <b>regular expression</b> (“regex”) is a tiny pattern language for matching text. For example, <code>/\b(hair|braid|beard)/i</code> means “find any of these words, ignoring capital letters.” The parser is full of them.</div>
+
+<div class="warn"><b class="t">Honest limits</b>
+Rules can’t understand meaning the way an AI can. Phrases that don’t contain a known keyword may land in a general slot, so a quick glance and tweak after parsing is part of the workflow. In the sample above, “weathered” was also copied to <i>Wear &amp; patina</i> and “leather” to <i>Textiles</i>. That’s the keyword rules doing their best.</div>
+
+<!-- ===================== 6. WORKBENCH ===================== -->
+<h1><span class="num">Chapter 6</span>The workbench</h1>
+<p class="lede">The one screen where everything happens.</p>
+
+<div class="fig"><img class="shot" src="img/shot_workbench.png" alt="The Prompt Forge workbench" />
+<div class="cap">Left: your source text. Center-left: the 15-slot menu. Center: editable fields and the live JSON. Right: the Assets shelf.</div></div>
+
+<h2>The four zones</h2>
+<table>
+  <tr><th style="width:26%">Zone</th><th>What you do there</th></tr>
+  <tr><td><b>Source</b> (far left)</td><td>Paste a prompt and press <b>Parse &amp; Standardize</b> (or Ctrl+Enter). The <b>Sample</b> button loads the ranger example.</td></tr>
+  <tr><td><b>Cluster menu</b></td><td>The 15 slots, grouped under Aesthetic DNA, Scene, Subject, Thesis. A dot beside a name means it has content.</td></tr>
+  <tr><td><b>Editor + JSON</b></td><td>Text boxes for the open slot. Underneath is the live JSON, with <b>Copy line</b> and <b>Copy JSON</b> buttons and an expand button for full-screen reading.</td></tr>
+  <tr><td><b>Assets shelf</b> (right)</td><td>Saved characters, snippets, bookmarks, and the <b>Looks</b> shelf with poses, camera angles, lights and settings.</td></tr>
+</table>
+
+<h2>Handy features</h2>
+<ul>
+  <li><b>Multiple subjects.</b> Tabs across the top let you add or remove characters. Each gets its own casting, posture and wardrobe.</li>
+  <li><b>Characters.</b> Save a finished subject and later drop it into any new prompt with “Add as subject.”</li>
+  <li><b>Snippets.</b> Reusable bits of text (“85mm, shallow depth of field”) you can insert anywhere.</li>
+  <li><b>Library.</b> Save whole prompts, search them, and reopen later.</li>
+  <li><b>Bookmarks.</b> Save a whole subject or just one section, add tags and a reference photo, and apply several at once.</li>
+</ul>
+
+
+<!-- ===================== 7. STORAGE ===================== -->
+<h1><span class="num">Chapter 7</span>Where your stuff is saved</h1>
+<p class="lede">Three places, and only one of them needs an account.</p>
+
+<div class="fig">
+<svg viewBox="0 0 760 275" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
+  <rect width="760" height="275" rx="16" fill="#15130f"/>
+  <text x="255" y="24" text-anchor="middle" fill="#3fb8a8" font-size="11" letter-spacing="2">STAYS ON THIS DEVICE</text>
+  <line x1="24" y1="32" x2="486" y2="32" stroke="#3fb8a8" stroke-width="2"/>
+  <text x="630" y="24" text-anchor="middle" fill="#e0883a" font-size="11" letter-spacing="2">SYNCED ACROSS DEVICES</text>
+  <line x1="520" y1="32" x2="740" y2="32" stroke="#e0883a" stroke-width="2"/>
+  <g fill="#211e18" stroke="#3a342a" stroke-width="1.5"><rect x="24" y="46" width="220" height="150" rx="14"/><rect x="266" y="46" width="220" height="150" rx="14"/><rect x="520" y="46" width="220" height="150" rx="14"/></g>
+  <g font-size="14" font-weight="700" fill="#f3eee6"><text x="40" y="74">YOUR BROWSER</text><text x="282" y="74">IMAGE VAULT</text><text x="536" y="74">THE CLOUD</text></g>
+  <g font-size="12" fill="#e0883a" font-family="Menlo, monospace"><text x="40" y="96">localStorage</text><text x="282" y="96">IndexedDB</text><text x="536" y="96">PostgreSQL</text></g>
+  <g font-size="12.5" fill="#b9b0a0">
+    <text x="40" y="122">• your draft</text><text x="40" y="140">• saved library</text><text x="40" y="158">• snippets, characters</text><text x="40" y="176">• bookmarks (text)</text>
+    <text x="282" y="122">• bookmark photos</text><text x="282" y="140">• big files that don’t</text><text x="282" y="158">  fit in localStorage</text>
+    <text x="536" y="122">• user_blobs table</text><text x="536" y="140">• bookmark_images</text><text x="536" y="158">• one set per account</text>
+  </g>
+  <path d="M134 204 C 134 262, 630 262, 630 204" fill="none" stroke="#e0883a" stroke-width="2.5" stroke-dasharray="6 5"/>
+  <polygon points="624,206 636,206 630,196" fill="#e0883a"/>
+  <text x="382" y="256" text-anchor="middle" fill="#e0883a" font-size="12" font-weight="700">only if you sign in</text>
+</svg>
+<div class="cap">Everything works offline. Signing in adds a copy in the cloud.</div>
+</div>
+
+<h2>Why three places?</h2>
+<ul>
+  <li><b>localStorage</b> is a small notepad built into every browser (about 5 MB). It’s perfect for text but too small for photos.</li>
+  <li><b>IndexedDB</b> is a bigger browser database. Photos go there as <b>blobs</b> (raw file data).</li>
+  <li><b>The cloud</b> (PostgreSQL) is a real database on a server. A <b>server function</b> in <code>cloud.ts</code> checks who you are with <code>authMiddleware</code> and then reads or writes only <i>your</i> rows. The two tables are created by the file <code>migrations/0002_library.sql</code>.</li>
+</ul>
+
+<div class="jargon"><b class="t">Jargon check · Migration &amp; middleware</b>
+A <b>migration</b> is a small script that creates or changes database tables, like a construction blueprint for the filing cabinet. <b>Middleware</b> is a checkpoint that runs before your code, here it’s the bouncer that asks “who are you?” before letting a request touch saved data.</div>
+
+<h2>Safety nets</h2>
+<ul>
+  <li>Every read goes through a “coerce” function that cleans unexpected data, so a corrupted save can’t break the app.</li>
+  <li>Storage keys are versioned (<code>prompt-forge:library:v2</code>) so future changes can migrate old saves safely.</li>
+  <li>Old field names (like <code>clothing</code> or <code>camera</code>) are translated to the new cluster names automatically.</li>
+</ul>
+
+<!-- ===================== 8. POSES ===================== -->
+<h1 class="pb"><span class="num">Chapter 8</span>The Pose Library</h1>
+<p class="lede">Out with the stick figures. In with 97 studio-quality poses.</p>
+
+<h2>The problem</h2>
+<p>The first version drew poses as tiny wobbly stick figures. They were hard to read and looked cheap, and a pose reference is only useful if you can actually <i>see</i> the pose. So we removed them completely and started over with a different goal: a big, well-organized library that feels like a photo-studio reference book.</p>
+
+<div class="two" style="align-items:center">
+  <div class="fig"><img class="shot" src="../../public/poses/pose_knight_02.jpg" alt="Mannequin knight with sword on shoulder" /><div class="cap">NEW: neutral matte mannequin. Shape and weight are clear.</div></div>
+  <div class="fig">
+    <svg viewBox="0 0 240 280" xmlns="http://www.w3.org/2000/svg"><rect width="240" height="280" rx="10" fill="#f5f1e8"/>
+      <g stroke="#7a736a" stroke-width="4" fill="none" stroke-linecap="round"><circle cx="120" cy="60" r="18"/><line x1="120" y1="78" x2="120" y2="150"/><line x1="120" y1="95" x2="85" y2="130"/><line x1="120" y1="95" x2="158" y2="125"/><line x1="120" y1="150" x2="95" y2="215"/><line x1="120" y1="150" x2="148" y2="215"/></g>
+      <g stroke="#c0453a" stroke-width="8" stroke-linecap="round"><line x1="40" y1="40" x2="200" y2="240"/><line x1="200" y1="40" x2="40" y2="240"/></g></svg>
+    <div class="cap">OLD: stick figure (illustration). Removed.</div></div>
+</div>
+
+<h2>How we planned it</h2>
+<p>Before building, we asked a round of questions and you answered them. The decisions that shaped everything:</p>
+<ul>
+  <li><b>Use existing-style imagery, not hand-drawn art.</b> Easiest for us to produce and the quality is much higher.</li>
+  <li><b>Organize for real use.</b> Not just standing/sitting, but by <i>subject</i>: knights &amp; warriors, fashion &amp; photo shoots, fine-art paintings, cinematic scenes, couples, and so on.</li>
+  <li><b>Quality over quantity,</b> with hundreds as the long-term goal. We shipped 97 strong ones first.</li>
+  <li><b>Subject-specific poses are a later step.</b> (A knight’s pose won’t suit a portrait shoot.) For now, categories carry that meaning.</li>
+</ul>
+
+<h2>How the images were made</h2>
+<ol>
+  <li><b>Generate a contact sheet.</b> One AI image shows a 3×3 grid of nine poses of the same neutral grey mannequin on a white background.</li>
+  <li><b>Slice it.</b> A script cuts each sheet into nine separate JPEGs in <code>public/poses/</code>.</li>
+  <li><b>Describe each pose in words.</b> Every card gets a written <code>posture</code> sentence, because <i>that sentence</i> is what goes into the prompt.</li>
+  <li><b>Register it in the database file</b> with an ID, category, stance and search tags.</li>
+</ol>
+
+<div class="fig" style="max-width:4.3in;margin-left:auto;margin-right:auto"><img class="shot" src="img/grid_knights.jpg" alt="Knight pose contact sheet" /><div class="cap">One generated contact sheet (Knights &amp; Warriors) before slicing into nine cards.</div></div>
+
+<h2>What one pose looks like as data</h2>
+<pre><span class="k">{</span>
+  <span class="k">id</span>: <span class="s">"kng-shoulder-blade"</span>,
+  <span class="k">name</span>: <span class="s">"Blade on Shoulder"</span>,
+  <span class="k">category</span>: <span class="s">"knights"</span>,   <span class="c">// which collection</span>
+  <span class="k">stance</span>: <span class="s">"standing"</span>,     <span class="c">// standing / sitting / kneeling …</span>
+  <span class="k">posture</span>: <span class="s">"Standing tall and confident, heavy broadsword resting
+           casually across right shoulder, left arm loose at side…"</span>,
+  <span class="k">image</span>: <span class="s">"/poses/pose_knight_02.jpg"</span>,
+  <span class="k">tags</span>: [<span class="s">"knight"</span>, <span class="s">"sword"</span>, <span class="s">"heroic"</span> …]
+<span class="k">}</span></pre>
+
+<h2>The 97 poses</h2>
+<div class="fig">
+<svg viewBox="0 0 760 385" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
+  <rect width="760" height="385" rx="16" fill="#15130f"/>
+  <text x="20" y="30" fill="#f3eee6" font-size="15" font-weight="700">Poses per collection</text>
+  <text x="740" y="30" text-anchor="end" fill="#e0883a" font-size="15" font-weight="700">97 total</text>
+  <g font-size="13" fill="#f3eee6" text-anchor="end">
+    <text x="215" y="71">Fashion &amp; Photo Shoots</text><text x="215" y="101">Fine Art &amp; Paintings</text><text x="215" y="131">Cinematic &amp; Scenes</text><text x="215" y="161">Action &amp; Combat</text><text x="215" y="191">Knights &amp; Warriors</text><text x="215" y="221">Couples &amp; Duos</text><text x="215" y="251">Sitting &amp; Furniture</text><text x="215" y="281">Casual &amp; Everyday</text><text x="215" y="311">Fantasy &amp; Magic</text><text x="215" y="341">Floor &amp; Reclining</text>
+  </g>
+  <g fill="#e0883a">
+    <rect x="230" y="55" width="396" height="22" rx="5"/><rect x="230" y="85" width="396" height="22" rx="5"/><rect x="230" y="115" width="396" height="22" rx="5"/>
+    <rect x="230" y="145" width="220" height="22" rx="5" fill="#3fb8a8"/><rect x="230" y="175" width="198" height="22" rx="5" fill="#3fb8a8"/><rect x="230" y="205" width="198" height="22" rx="5" fill="#3fb8a8"/>
+    <rect x="230" y="235" width="110" height="22" rx="5" fill="#8f9de6"/><rect x="230" y="265" width="88" height="22" rx="5" fill="#8f9de6"/><rect x="230" y="295" width="66" height="22" rx="5" fill="#8f9de6"/><rect x="230" y="325" width="66" height="22" rx="5" fill="#8f9de6"/>
+  </g>
+  <g font-size="13" font-weight="700" fill="#f3eee6">
+    <text x="636" y="71">18</text><text x="636" y="101">18</text><text x="636" y="131">18</text><text x="460" y="161">10</text><text x="438" y="191">9</text><text x="438" y="221">9</text><text x="350" y="251">5</text><text x="328" y="281">4</text><text x="306" y="311">3</text><text x="306" y="341">3</text>
+  </g>
+  <text x="20" y="372" fill="#8a8070" font-size="11">Orange = the three biggest collections · Teal = mid-size · Blue = small, room to grow</text>
+</svg>
+<div class="cap">Where the library is deep, and where it needs more poses.</div>
+</div>
+
+<div class="fig"><img class="shot" src="img/shot_pose_gallery.png" alt="Pose Reference Gallery" /><div class="cap">The Pose Reference Gallery: category pills with live counts, stance filters, and keyword search.</div></div>
+
+<h2>The gallery, feature by feature</h2>
+<ul>
+  <li><b>Category pills</b> show a live count (<code>All Poses 97</code>, <code>Knights &amp; Warriors 9</code>…).</li>
+  <li><b>Stance filters</b> narrow by Standing, Sitting, Kneeling, Crouching, Reclining or Dynamic.</li>
+  <li><b>Search</b> looks at name, ID, subtitle, description and tags, so “sword,” “stool” or “S-curve” all work.</li>
+  <li><b>Click a card</b> and it highlights, shows “Applied,” and the pose sentence is written into the open subject’s <code>kinetic_posture</code> field. Props listed on the pose (like “broadsword”) are merged into the scene’s props.</li>
+</ul>
+
+<div class="fig"><img class="shot" src="img/shot_posture_applied.png" alt="Posture applied in the workbench" /><div class="cap">After clicking “Dramatic Ballroom Dip,” the exact wording appears in the Posture field and in the live JSON.</div></div>
+
+<h2>A tour of the collections</h2>
+<div class="three">
+  <div class="fig"><img class="shot" src="img/grid_art.jpg" alt="Fine art poses" /><div class="cap">Fine Art: Rodin, Michelangelo, Botticelli…</div></div>
+  <div class="fig"><img class="shot" src="img/grid_editorial.jpg" alt="Editorial poses" /><div class="cap">Fashion &amp; photo shoots</div></div>
+  <div class="fig"><img class="shot" src="img/grid_duo.jpg" alt="Couples and duos" /><div class="cap">Couples &amp; duos</div></div>
+</div>
+
+<!-- ===================== 9. CAMERA ===================== -->
+<h1 class="pb"><span class="num">Chapter 9</span>Camera &amp; Angles</h1>
+<p class="lede">27 options, all shown with the same plant, so the <i>angle</i> is the only thing that changes.</p>
+
+<div class="analogy"><b class="t">Why a plant?</b>
+If every example used a different subject, you’d be comparing apples to oranges. A monstera in a white pot on a plain pedestal is the same in every picture, so when the view changes you instantly see what the camera did: the leaves stretch, the pot shrinks, the background melts away. It’s a science-fair control experiment for photography.</div>
+
+<div class="fig">
+<svg viewBox="0 0 760 430" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
+  <rect width="760" height="430" rx="16" fill="#15130f"/>
+  <text x="20" y="28" fill="#8a8070" font-size="11" letter-spacing="2">WHERE THE CAMERA SITS (SIDE VIEW)</text>
+  <text x="520" y="28" fill="#8a8070" font-size="11" letter-spacing="2">LENS = HOW MUCH YOU SEE</text>
+  <!-- guide arc -->
+  <path d="M 320 215 A 150 150 0 0 0 245 345" fill="none" stroke="#3a342a" stroke-dasharray="3 5"/>
+  <circle cx="170" cy="215" r="150" fill="none" stroke="#2c271f" stroke-dasharray="3 6"/>
+  <line x1="170" y1="215" x2="330" y2="215" stroke="#3a342a" stroke-dasharray="2 4"/>
+  <!-- plant on pedestal -->
+  <rect x="140" y="262" width="60" height="16" rx="3" fill="#6b645a"/>
+  <path d="M152 226 L188 226 L183 262 L157 262 Z" fill="#f2efe8"/>
+  <g fill="#3a9a55"><ellipse cx="150" cy="200" rx="22" ry="12" transform="rotate(-35 150 200)"/><ellipse cx="190" cy="198" rx="22" ry="12" transform="rotate(35 190 198)"/><ellipse cx="170" cy="184" rx="14" ry="22"/><ellipse cx="140" cy="222" rx="18" ry="9" transform="rotate(20 140 222)" fill="#2f8247"/><ellipse cx="200" cy="222" rx="18" ry="9" transform="rotate(-20 200 222)" fill="#2f8247"/></g>
+  <!-- cameras -->
+  <g fill="#e0883a">
+    <g transform="translate(170,65) rotate(-90)"><rect x="-14" y="-9" width="24" height="18" rx="3"/><rect x="-22" y="-5" width="8" height="10" rx="2"/></g>
+    <g transform="translate(233.4,79) rotate(-65)"><rect x="-14" y="-9" width="24" height="18" rx="3"/><rect x="-22" y="-5" width="8" height="10" rx="2"/></g>
+    <g transform="translate(292.9,129) rotate(-35)"><rect x="-14" y="-9" width="24" height="18" rx="3"/><rect x="-22" y="-5" width="8" height="10" rx="2"/></g>
+    <g transform="translate(320,215) rotate(0)" fill="#3fb8a8"><rect x="-14" y="-9" width="24" height="18" rx="3"/><rect x="-22" y="-5" width="8" height="10" rx="2"/></g>
+    <g transform="translate(299.9,290) rotate(30)"><rect x="-14" y="-9" width="24" height="18" rx="3"/><rect x="-22" y="-5" width="8" height="10" rx="2"/></g>
+    <g transform="translate(245,345) rotate(60)"><rect x="-14" y="-9" width="24" height="18" rx="3"/><rect x="-22" y="-5" width="8" height="10" rx="2"/></g>
+  </g>
+  <g font-size="12.5" fill="#f3eee6">
+    <text x="150" y="62" font-weight="700" text-anchor="end">Top-down 90°</text><text x="150" y="77" fill="#b9b0a0" font-size="11" text-anchor="end">flat-lay / nadir</text>
+    <text x="262" y="82" font-weight="700">Bird’s-eye</text><text x="262" y="97" fill="#b9b0a0" font-size="11">steep downward</text>
+    <text x="324" y="126" font-weight="700">High angle</text><text x="324" y="141" fill="#b9b0a0" font-size="11">looks down on subject</text>
+    <text x="352" y="212" font-weight="700" fill="#3fb8a8">Eye-level</text><text x="352" y="227" fill="#b9b0a0" font-size="11">neutral, 0°</text>
+    <text x="330" y="294" font-weight="700">Low angle (hero)</text><text x="330" y="309" fill="#b9b0a0" font-size="11">looks up: strong, dominant</text>
+    <text x="276" y="349" font-weight="700">Worm’s-eye</text><text x="276" y="364" fill="#b9b0a0" font-size="11">from the floor, steeply up</text>
+  </g>
+  <!-- lens cones -->
+  <g>
+    <g font-size="12.5" fill="#f3eee6" font-weight="700"><text x="520" y="75">14mm ultra-wide</text><text x="520" y="141">35mm classic</text><text x="520" y="207">50mm standard</text><text x="520" y="273">85mm portrait</text><text x="520" y="339">200mm telephoto</text></g>
+    <g fill="#3fb8a8" opacity=".85">
+      <polygon points="520,98 740,62 740,134"/>
+      <polygon points="520,164 740,142 740,186" opacity=".9"/>
+      <polygon points="520,230 740,214 740,246" opacity=".85"/>
+      <polygon points="520,296 740,288 740,304" opacity=".8"/>
+      <polygon points="520,362 740,359 740,365" opacity=".75"/>
+    </g>
+    <text x="520" y="395" fill="#b9b0a0" font-size="11">Wide lens = wide cone = more of the room.</text>
+    <text x="520" y="411" fill="#b9b0a0" font-size="11">Long lens = narrow cone = zoomed in, flatter.</text>
+  </g>
+  <g fill="#3fb8a8"><circle cx="170" cy="215" r="0"/></g>
+</svg>
+<div class="cap">Positions are where the camera <i>sits</i>. The badge numbers on the cards (like “+60° WORM”) describe how steeply it tilts.</div>
+</div>
+
+<h2>The 27 cards in three collections</h2>
+<div class="three">
+  <div class="stat"><div class="n">9</div><div class="l">Elevations &amp; angles</div></div>
+  <div class="stat"><div class="n">9</div><div class="l">Framings &amp; rotations</div></div>
+  <div class="stat"><div class="n">9</div><div class="l">Lenses &amp; depth of field</div></div>
+</div>
+
+<table>
+  <tr><th style="width:24%">Collection</th><th>The nine cards</th></tr>
+  <tr><td><b>Elevations &amp; angles</b><br/>height and tilt</td><td>Eye-level · Low-angle hero · Worm’s-eye · High-angle · Bird’s-eye · Top-down 90° · Dutch (tilted) · Ground-level skim · Isometric 30°</td></tr>
+  <tr><td><b>Framings &amp; rotations</b><br/>turning and distance</td><td>Three-quarter 45° · Profile 90° · Rear 180° · Macro leaf · Tight close-up · Medium · Wide environmental · Distant long shot · Foreground peek</td></tr>
+  <tr><td><b>Lenses &amp; depth of field</b><br/>zoom and blur</td><td>14mm ultra-wide · 24mm wide · 35mm classic · 50mm standard · 85mm portrait (f/1.4) · 135mm · 200mm super-tele · f/1.2 dreamy blur · f/16 everything sharp</td></tr>
+</table>
+
+<div class="fig" style="max-width:4.3in;margin-left:auto;margin-right:auto"><img class="shot" src="img/grid_cam_elev.jpg" alt="Elevation grid" /><div class="cap">Elevations &amp; angles: same plant, nine camera positions.</div></div>
+<div class="two">
+  <div class="fig"><img class="shot" src="img/grid_cam_frame.jpg" alt="Framing grid" /><div class="cap">Framings &amp; rotations</div></div>
+  <div class="fig"><img class="shot" src="img/grid_cam_lens.jpg" alt="Lens grid" /><div class="cap">Lenses &amp; depth of field</div></div>
+</div>
+
+<div class="jargon"><b class="t">Photo words, translated</b>
+<b>Focal length (mm)</b>: how “zoomed” the lens is. Small = wide view, big = zoomed in. <b>Aperture (f/number)</b>: how wide the lens opens; a small f-number (f/1.4) lets in lots of light and blurs the background. <b>Depth of field (DoF)</b>: how much of the picture is in focus. <b>Bokeh</b>: the soft, creamy blur. <b>Dutch angle</b>: tilting the camera so the horizon slants, for tension. <b>Nadir</b>: straight down.</div>
+
+<h2>What clicking a card does</h2>
+<p>Each camera card carries four pieces of text, and it writes them into the prompt:</p>
+<table>
+  <tr><th style="width:44%">Prompt field</th><th>Example value</th></tr>
+  <tr><td><code>framing_doctrine.named_principle</code></td><td>“Worm’s-eye dramatic ground rake”</td></tr>
+  <tr><td><code>framing_doctrine.camera_elevation_and_axis</code></td><td>“camera resting directly on floor plane, tilted steeply upward at 60°…”</td></tr>
+  <tr><td><code>optics.lens_type_and_focal_length</code></td><td>“24mm wide angle” (only on cards that specify a lens)</td></tr>
+  <tr><td><code>optics.aperture_and_dof</code></td><td>“f/8.0 deep ground-to-canopy depth”</td></tr>
+</table>
+
+<div class="fig"><img class="shot" src="img/shot_camera_gallery.png" alt="Camera gallery" /><div class="cap">The Camera &amp; Optics Reference Gallery: badges, category filters with counts, search, and a live preview of the text each card writes.</div></div>
+<div class="two">
+  <div class="fig"><img class="shot" src="img/shot_camera_applied.png" alt="Camera applied" /><div class="cap">Click “Worm’s-Eye”: Framing and the JSON update instantly.</div></div>
+  <div class="fig"><img class="shot" src="img/shot_shelf.png" alt="Camera shelf" /><div class="cap">The same cards also live in the right-hand Looks shelf under “Camera &amp; Angles.”</div></div>
+</div>
+
+<!-- ===================== 10. LOOKS ENGINE ===================== -->
+<h1><span class="num">Chapter 10</span>The “Looks” engine</h1>
+<p class="lede">One tiny function that makes every card in the app work.</p>
+
+<p>Poses, camera angles, lights and settings look different but behave the same way: <i>click, then write some text into specific fields.</i> So we gave them one shared shape, called a <b>Look</b>, and one function, <code>applyLook()</code>, that knows where each kind writes.</p>
+
+<div class="fig">
+<svg viewBox="0 0 760 270" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
+  <rect width="760" height="270" rx="16" fill="#15130f"/>
+  <defs><marker id="ah3" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#e0883a"/></marker></defs>
+  <g fill="#211e18" stroke="#3a342a" stroke-width="1.5"><rect x="20" y="92" width="150" height="86" rx="14"/><rect x="230" y="82" width="170" height="106" rx="14"/></g>
+  <text x="95" y="128" text-anchor="middle" font-size="15" font-weight="700" fill="#f3eee6">Click a card</text>
+  <text x="95" y="148" text-anchor="middle" font-size="12" fill="#b9b0a0">(a “Look”)</text>
+  <text x="315" y="120" text-anchor="middle" font-size="16" font-weight="700" fill="#e0883a" font-family="Menlo, monospace">applyLook()</text>
+  <text x="315" y="142" text-anchor="middle" font-size="12" fill="#b9b0a0">checks the kind,</text>
+  <text x="315" y="158" text-anchor="middle" font-size="12" fill="#b9b0a0">writes to the right fields</text>
+  <g stroke="#e0883a" stroke-width="2.5" marker-end="url(#ah3)">
+    <line x1="176" y1="135" x2="224" y2="135"/>
+    <line x1="406" y1="115" x2="450" y2="52"/><line x1="406" y1="127" x2="450" y2="111"/><line x1="406" y1="143" x2="450" y2="170"/><line x1="406" y1="155" x2="450" y2="226"/>
+  </g>
+  <g fill="#211e18" stroke="#3a342a" stroke-width="1.5"><rect x="456" y="26" width="284" height="50" rx="10"/><rect x="456" y="86" width="284" height="50" rx="10"/><rect x="456" y="146" width="284" height="50" rx="10"/><rect x="456" y="206" width="284" height="50" rx="10"/></g>
+  <g font-size="12" font-weight="700" letter-spacing="1"><text x="470" y="47" fill="#e0883a">POSE</text><text x="470" y="107" fill="#3fb8a8">ANGLE</text><text x="470" y="167" fill="#8f9de6">LIGHT</text><text x="470" y="227" fill="#c97a9b">SETTING</text></g>
+  <g font-size="12.5" fill="#f3eee6">
+    <text x="470" y="65">Subject › Posture (+ props)</text>
+    <text x="470" y="125">Framing principle + axis, lens, DoF</text>
+    <text x="470" y="185">Lighting style + key source + angle</text>
+    <text x="470" y="245">Location + atmosphere + props</text>
+  </g>
+</svg>
+<div class="cap">Four kinds of card, one function.</div>
+</div>
+
+<h2>What the shelf shows</h2>
+<ul>
+  <li><b>Filters:</b> All · Camera &amp; Angles · Knights · Photoshoot · Fine Art · Cinematic · Couples &amp; Duos · Action · Sitting · Floor · All Poses · Light · Setting.</li>
+  <li><b>About 160 looks in total:</b> 117 poses, 33 angles, 5 lights and 3 settings. The poses include the 97 new ones plus older entries kept so existing prompts still work.</li>
+  <li><b>Applied marker:</b> <code>lookIsApplied()</code> compares your current prompt with each card, so the card currently in use shows a check mark.</li>
+  <li><b>Content gating:</b> a few legacy poses are flagged <code>adult</code>. They’re excluded from every normal shelf and appear only under their own filter. A test guards that they never leak into the modeling shelf.</li>
+</ul>
+
+<!-- ===================== 11. QUALITY ===================== -->
+<h1><span class="num">Chapter 11</span>How we know it works</h1>
+<p class="lede">Five checks, run before every “done.”</p>
+
+<div class="fig">
+<svg viewBox="0 0 760 210" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
+  <rect width="760" height="210" rx="16" fill="#15130f"/>
+  <text x="380" y="26" text-anchor="middle" fill="#8a8070" font-size="11" letter-spacing="3">5 QUALITY GATES</text>
+  <g fill="#211e18" stroke="#3a342a" stroke-width="1.5"><rect x="16" y="44" width="136" height="130" rx="12"/><rect x="164" y="44" width="136" height="130" rx="12"/><rect x="312" y="44" width="136" height="130" rx="12"/><rect x="460" y="44" width="136" height="130" rx="12"/><rect x="608" y="44" width="136" height="130" rx="12"/></g>
+  <g fill="#3fb8a8"><circle cx="84" cy="70" r="12"/><circle cx="232" cy="70" r="12"/><circle cx="380" cy="70" r="12"/><circle cx="528" cy="70" r="12"/><circle cx="676" cy="70" r="12"/></g>
+  <g stroke="#15130f" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M78 70 l5 5 l9 -10"/><path d="M226 70 l5 5 l9 -10"/><path d="M374 70 l5 5 l9 -10"/><path d="M522 70 l5 5 l9 -10"/><path d="M670 70 l5 5 l9 -10"/></g>
+  <g font-size="13" font-weight="700" fill="#f3eee6" text-anchor="middle"><text x="84" y="108">Unit tests</text><text x="232" y="108">Type check</text><text x="380" y="108">Build</text><text x="528" y="108">Smoke test</text><text x="676" y="108">Click-through</text></g>
+  <g font-size="11" fill="#b9b0a0" text-anchor="middle">
+    <text x="84" y="130">74 of 74 pass</text><text x="84" y="146">logic works</text>
+    <text x="232" y="130">0 errors</text><text x="232" y="146">labels all match</text>
+    <text x="380" y="130">production bundle</text><text x="380" y="146">builds cleanly</text>
+    <text x="528" y="130">desktop + phone</text><text x="528" y="146">0 console errors</text>
+    <text x="676" y="130">a robot browser</text><text x="676" y="146">uses the app</text>
+  </g>
+  <text x="380" y="196" text-anchor="middle" fill="#6b645a" font-size="11">Any red light = not finished.</text>
+</svg>
+</div>
+
+<table>
+  <tr><th style="width:22%">Gate</th><th style="width:30%">Command</th><th>What it protects</th></tr>
+  <tr><td><b>Unit tests</b></td><td><code>npm test</code></td><td>The brain: parser, bookmarks, Looks. Includes tests that angles write to the right fields and that at least 20 camera angles exist.</td></tr>
+  <tr><td><b>Type check</b></td><td><code>npm run typecheck</code></td><td>Catches mismatched data (like passing a number where text is expected) before they become bugs.</td></tr>
+  <tr><td><b>Build</b></td><td><code>npm run build</code></td><td>Makes sure the real, deployable version compiles. This is what goes to the internet.</td></tr>
+  <tr><td><b>Smoke test</b></td><td><code>node scripts/browser-smoke.mjs</code></td><td>Opens the app in a headless browser at desktop (1280×800) and phone (390×844) sizes, checks content shows, and the console is clean.</td></tr>
+  <tr><td><b>Click-through</b></td><td>Playwright script</td><td>A scripted browser opens the gallery, filters, clicks a card, and confirms the prompt JSON changed.</td></tr>
+</table>
+
+<div class="jargon"><b class="t">Jargon check · Smoke test</b>
+Borrowed from electronics: plug it in and see if smoke comes out. If the page loads and nothing explodes, it passes the first, most basic test.</div>
+
+<div class="warn"><b class="t">Status note</b>
+The tests and type check were re-run for this guide and pass (74/74, 0 errors). The browser-based smoke test passed during development, but when I tried to re-run it while preparing this document, macOS blocked the headless browser from launching, so that one wasn’t repeated today.</div>
+
+<!-- ===================== ROUGH EDGES / ROADMAP ===================== -->
+<h1 class="pb"><span class="num">Next steps</span>Rough edges &amp; roadmap</h1>
+
+<h2>Known rough edges (worth fixing)</h2>
+<table>
+  <tr><th style="width:34%">Issue</th><th>Detail</th></tr>
+  <tr><td><b>Numbers burned into pose photos</b></td><td>The big digits (“5”, “2”, “7”) in the corners of many pose cards are leftovers from the contact-sheet grids. Re-cropping a little tighter, or regenerating without numbers, fixes it.</td></tr>
+  <tr><td><b>Captions burned into camera photos</b></td><td>Each plant card has its own text (“Eye-Level Direct Frontal”) baked into the picture, which duplicates the title underneath. A few cards also show a small corner artifact from the grid.</td></tr>
+  <tr><td><b>Clipped ID badges in the sidebar</b></td><td>In the narrow right shelf, IDs like <code>ANG-EYE…</code> are cut off. Shortening or hiding the ID there is a quick CSS tweak.</td></tr>
+  <tr><td><b>Leftover stick-figure data</b></td><td>The old drawing file <code>figure.ts</code> is still in the code. It no longer appears as cards, and can be deleted in a cleanup pass.</td></tr>
+  <tr><td><b>Small pose collections</b></td><td>Sitting (5), Casual (4), Fantasy (3), Floor (3) are thin compared with the 18-pose collections.</td></tr>
+</table>
+
+<h2>Roadmap</h2>
+<div class="two">
+  <div>
+    <h3>Option 2 · Visual Wardrobe &amp; Outfit Catalog</h3>
+    <p>The same treatment for clothing: reference sheets for knight plate armor, techwear, editorial fashion, historical regalia and fantasy robes. Each card would write into the Wardrobe slot (<i>layers, textiles, hardware, wear &amp; patina, footwear</i>). Modeled on the outfit reference image you shared.</p>
+  </div>
+  <div>
+    <h3>Option 3 · Visual Lighting &amp; Atmosphere Studio</h3>
+    <p>Lighting cards on a controlled subject: Rembrandt, chiaroscuro, neon rim, golden hour, volumetric fog. Writing into Key light, Fill, Accents and Environment.</p>
+  </div>
+</div>
+<h3>Bigger ideas, parked for later</h3>
+<ul>
+  <li><b>Subject-specific pose filters</b> (poses that only suit knights, or only portraits).</li>
+  <li><b>Growing the pose library toward hundreds</b>, prioritizing the thin collections.</li>
+  <li><b>Regenerating the numbered/captioned images</b> cleanly with the image tool once its daily quota resets.</li>
+</ul>
+
+<h2>Run it yourself</h2>
+<pre><span class="c"># You need Node 24 (this project uses a newer Node feature)</span>
+npm install
+npm run dev          <span class="c"># starts the app at http://localhost:8080</span>
+npm test             <span class="c"># 74 tests</span>
+npm run typecheck    <span class="c"># the label-checker</span>
+npm run build        <span class="c"># make the production version</span></pre>
+<p>On this Mac, Node 24 is installed at <code>~/.nvm/versions/node/v24.11.1/bin</code>. The default system Node 18 is too old and will fail with an error mentioning <code>styleText</code>.</p>
+
+<!-- ===================== GLOSSARY ===================== -->
+<h1 class="pb"><span class="num">Reference</span>Glossary</h1>
+<p class="lede">Every technical word in this guide, in one place.</p>
+<table style="page-break-inside:auto">
+  <tr><th style="width:24%">Word</th><th>Meaning</th></tr>
+  <tr><td><b>Aperture / f-stop</b></td><td>How wide the lens opens. Small f-number (f/1.4) = blurry background; large (f/16) = everything sharp.</td></tr>
+  <tr><td><b>authMiddleware</b></td><td>A checkpoint that confirms who’s signed in before touching saved data.</td></tr>
+  <tr><td><b>Blob</b></td><td>A raw chunk of file data, like a photo.</td></tr>
+  <tr><td><b>Bokeh</b></td><td>The soft blur of out-of-focus areas.</td></tr>
+  <tr><td><b>Build</b></td><td>Packaging the code into the final optimized files that get deployed.</td></tr>
+  <tr><td><b>Cluster</b></td><td>One of the 15 prompt slots in the left-hand menu.</td></tr>
+  <tr><td><b>Component</b></td><td>A reusable piece of screen (a card, a button, a whole panel) in React.</td></tr>
+  <tr><td><b>Contact sheet</b></td><td>One image holding a grid of many small images; we use 3×3 sheets.</td></tr>
+  <tr><td><b>Dutch angle</b></td><td>A deliberately tilted camera that makes the horizon slant.</td></tr>
+  <tr><td><b>Depth of field (DoF)</b></td><td>How much of the scene, near to far, is in focus.</td></tr>
+  <tr><td><b>Focal length</b></td><td>The lens “zoom” in millimeters. Small = wide, large = tight.</td></tr>
+  <tr><td><b>Frontend / backend</b></td><td>What runs in your browser vs. what runs on a server.</td></tr>
+  <tr><td><b>HMR</b></td><td>Hot Module Replacement: the page updates live as code is edited.</td></tr>
+  <tr><td><b>IndexedDB</b></td><td>A larger database built into browsers, used here for photos.</td></tr>
+  <tr><td><b>JSON</b></td><td>A labeled, nested text format: <code>"label": "value"</code>.</td></tr>
+  <tr><td><b>localStorage</b></td><td>A small key-value notepad every browser provides (about 5 MB).</td></tr>
+  <tr><td><b>Look</b></td><td>Any clickable card (pose, angle, light, setting) that writes into the prompt.</td></tr>
+  <tr><td><b>Migration</b></td><td>A script that creates or changes database tables.</td></tr>
+  <tr><td><b>Modal</b></td><td>A full-screen or pop-up panel that sits on top of the page (the galleries).</td></tr>
+  <tr><td><b>Nadir</b></td><td>Straight down. A “nadir shot” points the camera at the ground.</td></tr>
+  <tr><td><b>Parse</b></td><td>Read text and organize it into structure.</td></tr>
+  <tr><td><b>PostgreSQL</b></td><td>A popular, reliable database.</td></tr>
+  <tr><td><b>Prompt</b></td><td>The written instructions you give an AI image generator.</td></tr>
+  <tr><td><b>Regex</b></td><td>A mini language for matching patterns in text.</td></tr>
+  <tr><td><b>Route</b></td><td>A page address, like <code>/</code> or <code>/login</code>.</td></tr>
+  <tr><td><b>Server function</b></td><td>Code that runs on the server but can be called straight from the app.</td></tr>
+  <tr><td><b>Smoke test</b></td><td>The quickest “does it even turn on?” check.</td></tr>
+  <tr><td><b>Stance</b></td><td>The pose’s basic body position: standing, sitting, kneeling, etc.</td></tr>
+  <tr><td><b>Tailwind</b></td><td>A styling system that uses small class names on elements.</td></tr>
+  <tr><td><b>Type / TypeScript</b></td><td>Labels describing what kind of data each value is, checked automatically.</td></tr>
+  <tr><td><b>Unit test</b></td><td>A small automatic check of one piece of logic.</td></tr>
+  <tr><td><b>Vite</b></td><td>The tool that serves the app while developing and bundles it for release.</td></tr>
+</table>
+
+</body>
+</html>

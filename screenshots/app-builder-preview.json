@@ -1,36 +1,5 @@
 {
+  "ok": false,
   "url": "http://127.0.0.1:8080/",
-  "viewports": {
-    "desktop": {
-      "width": 1280,
-      "height": 800,
-      "status": 200,
-      "title": "Prompt Forge",
-      "hasCanvas": false,
-      "bodyTextLen": 2523,
-      "bodyTextHash": "1d17ce86ac7c387450246a5362758b71ec2c3584ec800a970052d36dbd2b8da9",
-      "bodyTextPrefix": "Prompt Forge New prompt Save to library Library Sign in Source A",
-      "horizontalOverflow": false,
-      "consoleErrors": [],
-      "pageErrors": [],
-      "screenshot": "/workspace/screenshots/app-builder-preview.png"
-    },
-    "mobile": {
-      "width": 390,
-      "height": 844,
-      "status": 200,
-      "title": "Prompt Forge",
-      "hasCanvas": false,
-      "bodyTextLen": 2045,
-      "bodyTextHash": "316e44790e58e26863bb3b711d8ff7917b5d45163d3108b3fc26abae7b621e5c",
-      "bodyTextPrefix": "Prompt Forge New Save Library Sign in to keep this in your accou",
-      "horizontalOverflow": false,
-      "consoleErrors": [],
-      "pageErrors": [],
-      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
-    }
-  },
-  "brandWarnings": [],
-  "authWarnings": [],
-  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+  "error": "browserType.launch: Target page, context or browser has been closed\nBrowser logs:\n\n<launching> /Applications/Google Chrome.app/Contents/MacOS/Google Chrome --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,BlockOriginHeaderModificationOnRedirect,Translate,AutoDeElevate,OptimizationHints,NetworkTimeServiceQuerying,AimEnabled,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --disable-updater-scheduler --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --no-sandbox --disable-dev-shm-usage --user-data-dir=/var/folders/bx/gmp1x5y17gz976b71dcwrpx80000gn/T/playwright_chromiumdev_profile-zVNbrU --remote-debugging-pipe --no-startup-window\n<launched> pid=10830\n[pid=10830][err] [1031/022743.572094:ERROR:third_party/crashpad/crashpad/util/mach/bootstrap.cc:65] bootstrap_check_in org.chromium.crashpad.child_port_handshake.10833.171839.YBXGMQIHOVJKXWGA: Permission denied (1100)\n[pid=10830][err] [1031/022743.578144:ERROR:third_party/crashpad/crashpad/util/file/file_io.cc:103] ReadExactly: expected 4, observed 0\n[pid=10830][err] [1031/022743.586244:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:208] open /Users/master/Library/Application Support/Google/Chrome/Crashpad/settings.dat: Operation not permitted (1)\n[pid=10830][err] [1031/022743.586381:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:208] open /Users/master/Library/Application Support/Google/Chrome/Crashpad/settings.dat: Operation not permitted (1)\n[pid=10830][err] [10830:171894:1031/022743.999562:FATAL:base/apple/mach_port_rendezvous_mac.cc:159] Check failed: kr == KERN_SUCCESS. bootstrap_check_in com.google.Chrome.MachPortRendezvousServer.10830: Permission denied (1100)\nCall log:\n  - <launching> /Applications/Google Chrome.app/Contents/MacOS/Google Chrome --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,BlockOriginHeaderModificationOnRedirect,Translate,AutoDeElevate,OptimizationHints,NetworkTimeServiceQuerying,AimEnabled,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --disable-updater-scheduler --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --no-sandbox --disable-dev-shm-usage --user-data-dir=/var/folders/bx/gmp1x5y17gz976b71dcwrpx80000gn/T/playwright_chromiumdev_profile-zVNbrU --remote-debugging-pipe --no-startup-window\n  - <launched> pid=10830\n  - [pid=10830][err] [1031/022743.572094:ERROR:third_party/crashpad/crashpad/util/mach/bootstrap.cc:65] bootstrap_check_in org.chromium.crashpad.child_port_handshake.10833.171839.YBXGMQIHOVJKXWGA: Permission denied (1100)\n  - [pid=10830][err] [1031/022743.578144:ERROR:third_party/crashpad/crashpad/util/file/file_io.cc:103] ReadExactly: expected 4, observed 0\n  - [pid=10830][err] [1031/022743.586244:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:208] open /Users/master/Library/Application Support/Google/Chrome/Crashpad/settings.dat: Operation not permitted (1)\n  - [pid=10830][err] [1031/022743.586381:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:208] open /Users/master/Library/Application Support/Google/Chrome/Crashpad/settings.dat: Operation not permitted (1)\n  - [pid=10830][err] [10830:171894:1031/022743.999562:FATAL:base/apple/mach_port_rendezvous_mac.cc:159] Check failed: kr == KERN_SUCCESS. bootstrap_check_in com.google.Chrome.MachPortRendezvousServer.10830: Permission denied (1100)\n  - [pid=10830] <gracefully close start>\n  - [pid=10830] <kill>\n  - [pid=10830] <will force kill>\n  - [pid=10830] exception while trying to kill process: Error: kill EPERM\n  - [pid=10830] <process did exit: exitCode=null, signal=SIGTRAP>\n  - [pid=10830] starting temporary directories cleanup\n  - [pid=10830] finished temporary directories cleanup\n  - [pid=10830] <gracefully close end>\n"
 }

@@ -194,62 +194,32 @@ export const CLUSTERS: Cluster[] = [
   {
     id: "key",
     group: "Aesthetic DNA",
-    label: "Key light",
+    label: "Lighting",
     fields: [
-      text("aesthetic_dna.lighting_architecture.lighting_style", "Lighting style", "overall contrast scheme"),
+      text(
+        "aesthetic_dna.lighting_architecture.lighting_style",
+        "Lighting style",
+        "Rembrandt, chiaroscuro, split, volumetric, golden hour",
+      ),
       text(
         "aesthetic_dna.lighting_architecture.key_source.fixture_or_origin",
         "Fixture or origin",
-        "window, sun, bare bulb",
+        "softbox, direct sun, candle flame, neon tube",
       ),
       text(
         "aesthetic_dna.lighting_architecture.key_source.angle_and_elevation",
         "Angle & elevation",
-        "45° camera-left, high",
-      ),
-      text(
-        "aesthetic_dna.lighting_architecture.key_source.falloff_and_contrast_ratio",
-        "Falloff & contrast",
-        "fast falloff, 8:1",
-      ),
-    ],
-  },
-  {
-    id: "fill",
-    group: "Aesthetic DNA",
-    label: "Fill & shadow",
-    fields: [
-      text(
-        "aesthetic_dna.lighting_architecture.fill_and_negative_space.fill_mechanism",
-        "Fill mechanism",
-        "bounce, negative fill, none",
+        "45° camera-left, high overhead, 90° lateral side rake",
       ),
       text(
         "aesthetic_dna.lighting_architecture.fill_and_negative_space.shadow_depth",
         "Shadow depth",
-        "crushed, open, inked",
-      ),
-    ],
-  },
-  {
-    id: "accent",
-    group: "Aesthetic DNA",
-    label: "Accents",
-    fields: [
-      text(
-        "aesthetic_dna.lighting_architecture.accent_and_practicals.rim_or_kicker",
-        "Rim or kicker",
-        "edge light from behind",
+        "rich penumbra, deep carved shadows, soft open fill",
       ),
       text(
         "aesthetic_dna.lighting_architecture.accent_and_practicals.practical_sources",
         "Practical sources",
-        "candles, neon, fire",
-      ),
-      text(
-        "aesthetic_dna.lighting_architecture.accent_and_practicals.color_temperature_balance",
-        "Color temperature",
-        "warm key, cool fill",
+        "candles, neon signage, streetlamps, crystal caustics",
       ),
     ],
   },
