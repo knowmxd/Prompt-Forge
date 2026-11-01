@@ -26,8 +26,18 @@ import {
   Sparkles,
   SunMedium,
   Trash2,
+  Users,
   X,
 } from "lucide-react";
+import {
+  CAST_MODELS,
+  CAST_CATEGORIES,
+  filterCastModels,
+  applyCastModel,
+  isCastModelApplied,
+  type CastModelItem,
+  type CastCategory,
+} from "@/lib/prompt/cast-database";
 import { applySection, captureFields, fieldsHaveContent, normalizeTag, sectionBlurb } from "@/lib/prompt/bookmarks";
 import { applyLook, lookIsApplied, looksFor, LOOK_FILTERS, LOOKS, customOutfitToLook, type Look, type LookFilter } from "@/lib/prompt/looks";
 import { PoseCardVisual } from "@/components/pose-art";
@@ -142,7 +152,7 @@ const FILTERS: Array<{ id: "all" | SnippetCategory; label: string }> = [
 ];
 
 type Pane = "source" | "forge" | "assets";
-type AssetTab = "wardrobe" | "poses" | "lighting" | "camera" | "saved";
+type AssetTab = "cast" | "wardrobe" | "poses" | "lighting" | "camera" | "saved";
 type Copied = "json" | "line" | null;
 type JsonMode = "peek" | "full" | "hidden";
 
@@ -656,6 +666,102 @@ function CameraCard({
   );
 }
 
+function CastModelCard({
+  model,
+  applied,
+  density,
+  onSelect,
+}: {
+  model: CastModelItem;
+  applied: boolean;
+  density: "comfortable" | "compact";
+  onSelect: () => void;
+}) {
+  if (density === "compact") {
+    return (
+      <button
+        type="button"
+        onClick={onSelect}
+        title={`${model.name} (${model.badge}) - Click to set as active subject model`}
+        aria-pressed={applied}
+        className={cn(
+          "group relative flex flex-col overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-xs",
+          applied ? "border-purple-500 ring-2 ring-purple-500/40" : "border-border",
+        )}
+      >
+        <div className="relative aspect-[4/5] w-full bg-neutral-900/60 overflow-hidden">
+          <img
+            src={model.image}
+            alt={model.name}
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform group-hover:scale-105"
+          />
+          <span className="absolute top-1 left-1 rounded bg-black/80 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-purple-400">
+            {model.badge}
+          </span>
+          {applied && (
+            <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-purple-500 text-white shadow font-bold">
+              <Check className="size-2.5 stroke-[3]" />
+            </span>
+          )}
+        </div>
+        <div className="p-1.5">
+          <p className="text-[11px] font-medium leading-tight text-foreground truncate group-hover:text-primary">
+            {model.name}
+          </p>
+        </div>
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={applied}
+      className={cn(
+        "group relative flex flex-col overflow-hidden rounded-xl border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-md",
+        applied ? "border-purple-500 ring-2 ring-purple-500/40" : "border-border",
+      )}
+    >
+      <div className="relative aspect-[4/5] w-full bg-neutral-900/60 overflow-hidden">
+        <img
+          src={model.image}
+          alt={model.name}
+          loading="lazy"
+          className="h-full w-full object-cover transition-transform group-hover:scale-105"
+        />
+        <span className="absolute top-1.5 left-1.5 rounded-md bg-black/80 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-purple-400">
+          {model.badge}
+        </span>
+        {applied && (
+          <span className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-purple-500 text-white shadow font-bold">
+            <Check className="size-3 stroke-[3]" />
+          </span>
+        )}
+      </div>
+      <div className="p-2.5 flex-1 flex flex-col justify-between">
+        <div>
+          <h4 className="text-xs font-semibold leading-snug text-foreground line-clamp-2 group-hover:text-primary">
+            {model.name}
+          </h4>
+          <p className="mt-1 text-[10px] text-muted line-clamp-2">
+            {model.description}
+          </p>
+        </div>
+        <div className="mt-2 flex items-center justify-between pt-1 border-t border-border/50">
+          <span className="text-[9px] font-medium text-faint">
+            {model.tags[0] ? `#${model.tags[0]}` : model.category.replace("_", " ")}
+          </span>
+          <span className={cn("text-[10px] font-semibold", applied ? "text-purple-400" : "text-primary group-hover:underline")}>
+            {applied ? "Applied" : "+ Apply"}
+          </span>
+        </div>
+      </div>
+    </button>
+  );
+}
+
 function cn(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(" ");
 }
@@ -818,7 +924,9 @@ export function PromptForge() {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [assetFilter, setAssetFilter] = useState("all");
   const [assetShelf, setAssetShelf] = useState<"saved" | "looks">("saved");
-  const [assetTab, setAssetTab] = useState<AssetTab>("wardrobe");
+  const [assetTab, setAssetTab] = useState<AssetTab>("cast");
+  const [castCategoryFilter, setCastCategoryFilter] = useState<CastCategory>("all");
+  const [castSearch, setCastSearch] = useState("");
   const [wardrobeTab, setWardrobeTab] = useState<"pieces" | "outfits">("pieces");
   const [wardrobeSlot, setWardrobeSlot] = useState<WardrobeSlot | "all">("all");
   const [wardrobeSearch, setWardrobeSearch] = useState("");
@@ -919,6 +1027,17 @@ export function PromptForge() {
     }
     return base;
   }, [lookFilter, customOutfits]);
+
+  const displayedCastModels = useMemo(() => {
+    return filterCastModels(CAST_MODELS, castCategoryFilter, castSearch);
+  }, [castCategoryFilter, castSearch]);
+
+  const handleSelectCastModel = (model: CastModelItem) => {
+    const updated = applyCastModel(doc, model, slot);
+    setDoc(updated);
+    setUntouched(false);
+    setStatus(`Applied Exile Model "${model.name}" to Subject ${slot + 1} (${model.badge}). Consistent character JSON updated.`);
+  };
 
   const displayedPoses = useMemo(() => {
     return filterPoses({
@@ -1756,6 +1875,22 @@ export function PromptForge() {
                   <h2 className="text-base font-medium">{active.label}</h2>
                 </div>
                 <div className="flex items-center gap-2">
+                  {cluster === "casting" && (
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPane("assets");
+                          setAssetTab("cast");
+                          if (narrow()) setAssetFullscreen(true);
+                        }}
+                        className="flex items-center gap-1.5 rounded-lg border border-purple-500/40 bg-purple-500/10 px-3 py-1.5 text-xs font-bold text-purple-400 hover:bg-purple-500/20 transition-all shadow-sm"
+                      >
+                        <Users className="size-3.5" />
+                        <span>Exile Cast Models ({CAST_MODELS.length})</span>
+                      </button>
+                    </div>
+                  )}
                   {(cluster === "framing" || cluster === "optics") && (
                     <div className="flex flex-wrap items-center gap-1.5">
                       <button
@@ -1894,15 +2029,17 @@ export function PromptForge() {
                 <div className="flex items-center gap-1.5">
                   <h2 className="text-sm font-bold tracking-tight text-foreground">Asset Library</h2>
                   <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                    {assetTab === "wardrobe"
-                      ? `${allWardrobeItems.length} Pieces · ${allWardrobeOutfits.length} Outfits`
-                      : assetTab === "poses"
-                        ? `${POSE_LIBRARY.length} Poses`
-                        : assetTab === "lighting"
-                          ? `${LIGHTING_LIBRARY.length} Setups`
-                          : assetTab === "camera"
-                            ? `${CAMERA_LIBRARY.length} Angles`
-                            : "Saved"}
+                    {assetTab === "cast"
+                      ? `${displayedCastModels.length} Models`
+                      : assetTab === "wardrobe"
+                        ? `${allWardrobeItems.length} Pieces · ${allWardrobeOutfits.length} Outfits`
+                        : assetTab === "poses"
+                          ? `${POSE_LIBRARY.length} Poses`
+                          : assetTab === "lighting"
+                            ? `${LIGHTING_LIBRARY.length} Setups`
+                            : assetTab === "camera"
+                              ? `${CAMERA_LIBRARY.length} Angles`
+                              : "Saved"}
                   </span>
                 </div>
                 <p className="truncate text-[10px] text-muted">
@@ -1949,6 +2086,7 @@ export function PromptForge() {
             {/* Top-Level Asset Category Navigation Pills */}
             <div className="mt-2.5 flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
               {[
+                { id: "cast" as const, label: "Cast", icon: Users, count: CAST_MODELS.length },
                 { id: "wardrobe" as const, label: "Wardrobe", icon: Shirt, count: allWardrobeItems.length },
                 { id: "poses" as const, label: "Poses", icon: Sparkles, count: POSE_LIBRARY.length },
                 { id: "lighting" as const, label: "Light", icon: SunMedium, count: LIGHTING_LIBRARY.length },
@@ -1986,6 +2124,97 @@ export function PromptForge() {
               })}
             </div>
           </div>
+
+          {/* TAB 0: EXILE CAST MODELS (27 Models) */}
+          {assetTab === "cast" && (
+            <>
+              <div className="shrink-0 border-b border-border bg-surface/30 px-3 py-2 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs text-muted">
+                    Consistent starting characters for <span className="font-semibold text-foreground">{doc.subjects[slot]?.subject_id.trim() || `Subject ${slot + 1}`}</span>
+                  </p>
+                  <span className="shrink-0 rounded-md bg-purple-500/10 border border-purple-500/30 px-2 py-0.5 text-[10px] font-semibold text-purple-400">
+                    {CAST_MODELS.length} Turnarounds
+                  </span>
+                </div>
+
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted" />
+                  <input
+                    type="text"
+                    value={castSearch}
+                    onChange={(e) => setCastSearch(e.target.value)}
+                    placeholder={`Search ${CAST_MODELS.length} Exile models (e.g. cyber, ronin, tactical, priestess)...`}
+                    className="w-full rounded-md border border-border bg-bg py-1.5 pl-8 pr-7 text-xs text-foreground placeholder-muted focus:border-primary focus:outline-none"
+                  />
+                  {castSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setCastSearch("")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1 overflow-x-auto pb-0.5 no-scrollbar text-xs">
+                  {CAST_CATEGORIES.map((cat) => {
+                    const active = castCategoryFilter === cat.id;
+                    const count = cat.id === "all"
+                      ? CAST_MODELS.length
+                      : CAST_MODELS.filter((m) => m.category === cat.id).length;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setCastCategoryFilter(cat.id)}
+                        className={cn(
+                          "h-7 shrink-0 rounded-full px-2.5 text-[11px] font-medium transition-all flex items-center gap-1",
+                          active
+                            ? "bg-purple-600 text-white shadow-xs"
+                            : "border border-border bg-bg text-muted hover:text-foreground",
+                        )}
+                      >
+                        <span>{cat.label}</span>
+                        <span className={cn("text-[9px] px-1 rounded-full", active ? "bg-black/30 text-white" : "text-muted")}>
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
+                {displayedCastModels.length === 0 ? (
+                  <div className="py-12 text-center text-xs text-muted">
+                    <Users className="mx-auto size-8 opacity-30 mb-2" />
+                    <p>No Exile models match "{castSearch}".</p>
+                  </div>
+                ) : (
+                  <div
+                    className={cn(
+                      "grid",
+                      assetDensity === "compact"
+                        ? "grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-1.5"
+                        : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2",
+                    )}
+                  >
+                    {displayedCastModels.map((model) => (
+                      <CastModelCard
+                        key={model.id}
+                        model={model}
+                        applied={isCastModelApplied(doc, model, slot)}
+                        density={assetDensity}
+                        onSelect={() => handleSelectCastModel(model)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
 
           {/* TAB 1: WARDROBE (Pieces & Outfits) */}
           {assetTab === "wardrobe" && (

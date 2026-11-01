@@ -759,6 +759,32 @@ var Upload = createLucideIcon("upload", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Users = createLucideIcon("users", [
+	["path", {
+		d: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2",
+		key: "1yyitq"
+	}],
+	["path", {
+		d: "M16 3.128a4 4 0 0 1 0 7.744",
+		key: "16gr8j"
+	}],
+	["path", {
+		d: "M22 21v-2a4 4 0 0 0-3-3.87",
+		key: "kshegd"
+	}],
+	["circle", {
+		cx: "9",
+		cy: "7",
+		r: "4",
+		key: "nufk8"
+	}]
+]);
+/**
+* @license lucide-react v0.510.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var X = createLucideIcon("x", [["path", {
 	d: "M18 6 6 18",
 	key: "1bl5f8"
@@ -767,4 +793,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { Check as A, FilePlus as C, CircleAlert as D, Code as E, Bookmark as M, BookmarkPlus as N, ChevronUp as O, FileText as S, Copy as T, Grid2x2 as _, Tag as a, FolderInput as b, Shirt as c, Minimize2 as d, Maximize2 as f, ImagePlus as g, Image as h, Trash2 as i, Camera as j, ChevronDown as k, Search as l, Layers as m, Upload as n, SunMedium as o, Library as p, TriangleAlert as r, Sparkles as s, X as t, Plus as u, Grid3x3 as v, Download as w, Flame as x, Funnel as y };
+export { ChevronDown as A, FileText as C, Code as D, Copy as E, Camera as M, Bookmark as N, CircleAlert as O, BookmarkPlus as P, Flame as S, Download as T, ImagePlus as _, Trash2 as a, Funnel as b, Sparkles as c, Plus as d, Minimize2 as f, Image as g, Layers as h, TriangleAlert as i, Check as j, ChevronUp as k, Shirt as l, Library as m, Users as n, Tag as o, Maximize2 as p, Upload as r, SunMedium as s, X as t, Search as u, Grid2x2 as v, FilePlus as w, FolderInput as x, Grid3x3 as y };
