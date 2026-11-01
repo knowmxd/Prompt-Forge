@@ -44,6 +44,65 @@ type WardrobeCatalogModalProps = {
   activeFootwear?: string;
 };
 
+function CatalogItemImage({ item }: { item: WardrobeItem }) {
+  const [hasError, setHasError] = useState(false);
+
+  if (hasError) {
+    return (
+      <div className="flex h-full w-full flex-col items-center justify-center bg-white p-3 text-center select-none">
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-neutral-100 text-neutral-800 shadow-sm border border-neutral-200/60 mb-2 group-hover:scale-110 transition-transform">
+          <Shirt className="h-6 w-6 stroke-[1.5]" />
+        </div>
+        <span className="text-[11px] font-semibold text-neutral-800 line-clamp-1 max-w-[90%]">
+          {item.name}
+        </span>
+        <div className="mt-1 flex items-center gap-1">
+          <span className="text-[9px] font-medium text-neutral-500 capitalize">
+            {item.colors[0] || item.subcategory}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={item.image}
+      alt={item.name}
+      loading="lazy"
+      onError={() => setHasError(true)}
+      className="h-full w-full object-contain p-2 transition-transform duration-300 group-hover:scale-105"
+    />
+  );
+}
+
+function CatalogOutfitImage({ outfit }: { outfit: WardrobeOutfit }) {
+  const [hasError, setHasError] = useState(false);
+
+  if (hasError) {
+    return (
+      <div className="flex h-full w-full flex-col items-center justify-center bg-white p-3 text-center select-none">
+        <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-rose-50 text-rose-500 shadow-sm border border-rose-200/60 mb-2 group-hover:scale-110 transition-transform">
+          <Layers className="h-7 w-7 stroke-[1.5]" />
+        </div>
+        <span className="text-xs font-semibold text-neutral-800 line-clamp-2 max-w-[90%]">
+          {outfit.name}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={outfit.image}
+      alt={outfit.name}
+      loading="lazy"
+      onError={() => setHasError(true)}
+      className="h-full w-full object-contain p-2 transition-transform duration-300 group-hover:scale-105"
+    />
+  );
+}
+
 export function WardrobeCatalogModal({
   isOpen,
   onClose,
@@ -405,12 +464,7 @@ export function WardrobeCatalogModal({
                   >
                     {/* Outfit Flat-Lay Visual (3:4 ratio) */}
                     <div className="relative aspect-[3/4] w-full overflow-hidden bg-white">
-                      <img
-                        src={outfit.image}
-                        alt={outfit.name}
-                        loading="lazy"
-                        className="h-full w-full object-contain p-2 transition-transform duration-300 group-hover:scale-105"
-                      />
+                      <CatalogOutfitImage outfit={outfit} />
 
                       {/* Outfit Piece Count Badge & Custom Badge */}
                       <div className="absolute top-2 left-2 flex items-center gap-1">
@@ -538,12 +592,7 @@ export function WardrobeCatalogModal({
                   >
                     {/* Item Product Shot Visual (1:1 ratio) */}
                     <div className="relative aspect-square w-full overflow-hidden bg-white">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        loading="lazy"
-                        className="h-full w-full object-contain p-2 transition-transform duration-300 group-hover:scale-105"
-                      />
+                      <CatalogItemImage item={item} />
 
                       {/* Slot Badge & Custom Badge */}
                       <div className="absolute top-2 left-2 flex items-center gap-1">

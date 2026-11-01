@@ -13,8 +13,8 @@ import {
 } from "./wardrobe-database.ts";
 
 describe("wardrobe database", () => {
-  it("loads 213 items, 49 outfits, and 14 slots", () => {
-    assert.equal(WARDROBE_ITEMS.length, 213);
+  it("loads 294 items, 49 outfits, and 14 slots", () => {
+    assert.equal(WARDROBE_ITEMS.length, 294);
     assert.equal(WARDROBE_OUTFITS.length, 49);
     assert.equal(WARDROBE_SLOTS.length, 14);
 
@@ -87,7 +87,7 @@ describe("wardrobe database", () => {
   it("filters items and outfits accurately by search query, slot, and style tags", () => {
     // Filter items by slot
     const tops = filterWardrobeItems(WARDROBE_ITEMS, "", "top");
-    assert.equal(tops.length, 37);
+    assert.equal(tops.length, 49);
 
     // Filter items by query
     const leather = filterWardrobeItems(WARDROBE_ITEMS, "leather");

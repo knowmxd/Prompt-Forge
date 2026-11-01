@@ -1,4 +1,4 @@
-// Auto-generated from Lib_Wardrobe/wardrobe_library.json
+// Auto-generated from Lib_Wardrobe/wardrobe_library.json (version 1.5)
 import { setAt, type PromptDoc } from "./model.ts";
 
 export type WardrobeSlot =
@@ -63,6 +63,13 @@ export type WardrobeSlotInfo = {
   item_count: number;
 };
 
+export const WARDROBE_LIBRARY_METADATA = {
+  version: "1.5",
+  created: "2026-10-31",
+  updated: "2026-11-01",
+  description: "Starter wardrobe library built from 46 reference images (45 used, 1 skipped), plus generated gap-filling pieces: 28 added in v1.2, 19 added in v1.3, 14 added in v1.4 (first menswear batch) and 20 added in v1.5 (archive menswear). Each item is a standalone prompt fragment for AI image generation; outfits are ready-made presets.",
+};
+
 export const WARDROBE_SLOTS: WardrobeSlotInfo[] = [
   {
     "slot": "headwear",
@@ -73,9 +80,10 @@ export const WARDROBE_SLOTS: WardrobeSlotInfo[] = [
       "cap",
       "durag",
       "hair_ribbon",
-      "headband"
+      "headband",
+      "trapper_hat"
     ],
-    "item_count": 9
+    "item_count": 13
   },
   {
     "slot": "eyewear",
@@ -84,7 +92,7 @@ export const WARDROBE_SLOTS: WardrobeSlotInfo[] = [
       "glasses",
       "sunglasses"
     ],
-    "item_count": 3
+    "item_count": 7
   },
   {
     "slot": "jewelry",
@@ -96,7 +104,7 @@ export const WARDROBE_SLOTS: WardrobeSlotInfo[] = [
       "necklace_layered",
       "rings"
     ],
-    "item_count": 13
+    "item_count": 19
   },
   {
     "slot": "neckwear",
@@ -107,7 +115,7 @@ export const WARDROBE_SLOTS: WardrobeSlotInfo[] = [
       "necktie",
       "scarf"
     ],
-    "item_count": 6
+    "item_count": 9
   },
   {
     "slot": "top",
@@ -117,6 +125,7 @@ export const WARDROBE_SLOTS: WardrobeSlotInfo[] = [
       "bralette_top",
       "bustier",
       "cami",
+      "corset_top",
       "crop_tee",
       "knit_top",
       "long_sleeve_tee",
@@ -127,47 +136,61 @@ export const WARDROBE_SLOTS: WardrobeSlotInfo[] = [
       "tee",
       "tube_top"
     ],
-    "item_count": 37
+    "item_count": 49
   },
   {
     "slot": "layer_top",
     "description": "Shirts or long-sleeves worn open or under/over another top",
     "subcategories": [
       "camp_shirt",
+      "flannel_shirt",
       "long_sleeve_tee",
+      "mesh_top",
       "shirt"
     ],
-    "item_count": 4
+    "item_count": 11
   },
   {
     "slot": "outerwear",
     "description": "Jackets, hoodies, blazers, puffers, vests, capes",
     "subcategories": [
       "blazer",
+      "bomber",
       "cape",
+      "cardigan",
       "denim_jacket",
+      "field_jacket",
       "fleece_jacket",
       "leather_blazer",
       "leather_jacket",
       "puffer",
+      "racer_jacket",
+      "suede_jacket",
       "track_jacket",
+      "trench",
       "tweed_jacket",
       "vest",
       "work_jacket",
       "zip_hoodie"
     ],
-    "item_count": 19
+    "item_count": 32
   },
   {
     "slot": "dress_onepiece",
     "description": "Dresses, pinafores, bodysuits (replace top + bottom)",
     "subcategories": [
+      "babydoll_dress",
       "corset_bodysuit",
+      "corset_dress",
       "knit_dress",
+      "maxi_dress",
+      "mini_dress",
       "pinafore",
+      "slip_dress",
+      "tank_dress",
       "tee_dress"
     ],
-    "item_count": 5
+    "item_count": 12
   },
   {
     "slot": "bottom",
@@ -177,6 +200,7 @@ export const WARDROBE_SLOTS: WardrobeSlotInfo[] = [
       "cargo_pants",
       "jeans",
       "maxi_skirt",
+      "midi_skirt",
       "mini_skirt",
       "puffer_pants",
       "shorts",
@@ -184,35 +208,40 @@ export const WARDROBE_SLOTS: WardrobeSlotInfo[] = [
       "track_pants",
       "trousers"
     ],
-    "item_count": 39
+    "item_count": 49
   },
   {
     "slot": "belt_waist",
     "description": "Belts and hip chains",
     "subcategories": [
       "belt",
-      "chain_belt"
+      "chain_belt",
+      "corset_belt"
     ],
-    "item_count": 11
+    "item_count": 13
   },
   {
     "slot": "legwear",
     "description": "Socks, loose socks, leg warmers, stockings",
     "subcategories": [
+      "ankle_socks",
       "knee_socks",
       "leg_warmers",
       "loose_socks",
       "socks",
-      "thigh_highs"
+      "thigh_highs",
+      "tights"
     ],
-    "item_count": 10
+    "item_count": 14
   },
   {
     "slot": "shoes",
     "description": "All footwear",
     "subcategories": [
       "ankle_boots",
+      "ballet_flats",
       "cowboy_boots",
+      "creepers",
       "derbies",
       "knee_boots",
       "loafers",
@@ -221,11 +250,12 @@ export const WARDROBE_SLOTS: WardrobeSlotInfo[] = [
       "platform_sneakers",
       "pumps",
       "sandals",
+      "skate_sneakers",
       "slouch_boots",
       "sneakers",
       "work_boots"
     ],
-    "item_count": 34
+    "item_count": 40
   },
   {
     "slot": "bag",
@@ -250,11 +280,13 @@ export const WARDROBE_SLOTS: WardrobeSlotInfo[] = [
       "carried_prop",
       "chain_charm",
       "corsage",
+      "gloves",
       "keychain",
       "wallet_chain",
-      "watch"
+      "watch",
+      "wrist_cuff"
     ],
-    "item_count": 7
+    "item_count": 10
   }
 ];
 
@@ -297,7 +329,9 @@ export const STYLE_TAG_VOCABULARY: Record<string, string> = {
   "skater": "Skate-shop staples: puffy skate shoes, slip-ons, loose denim",
   "minimal_basics": "Plain staples that go with anything",
   "romantic_couture": "Couture-level romantic pieces: floral appliqué tulle, corsetry, capes",
-  "fairycore": "Ethereal floaty pieces with flowers and sheer layers"
+  "fairycore": "Ethereal floaty pieces with flowers and sheer layers",
+  "menswear": "Men's cuts and proportions: boxy/heavyweight tees and hoodies, workwear, track and sport pieces, chains; pairs with unisex items",
+  "archive": "Early-2000s/Y2K archive menswear revival: fitted printed mesh and tees, tattoo/tribal/flame/filigree prints, flared and distressed denim, slim leather, silver cross and filigree hardware, pointy boots, creepers"
 };
 
 export const WARDROBE_ITEMS: WardrobeItem[] = [
@@ -606,6 +640,169 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
     "image": "/shots/items/headwear_ribbon_hair_ties_black_01.jpg"
   },
   {
+    "id": "headwear_beanie_rib_burnt_orange_01",
+    "name": "Burnt orange ribbed beanie",
+    "slot": "headwear",
+    "subcategory": "beanie",
+    "style_tags": [
+      "streetwear_90s",
+      "skater",
+      "grunge"
+    ],
+    "colors": [
+      "burnt orange"
+    ],
+    "materials": [
+      "acrylic rib knit"
+    ],
+    "patterns": [],
+    "fit_silhouette": "short fisherman beanie, cuffed",
+    "details": [
+      "thick rib",
+      "folded cuff",
+      "plain, no patch"
+    ],
+    "styling_notes": "a pop of orange with black and denim",
+    "prompt": "a short burnt orange ribbed knit fisherman beanie with a folded cuff, plain with no patch or label, no text, no logos",
+    "negative": [
+      "pom pom",
+      "logo patch",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#26"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/headwear_beanie_rib_burnt_orange_01.jpg"
+  },
+  {
+    "id": "headwear_trapper_hat_faux_fur_black_01",
+    "name": "Black faux-fur trapper hat",
+    "slot": "headwear",
+    "subcategory": "trapper_hat",
+    "style_tags": [
+      "y2k",
+      "gyaru",
+      "cozy_layered"
+    ],
+    "colors": [
+      "black"
+    ],
+    "materials": [
+      "faux fur",
+      "nylon"
+    ],
+    "patterns": [],
+    "fit_silhouette": "puffy trapper with long ear flaps",
+    "details": [
+      "shaggy black faux fur lining and trim",
+      "ear flaps with ties",
+      "glossy black nylon crown"
+    ],
+    "styling_notes": "Y2K winter glam with puffers and leg warmers",
+    "prompt": "a black trapper hat with a glossy black nylon crown, shaggy black faux-fur trim and long faux-fur ear flaps with ties, no text, no logos",
+    "negative": [
+      "text",
+      "logo",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch2#2"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/headwear_trapper_hat_faux_fur_black_01.jpg"
+  },
+  {
+    "id": "headwear_cap_trucker_mesh_black_white_01",
+    "name": "Black and white mesh trucker cap",
+    "slot": "headwear",
+    "subcategory": "cap",
+    "style_tags": [
+      "menswear",
+      "y2k",
+      "streetwear_90s",
+      "americana"
+    ],
+    "colors": [
+      "black",
+      "white"
+    ],
+    "materials": [
+      "foam",
+      "nylon mesh"
+    ],
+    "patterns": [],
+    "fit_silhouette": "high foam front, curved brim",
+    "details": [
+      "white foam front panel",
+      "black mesh back",
+      "snapback",
+      "blank front"
+    ],
+    "styling_notes": "Y2K/americana with a thermal, carpenter pants or a jersey",
+    "prompt": "a men's trucker cap with a blank white foam front panel, black mesh back panels, black curved brim and snapback closure, no text or patch, no text, no logos",
+    "negative": [
+      "text",
+      "patch",
+      "logo",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch3#19"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/headwear_cap_trucker_mesh_black_white_01.jpg"
+  },
+  {
+    "id": "headwear_durag_silky_burgundy_01",
+    "name": "Burgundy silky durag",
+    "slot": "headwear",
+    "subcategory": "durag",
+    "style_tags": [
+      "menswear",
+      "hip_hop_2000s",
+      "uk_drill",
+      "streetwear_90s"
+    ],
+    "colors": [
+      "burgundy"
+    ],
+    "materials": [
+      "silky satin"
+    ],
+    "patterns": [],
+    "fit_silhouette": "close fitting with long tails",
+    "details": [
+      "glossy satin sheen",
+      "long ties",
+      "center seam"
+    ],
+    "styling_notes": "under or without a fitted cap with jerseys, tracksuits and chains",
+    "prompt": "a glossy burgundy silky satin durag laid flat with a center seam and long ties, no text, no logos",
+    "negative": [
+      "text",
+      "logo",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch3#20"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/headwear_durag_silky_burgundy_01.jpg"
+  },
+  {
     "id": "eyewear_glasses_oval_wire_01",
     "name": "Small oval wire-rim glasses",
     "slot": "eyewear",
@@ -706,6 +903,171 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "outfit_D3_right"
     ],
     "image": "/shots/items/eyewear_sunglasses_white_orange_lens_01.jpg"
+  },
+  {
+    "id": "eyewear_sunglasses_slim_rectangle_black_01",
+    "name": "Slim black rectangle sunglasses",
+    "slot": "eyewear",
+    "subcategory": "sunglasses",
+    "style_tags": [
+      "streetwear_90s",
+      "y2k_streetwear",
+      "minimal_basics"
+    ],
+    "colors": [
+      "black"
+    ],
+    "materials": [
+      "glossy acetate"
+    ],
+    "patterns": [],
+    "fit_silhouette": "narrow 90s rectangle frame, small lenses",
+    "details": [
+      "thin glossy black frame",
+      "dark smoke lenses",
+      "slim temples"
+    ],
+    "styling_notes": "the everyday 90s shade; works with tees, baggy denim and tracksuits",
+    "prompt": "slim narrow rectangular 90s sunglasses with a thin glossy black acetate frame and small dark smoke-tinted lenses, no text, no logos",
+    "negative": [
+      "oversized lenses",
+      "aviator shape",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#1"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/eyewear_sunglasses_slim_rectangle_black_01.jpg"
+  },
+  {
+    "id": "eyewear_sunglasses_wrap_shield_silver_01",
+    "name": "Silver mirrored wraparound shield sunglasses",
+    "slot": "eyewear",
+    "subcategory": "sunglasses",
+    "style_tags": [
+      "y2k",
+      "y2k_streetwear",
+      "techwear",
+      "sportswear"
+    ],
+    "colors": [
+      "metallic silver",
+      "silver mirror"
+    ],
+    "materials": [
+      "metal",
+      "polycarbonate"
+    ],
+    "patterns": [],
+    "fit_silhouette": "one-piece wraparound shield lens curving around the sides",
+    "details": [
+      "silver mirrored single shield lens",
+      "thin silver metal temples",
+      "rimless top edge"
+    ],
+    "styling_notes": "Y2K sporty futurism; pairs with track sets, puffers and silver sneakers",
+    "prompt": "sleek wraparound Y2K shield sunglasses with a single curved silver mirrored lens and thin silver metal temples, rimless sporty futuristic shape, no text, no logos",
+    "negative": [
+      "round lenses",
+      "thick black frame",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#2"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/eyewear_sunglasses_wrap_shield_silver_01.jpg"
+  },
+  {
+    "id": "eyewear_sunglasses_cateye_rhinestone_black_01",
+    "name": "Black cat-eye sunglasses with rhinestone corners",
+    "slot": "eyewear",
+    "subcategory": "sunglasses",
+    "style_tags": [
+      "coquette",
+      "y2k",
+      "gothic",
+      "indie_sleaze"
+    ],
+    "colors": [
+      "black",
+      "clear crystal"
+    ],
+    "materials": [
+      "glossy acetate",
+      "rhinestones"
+    ],
+    "patterns": [],
+    "fit_silhouette": "upswept cat-eye frame, medium size",
+    "details": [
+      "small clear rhinestones on the upper outer corners",
+      "dark gray lenses",
+      "glossy black frame"
+    ],
+    "styling_notes": "a little glam for black dresses, patent shoes and lace",
+    "prompt": "glossy black acetate cat-eye sunglasses with upswept corners, small clear rhinestones studded on the outer upper corners, dark gray lenses, no text, no logos",
+    "negative": [
+      "oversized square frame",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#4"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/eyewear_sunglasses_cateye_rhinestone_black_01.jpg"
+  },
+  {
+    "id": "eyewear_glasses_round_tortoise_01",
+    "name": "Round tortoiseshell glasses",
+    "slot": "eyewear",
+    "subcategory": "glasses",
+    "style_tags": [
+      "dark_academia",
+      "vintage_romantic",
+      "french_casual",
+      "indie_sleaze"
+    ],
+    "colors": [
+      "tortoiseshell brown",
+      "amber"
+    ],
+    "materials": [
+      "acetate"
+    ],
+    "patterns": [
+      "tortoiseshell"
+    ],
+    "fit_silhouette": "medium round frame with keyhole bridge",
+    "details": [
+      "clear lenses",
+      "brown and amber tortoiseshell acetate",
+      "keyhole bridge"
+    ],
+    "styling_notes": "the bookish/vintage option for blouses, knits and loafers",
+    "prompt": "round vintage-style eyeglasses with brown and amber tortoiseshell acetate frames, keyhole bridge and clear lenses, no text, no logos",
+    "negative": [
+      "sunglass tint",
+      "metal frame",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#5"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/eyewear_glasses_round_tortoise_01.jpg"
   },
   {
     "id": "jewelry_bracelets_beaded_stack_01",
@@ -1149,6 +1511,239 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
     "image": "/shots/items/jewelry_rings_silver_01.jpg"
   },
   {
+    "id": "jewelry_necklace_padlock_chain_silver_01",
+    "name": "Silver padlock chain necklace",
+    "slot": "jewelry",
+    "subcategory": "necklace",
+    "style_tags": [
+      "punk",
+      "y2k_streetwear",
+      "grunge"
+    ],
+    "colors": [
+      "silver"
+    ],
+    "materials": [
+      "silver metal"
+    ],
+    "patterns": [],
+    "fit_silhouette": "chunky curb chain with padlock at the sternum",
+    "details": [
+      "heavy curb chain",
+      "small blank silver padlock pendant"
+    ],
+    "styling_notes": "over tees, tanks and the mesh top",
+    "prompt": "a chunky silver curb chain necklace with a small blank silver padlock pendant, no text, no logos",
+    "negative": [
+      "engraving",
+      "text",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch2#4"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/jewelry_necklace_padlock_chain_silver_01.jpg"
+  },
+  {
+    "id": "jewelry_earrings_chunky_hoops_silver_01",
+    "name": "Chunky silver hoop earrings",
+    "slot": "jewelry",
+    "subcategory": "earrings",
+    "style_tags": [
+      "y2k_streetwear",
+      "streetwear_90s",
+      "minimal_basics"
+    ],
+    "colors": [
+      "silver"
+    ],
+    "materials": [
+      "polished silver metal"
+    ],
+    "patterns": [],
+    "fit_silhouette": "large thick hoops, about 2 inches",
+    "details": [
+      "thick tube hoops",
+      "high polish"
+    ],
+    "styling_notes": "the silver version of your gold hoops",
+    "prompt": "a pair of large chunky polished silver tube hoop earrings, about two inches across, no text, no logos",
+    "negative": [
+      "thin wire",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch2#5"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/jewelry_earrings_chunky_hoops_silver_01.jpg"
+  },
+  {
+    "id": "jewelry_necklace_star_pendant_ballchain_silver_01",
+    "name": "Silver star pendant ball-chain necklace",
+    "slot": "jewelry",
+    "subcategory": "necklace",
+    "style_tags": [
+      "y2k",
+      "y2k_streetwear",
+      "kawaii"
+    ],
+    "colors": [
+      "silver"
+    ],
+    "materials": [
+      "silver metal"
+    ],
+    "patterns": [],
+    "fit_silhouette": "short ball chain with puffy star",
+    "details": [
+      "puffy polished silver star pendant",
+      "fine ball chain"
+    ],
+    "styling_notes": "small Y2K detail for baby tees and camis",
+    "prompt": "a short fine silver ball-chain necklace with a puffy polished silver star pendant, no text, no logos",
+    "negative": [
+      "text",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch2#6"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/jewelry_necklace_star_pendant_ballchain_silver_01.jpg"
+  },
+  {
+    "id": "jewelry_necklace_cuban_link_gold_01",
+    "name": "Thick gold Cuban link chain",
+    "slot": "jewelry",
+    "subcategory": "necklace",
+    "style_tags": [
+      "menswear",
+      "hip_hop_2000s",
+      "luxury_street",
+      "streetwear_90s"
+    ],
+    "colors": [
+      "gold"
+    ],
+    "materials": [
+      "gold-tone metal"
+    ],
+    "patterns": [],
+    "fit_silhouette": "thick chain at collarbone length",
+    "details": [
+      "tight flat Cuban links",
+      "box clasp",
+      "high polish"
+    ],
+    "styling_notes": "over a white tee or jersey; stack with the gold medallion",
+    "prompt": "a thick polished gold Cuban link chain necklace with tight flat interlocking links and a box clasp, no text, no logos",
+    "negative": [
+      "thin chain",
+      "pendant",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch3#21"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/jewelry_necklace_cuban_link_gold_01.jpg"
+  },
+  {
+    "id": "jewelry_necklace_cross_pendant_rope_silver_01",
+    "name": "Silver cross pendant on rope chain",
+    "slot": "jewelry",
+    "subcategory": "necklace",
+    "style_tags": [
+      "menswear",
+      "hip_hop_2000s",
+      "gothic",
+      "rock_moto"
+    ],
+    "colors": [
+      "silver"
+    ],
+    "materials": [
+      "silver-tone metal"
+    ],
+    "patterns": [],
+    "fit_silhouette": "mid-chest length",
+    "details": [
+      "twisted rope chain",
+      "plain polished cross pendant"
+    ],
+    "styling_notes": "over black tees and hoodies; layers with your silver chains",
+    "prompt": "a twisted silver rope chain necklace with a plain polished silver cross pendant, no text, no logos",
+    "negative": [
+      "rhinestones",
+      "rosary beads",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch3#22"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/jewelry_necklace_cross_pendant_rope_silver_01.jpg"
+  },
+  {
+    "id": "jewelry_rings_filigree_cross_silver_01",
+    "name": "Chunky silver filigree cross rings",
+    "slot": "jewelry",
+    "subcategory": "rings",
+    "style_tags": [
+      "menswear",
+      "archive",
+      "gothic",
+      "luxury_street"
+    ],
+    "colors": [
+      "silver"
+    ],
+    "materials": [
+      "sterling silver"
+    ],
+    "patterns": [
+      "filigree"
+    ],
+    "fit_silhouette": "chunky men's rings",
+    "details": [
+      "set of three chunky rings",
+      "raised cross and filigree scroll engravings",
+      "oxidized recesses"
+    ],
+    "styling_notes": "stacked on both hands with a filigree long sleeve",
+    "prompt": "a set of three chunky oxidized sterling silver men's rings with raised cross and filigree scroll engravings, abstract pattern, no text, no letters, no logos",
+    "negative": [
+      "thin",
+      "gold",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch4#24"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/jewelry_rings_filigree_cross_silver_01.jpg"
+  },
+  {
     "id": "neckwear_choker_cord_thin_black_01",
     "name": "Thin black cord choker",
     "slot": "neckwear",
@@ -1356,6 +1951,127 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "outfit_B4"
     ],
     "image": "/shots/items/neckwear_scarf_plaid_fringe_camel_01.jpg"
+  },
+  {
+    "id": "neckwear_necktie_skinny_satin_black_01",
+    "name": "Black skinny satin necktie",
+    "slot": "neckwear",
+    "subcategory": "necktie",
+    "style_tags": [
+      "grunge",
+      "japanese_school",
+      "indie_sleaze",
+      "gothic"
+    ],
+    "colors": [
+      "black"
+    ],
+    "materials": [
+      "satin"
+    ],
+    "patterns": [],
+    "fit_silhouette": "skinny tie, worn loose",
+    "details": [
+      "subtle sheen",
+      "narrow blade"
+    ],
+    "styling_notes": "loose over tanks/baby tees or with a white shirt and blazer",
+    "prompt": "a black skinny satin necktie with a narrow blade and subtle sheen, pre-knotted, shown loosely knotted, no text, no logos",
+    "negative": [
+      "wide tie",
+      "pattern",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#14"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/neckwear_necktie_skinny_satin_black_01.jpg"
+  },
+  {
+    "id": "neckwear_choker_studded_leather_black_01",
+    "name": "Black studded leather choker",
+    "slot": "neckwear",
+    "subcategory": "choker",
+    "style_tags": [
+      "punk",
+      "gothic",
+      "grunge"
+    ],
+    "colors": [
+      "black",
+      "silver"
+    ],
+    "materials": [
+      "leather",
+      "metal studs"
+    ],
+    "patterns": [],
+    "fit_silhouette": "wide flat band",
+    "details": [
+      "row of silver pyramid studs",
+      "silver O-ring at front",
+      "buckle closure"
+    ],
+    "styling_notes": "matches your bullet and grommet belts",
+    "prompt": "a black leather choker band with a row of small silver pyramid studs, a silver O-ring at the center front and a small buckle closure, no text, no logos",
+    "negative": [
+      "spikes too large",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#15"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/neckwear_choker_studded_leather_black_01.jpg"
+  },
+  {
+    "id": "neckwear_bandana_paisley_black_01",
+    "name": "Black paisley bandana",
+    "slot": "neckwear",
+    "subcategory": "scarf",
+    "style_tags": [
+      "streetwear_90s",
+      "hip_hop_2000s",
+      "western",
+      "skater"
+    ],
+    "colors": [
+      "black",
+      "white"
+    ],
+    "materials": [
+      "cotton"
+    ],
+    "patterns": [
+      "paisley bandana print"
+    ],
+    "fit_silhouette": "square bandana, folded neckerchief",
+    "details": [
+      "classic white paisley print",
+      "folded into a triangle"
+    ],
+    "styling_notes": "tied at the neck, on the head, or hanging from a back pocket",
+    "prompt": "a black cotton bandana with classic white paisley print, folded into a triangle neckerchief, no text, no logos",
+    "negative": [
+      "red bandana",
+      "text",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#16"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/neckwear_bandana_paisley_black_01.jpg"
   },
   {
     "id": "top_baby_tee_i_dont_smoke_cream_01",
@@ -2657,6 +3373,508 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
     "image": "/shots/items/top_tube_bandeau_black_01.jpg"
   },
   {
+    "id": "top_baby_tee_plain_lavender_01",
+    "name": "Lavender baby tee",
+    "slot": "top",
+    "subcategory": "crop_tee",
+    "style_tags": [
+      "y2k",
+      "y2k_streetwear",
+      "kawaii"
+    ],
+    "colors": [
+      "lavender"
+    ],
+    "materials": [
+      "cotton jersey"
+    ],
+    "patterns": [],
+    "fit_silhouette": "shrunken cropped baby tee, cap sleeves",
+    "details": [
+      "plain, no graphics",
+      "contrast white ringer trim"
+    ],
+    "styling_notes": "drops purple into your Y2K looks",
+    "prompt": "a plain lavender fitted cropped baby tee with short cap sleeves and thin white ringer trim at the neckline and sleeves, no graphics, no text, no logos",
+    "negative": [
+      "text",
+      "logos",
+      "oversized",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#22"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/top_baby_tee_plain_lavender_01.jpg"
+  },
+  {
+    "id": "top_cami_satin_bow_butter_yellow_01",
+    "name": "Butter yellow satin bow cami",
+    "slot": "top",
+    "subcategory": "cami",
+    "style_tags": [
+      "coquette",
+      "y2k",
+      "french_casual"
+    ],
+    "colors": [
+      "butter yellow"
+    ],
+    "materials": [
+      "satin",
+      "lace"
+    ],
+    "patterns": [],
+    "fit_silhouette": "loose cropped cami",
+    "details": [
+      "thin straps",
+      "tiny bow at the neckline",
+      "lace trim at hem"
+    ],
+    "styling_notes": "soft yellow that works with denim, cream and brown",
+    "prompt": "a pale butter yellow satin camisole top with thin straps, a tiny satin bow at the center neckline and delicate cream lace trim at the hem, no text, no logos",
+    "negative": [
+      "neon yellow",
+      "print",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#25"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/top_cami_satin_bow_butter_yellow_01.jpg"
+  },
+  {
+    "id": "top_corset_velvet_lace_trim_black_01",
+    "name": "Black velvet corset top with lace trim",
+    "slot": "top",
+    "subcategory": "corset_top",
+    "style_tags": [
+      "coquette",
+      "gothic",
+      "y2k"
+    ],
+    "colors": [
+      "black"
+    ],
+    "materials": [
+      "velvet",
+      "lace"
+    ],
+    "patterns": [],
+    "fit_silhouette": "cropped strapless corset",
+    "details": [
+      "boned bodice",
+      "black lace trim at the neckline",
+      "hook front"
+    ],
+    "styling_notes": "with baggy jeans for street, or the lace midi for coquette",
+    "prompt": "a cropped strapless black velvet corset top with boning, black lace trim along the neckline and a hook-and-eye front, no text, no logos",
+    "negative": [
+      "straps",
+      "print",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch2#13"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/top_corset_velvet_lace_trim_black_01.jpg"
+  },
+  {
+    "id": "top_tee_boxy_heavyweight_white_01",
+    "name": "Boxy heavyweight white tee",
+    "slot": "top",
+    "subcategory": "tee",
+    "style_tags": [
+      "menswear",
+      "streetwear_90s",
+      "skater",
+      "minimal_basics"
+    ],
+    "colors": [
+      "white"
+    ],
+    "materials": [
+      "heavyweight cotton jersey"
+    ],
+    "patterns": [],
+    "fit_silhouette": "boxy, dropped shoulders, wide short-ish body, elbow-length sleeves",
+    "details": [
+      "thick ribbed crew neck",
+      "dropped shoulder seams",
+      "blank, no print"
+    ],
+    "styling_notes": "the base layer under chains, flannels and work jackets; tuck the front into baggy jeans",
+    "prompt": "a boxy oversized men's heavyweight white cotton tee with dropped shoulders, elbow-length sleeves and a thick ribbed crew neck, blank with no print, no text, no logos",
+    "negative": [
+      "fitted",
+      "cropped",
+      "graphic print",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch3#1"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/top_tee_boxy_heavyweight_white_01.jpg"
+  },
+  {
+    "id": "top_hoodie_pullover_heavyweight_brown_01",
+    "name": "Washed brown heavyweight pullover hoodie",
+    "slot": "top",
+    "subcategory": "sweatshirt",
+    "style_tags": [
+      "menswear",
+      "streetwear_90s",
+      "skater",
+      "vintage_workwear"
+    ],
+    "colors": [
+      "brown"
+    ],
+    "materials": [
+      "heavyweight cotton fleece"
+    ],
+    "patterns": [],
+    "fit_silhouette": "oversized, boxy body, dropped shoulders",
+    "details": [
+      "kangaroo pocket",
+      "double-layer hood, no drawcords",
+      "ribbed cuffs and hem",
+      "garment-washed faded color"
+    ],
+    "styling_notes": "under a work jacket with carpenter pants and skate shoes",
+    "prompt": "an oversized men's garment-washed faded brown heavyweight cotton pullover hoodie with a double-layer hood without drawcords, kangaroo pocket and ribbed cuffs, blank with no print, no text, no logos",
+    "negative": [
+      "zip front",
+      "cropped",
+      "print",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch3#3"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/top_hoodie_pullover_heavyweight_brown_01.jpg"
+  },
+  {
+    "id": "top_longsleeve_thermal_waffle_cream_01",
+    "name": "Cream waffle-knit thermal",
+    "slot": "top",
+    "subcategory": "long_sleeve_tee",
+    "style_tags": [
+      "menswear",
+      "americana",
+      "vintage_workwear",
+      "grunge"
+    ],
+    "colors": [
+      "cream"
+    ],
+    "materials": [
+      "cotton waffle knit"
+    ],
+    "patterns": [],
+    "fit_silhouette": "relaxed straight men's fit",
+    "details": [
+      "waffle texture",
+      "ribbed cuffs",
+      "henley-free crew neck"
+    ],
+    "styling_notes": "under a flannel or plain with straight jeans and work boots",
+    "prompt": "a relaxed men's cream cotton waffle-knit thermal long-sleeve top with a crew neck and ribbed cuffs, plain, no text, no logos",
+    "negative": [
+      "cropped",
+      "fitted",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch3#4"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/top_longsleeve_thermal_waffle_cream_01.jpg"
+  },
+  {
+    "id": "top_polo_rugby_stripe_navy_green_01",
+    "name": "Navy and green striped rugby shirt",
+    "slot": "top",
+    "subcategory": "polo",
+    "style_tags": [
+      "menswear",
+      "preppy_sport",
+      "streetwear_90s",
+      "americana"
+    ],
+    "colors": [
+      "navy",
+      "forest green",
+      "white"
+    ],
+    "materials": [
+      "heavy cotton jersey"
+    ],
+    "patterns": [
+      "wide horizontal stripes"
+    ],
+    "fit_silhouette": "relaxed, slightly oversized",
+    "details": [
+      "white twill collar",
+      "rubber-free placket with white buttons",
+      "wide block stripes"
+    ],
+    "styling_notes": "90s collegiate-street with baggy jeans and white sneakers",
+    "prompt": "a relaxed men's heavy cotton long-sleeve rugby shirt with wide navy and forest green horizontal stripes, white twill collar and a short white-button placket, no embroidery, no text, no logos",
+    "negative": [
+      "logo embroidery",
+      "numbers",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch3#5"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/top_polo_rugby_stripe_navy_green_01.jpg"
+  },
+  {
+    "id": "top_longsleeve_filigree_scroll_gray_01",
+    "name": "Heather gray long sleeve with black filigree",
+    "slot": "top",
+    "subcategory": "long_sleeve_tee",
+    "style_tags": [
+      "menswear",
+      "archive",
+      "gothic",
+      "luxury_street"
+    ],
+    "colors": [
+      "heather gray",
+      "black"
+    ],
+    "materials": [
+      "stretch cotton jersey"
+    ],
+    "patterns": [
+      "all-over black filigree scrollwork"
+    ],
+    "fit_silhouette": "slim, body-skimming men's fit",
+    "details": [
+      "ornate curling filigree scrolls cover body and sleeves",
+      "crew neck",
+      "long fitted sleeves"
+    ],
+    "styling_notes": "with black leather pants and silver cross rings",
+    "prompt": "a slim body-skimming men's heather gray stretch-jersey long-sleeve top covered in an all-over black ornate curling filigree scrollwork print, abstract pattern, no text, no letters, no logos",
+    "negative": [
+      "oversized",
+      "boxy",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch4#3"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/top_longsleeve_filigree_scroll_gray_01.jpg"
+  },
+  {
+    "id": "top_tank_ribbed_studded_tribal_black_01",
+    "name": "Black ribbed tank with studded tribal swirl",
+    "slot": "top",
+    "subcategory": "tank",
+    "style_tags": [
+      "menswear",
+      "archive",
+      "punk",
+      "rock_moto"
+    ],
+    "colors": [
+      "black",
+      "silver"
+    ],
+    "materials": [
+      "ribbed cotton",
+      "metal studs"
+    ],
+    "patterns": [
+      "tribal swirl in silver studs"
+    ],
+    "fit_silhouette": "slim fitted men's tank",
+    "details": [
+      "small silver studs set in a curving tribal swirl across the chest",
+      "fine rib knit",
+      "deep armholes"
+    ],
+    "styling_notes": "under the leather jacket with chains and flared jeans",
+    "prompt": "a slim fitted men's black ribbed cotton tank top with small silver studs set in a curving tribal swirl across the chest, abstract pattern, no text, no letters, no logos",
+    "negative": [
+      "oversized",
+      "plain",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch4#6"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/top_tank_ribbed_studded_tribal_black_01.jpg"
+  },
+  {
+    "id": "top_tee_layered_mesh_sleeves_charcoal_01",
+    "name": "Charcoal tee with attached black mesh sleeves",
+    "slot": "top",
+    "subcategory": "long_sleeve_tee",
+    "style_tags": [
+      "menswear",
+      "archive",
+      "avant_garde_dark",
+      "grunge"
+    ],
+    "colors": [
+      "charcoal",
+      "black"
+    ],
+    "materials": [
+      "cotton jersey",
+      "stretch mesh"
+    ],
+    "patterns": [],
+    "fit_silhouette": "slim fitted men's fit",
+    "details": [
+      "short-sleeve tee body with sheer black mesh long sleeves sewn underneath",
+      "layered double-sleeve look",
+      "raw edges at the tee sleeve"
+    ],
+    "styling_notes": "the layered archive look in one piece, with waxed jeans and boots",
+    "prompt": "a slim fitted men's charcoal cotton short-sleeve tee with sheer black stretch-mesh long sleeves sewn underneath for a layered look, raw-edged tee sleeves, abstract pattern, no text, no letters, no logos",
+    "negative": [
+      "oversized",
+      "boxy",
+      "print",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch4#8"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/top_tee_layered_mesh_sleeves_charcoal_01.jpg"
+  },
+  {
+    "id": "top_tee_fitted_barbed_wire_gray_01",
+    "name": "Fitted gray rib tee with barbed-wire print",
+    "slot": "top",
+    "subcategory": "tee",
+    "style_tags": [
+      "menswear",
+      "archive",
+      "punk",
+      "grunge"
+    ],
+    "colors": [
+      "heather gray",
+      "black"
+    ],
+    "materials": [
+      "stretch rib cotton"
+    ],
+    "patterns": [
+      "all-over barbed-wire linework"
+    ],
+    "fit_silhouette": "slim fitted men's tee",
+    "details": [
+      "curving black barbed-wire lines wrap body and short sleeves",
+      "fine rib knit",
+      "crew neck"
+    ],
+    "styling_notes": "with distressed bootcut jeans and a studded belt",
+    "prompt": "a slim fitted men's heather gray stretch rib-knit tee with an all-over print of curving black barbed-wire linework wrapping the body and short sleeves, abstract pattern, no text, no letters, no logos",
+    "negative": [
+      "oversized",
+      "boxy",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch4#9"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/top_tee_fitted_barbed_wire_gray_01.jpg"
+  },
+  {
+    "id": "top_tee_fitted_celtic_knot_green_01",
+    "name": "Fitted forest green tee with black Celtic knotwork",
+    "slot": "top",
+    "subcategory": "tee",
+    "style_tags": [
+      "menswear",
+      "archive",
+      "grunge",
+      "y2k"
+    ],
+    "colors": [
+      "forest green",
+      "black"
+    ],
+    "materials": [
+      "stretch cotton jersey"
+    ],
+    "patterns": [
+      "all-over Celtic knotwork linework"
+    ],
+    "fit_silhouette": "slim fitted men's tee",
+    "details": [
+      "interlacing knot linework wraps body and sleeves",
+      "crew neck",
+      "short fitted sleeves"
+    ],
+    "styling_notes": "under the brown work jacket with flared jeans",
+    "prompt": "a slim fitted men's forest green stretch cotton tee with an all-over black interlacing Celtic knotwork print wrapping the body and sleeves, abstract pattern, no text, no letters, no logos",
+    "negative": [
+      "oversized",
+      "boxy",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch4#10"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/top_tee_fitted_celtic_knot_green_01.jpg"
+  },
+  {
     "id": "layer_top_camp_shirt_bandana_red_01",
     "name": "Red bandana-print camp shirt",
     "slot": "layer_top",
@@ -2790,6 +4008,295 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "outfit_B5"
     ],
     "image": "/shots/items/layer_top_shirt_pintuck_collared_white_01.jpg"
+  },
+  {
+    "id": "layer_top_mesh_longsleeve_black_01",
+    "name": "Black sheer mesh long-sleeve top",
+    "slot": "layer_top",
+    "subcategory": "mesh_top",
+    "style_tags": [
+      "grunge",
+      "y2k_streetwear",
+      "gothic",
+      "avant_garde_rick"
+    ],
+    "colors": [
+      "black"
+    ],
+    "materials": [
+      "stretch power mesh"
+    ],
+    "patterns": [],
+    "fit_silhouette": "fitted, long sleeves, crew neck, slightly long body",
+    "details": [
+      "fully sheer fine mesh",
+      "thumbholes at cuffs",
+      "raw-cut neckline"
+    ],
+    "styling_notes": "layer under tanks, tees, slip dresses and tube tops",
+    "prompt": "fitted black sheer stretch mesh long-sleeve top with a crew neck and thumbholes at the cuffs, fine see-through mesh, no text, no logos",
+    "negative": [
+      "opaque fabric",
+      "print",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#6"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/layer_top_mesh_longsleeve_black_01.jpg"
+  },
+  {
+    "id": "layer_top_oxford_oversized_light_blue_01",
+    "name": "Oversized light blue oxford shirt",
+    "slot": "layer_top",
+    "subcategory": "shirt",
+    "style_tags": [
+      "preppy",
+      "streetwear_90s",
+      "minimal_basics",
+      "french_casual"
+    ],
+    "colors": [
+      "light oxford blue"
+    ],
+    "materials": [
+      "cotton oxford cloth"
+    ],
+    "patterns": [],
+    "fit_silhouette": "boyfriend-oversized, dropped shoulders, long shirttail hem",
+    "details": [
+      "button-down collar",
+      "single chest pocket",
+      "white buttons"
+    ],
+    "styling_notes": "wear open over tanks or buttoned under sweaters",
+    "prompt": "oversized light blue cotton oxford button-down shirt with dropped shoulders, button-down collar, one chest pocket, white buttons and a long curved shirttail hem, no text, no logos",
+    "negative": [
+      "fitted slim shirt",
+      "stripes",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#7"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/layer_top_oxford_oversized_light_blue_01.jpg"
+  },
+  {
+    "id": "layer_top_flannel_plaid_red_black_01",
+    "name": "Red and black plaid flannel shirt",
+    "slot": "layer_top",
+    "subcategory": "flannel_shirt",
+    "style_tags": [
+      "grunge",
+      "streetwear_90s",
+      "skater"
+    ],
+    "colors": [
+      "red",
+      "black"
+    ],
+    "materials": [
+      "brushed cotton flannel"
+    ],
+    "patterns": [
+      "buffalo/tartan plaid"
+    ],
+    "fit_silhouette": "oversized, worn open or tied at the waist",
+    "details": [
+      "soft brushed flannel",
+      "two flap chest pockets",
+      "black buttons"
+    ],
+    "styling_notes": "open over band-style tees or tied round the waist of baggy jeans",
+    "prompt": "oversized soft brushed cotton flannel shirt in red and black plaid with two flap chest pockets and black buttons, no text, no logos",
+    "negative": [
+      "fitted cut",
+      "bright neon",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#8"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/layer_top_flannel_plaid_red_black_01.jpg"
+  },
+  {
+    "id": "layer_top_lace_trim_longsleeve_white_01",
+    "name": "White lace-trim fitted long-sleeve top",
+    "slot": "layer_top",
+    "subcategory": "long_sleeve_tee",
+    "style_tags": [
+      "coquette",
+      "vintage_romantic",
+      "kawaii"
+    ],
+    "colors": [
+      "white"
+    ],
+    "materials": [
+      "cotton rib jersey",
+      "cotton lace"
+    ],
+    "patterns": [],
+    "fit_silhouette": "slim, fitted, scoop neck",
+    "details": [
+      "scalloped white lace trim at neckline and cuffs",
+      "tiny ribbon bow at center front"
+    ],
+    "styling_notes": "layer under camis, pinafores and slip dresses",
+    "prompt": "fitted white ribbed cotton long-sleeve top with a scoop neck, scalloped white lace trim at the neckline and cuffs and a tiny white satin bow at the center front, no text, no logos",
+    "negative": [
+      "oversized",
+      "print",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#9"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/layer_top_lace_trim_longsleeve_white_01.jpg"
+  },
+  {
+    "id": "layer_top_work_shirt_oversized_black_01",
+    "name": "Oversized black twill work shirt",
+    "slot": "layer_top",
+    "subcategory": "shirt",
+    "style_tags": [
+      "menswear",
+      "vintage_workwear",
+      "americana",
+      "avant_garde_dark"
+    ],
+    "colors": [
+      "black"
+    ],
+    "materials": [
+      "cotton twill"
+    ],
+    "patterns": [],
+    "fit_silhouette": "oversized, boxy, long sleeves",
+    "details": [
+      "two flap chest pockets",
+      "pointed collar",
+      "black buttons",
+      "pen slot on left pocket"
+    ],
+    "styling_notes": "buttoned to the top with pleated trousers, or open over a tee as a light jacket",
+    "prompt": "an oversized men's black cotton twill long-sleeve work shirt with two flap chest pockets, a pointed collar and black buttons, no patches, no text, no logos",
+    "negative": [
+      "patches",
+      "logos",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch3#7"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/layer_top_work_shirt_oversized_black_01.jpg"
+  },
+  {
+    "id": "layer_top_mesh_longsleeve_baroque_burgundy_01",
+    "name": "Burgundy mesh top with black baroque scrolls",
+    "slot": "layer_top",
+    "subcategory": "mesh_top",
+    "style_tags": [
+      "menswear",
+      "archive",
+      "gothic",
+      "avant_garde_dark"
+    ],
+    "colors": [
+      "burgundy",
+      "black"
+    ],
+    "materials": [
+      "stretch power mesh"
+    ],
+    "patterns": [
+      "all-over baroque scroll print"
+    ],
+    "fit_silhouette": "slim, body-skimming men's fit",
+    "details": [
+      "semi-sheer stretch mesh",
+      "large black baroque acanthus scrolls",
+      "mock neck"
+    ],
+    "styling_notes": "over a black tank with leather pants and a cross necklace",
+    "prompt": "a slim body-skimming men's burgundy stretch power-mesh long-sleeve mock-neck top with an all-over large black baroque scroll print, abstract pattern, no text, no letters, no logos",
+    "negative": [
+      "oversized",
+      "boxy",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch4#4"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/layer_top_mesh_longsleeve_baroque_burgundy_01.jpg"
+  },
+  {
+    "id": "layer_top_shirt_slim_cross_thorn_black_01",
+    "name": "Slim black button-up with white crosses and thorn vines",
+    "slot": "layer_top",
+    "subcategory": "shirt",
+    "style_tags": [
+      "menswear",
+      "archive",
+      "gothic",
+      "rock_moto"
+    ],
+    "colors": [
+      "black",
+      "white"
+    ],
+    "materials": [
+      "stretch cotton poplin"
+    ],
+    "patterns": [
+      "Gothic crosses and thorny vine linework"
+    ],
+    "fit_silhouette": "slim fitted men's shirt",
+    "details": [
+      "white ornate Gothic crosses linked by curling thorny vines",
+      "point collar",
+      "black buttons",
+      "fitted long sleeves"
+    ],
+    "styling_notes": "worn open over a tank with leather flares and silver rings",
+    "prompt": "a slim fitted men's black stretch cotton button-up shirt with a point collar and an all-over white print of ornate Gothic crosses linked by curling thorny vines, abstract pattern, no text, no letters, no logos",
+    "negative": [
+      "oversized",
+      "boxy",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch4#11"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/layer_top_shirt_slim_cross_thorn_black_01.jpg"
   },
   {
     "id": "outerwear_blazer_leather_black_01",
@@ -3500,6 +5007,543 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
     "image": "/shots/items/outerwear_windbreaker_colorblock_navy_white_01.jpg"
   },
   {
+    "id": "outerwear_bomber_nylon_cropped_black_01",
+    "name": "Black cropped nylon bomber",
+    "slot": "outerwear",
+    "subcategory": "bomber",
+    "style_tags": [
+      "streetwear_90s",
+      "y2k_streetwear",
+      "uk_drill"
+    ],
+    "colors": [
+      "black"
+    ],
+    "materials": [
+      "nylon",
+      "rib knit"
+    ],
+    "patterns": [],
+    "fit_silhouette": "cropped boxy bomber, hits at the waist",
+    "details": [
+      "ribbed collar, cuffs and hem",
+      "silver zip",
+      "utility sleeve pocket"
+    ],
+    "styling_notes": "goes over nearly every top and dress",
+    "prompt": "a cropped boxy black nylon bomber jacket with ribbed collar, cuffs and hem, silver front zipper and a small zip utility pocket on the sleeve, no text, no logos",
+    "negative": [
+      "long length",
+      "patches",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#18"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/outerwear_bomber_nylon_cropped_black_01.jpg"
+  },
+  {
+    "id": "outerwear_jacket_suede_fur_collar_brown_01",
+    "name": "Brown suede cropped jacket with faux-fur trim",
+    "slot": "outerwear",
+    "subcategory": "suede_jacket",
+    "style_tags": [
+      "y2k",
+      "gyaru",
+      "indie_sleaze",
+      "western"
+    ],
+    "colors": [
+      "chocolate brown",
+      "cream"
+    ],
+    "materials": [
+      "faux suede",
+      "faux shearling"
+    ],
+    "patterns": [],
+    "fit_silhouette": "cropped, slightly fitted",
+    "details": [
+      "cream faux-fur collar and cuffs",
+      "toggle or snap front"
+    ],
+    "styling_notes": "early-2000s Penny Lane vibe; with low-rise denim and boots",
+    "prompt": "a cropped chocolate brown faux suede jacket with a fluffy cream faux-fur collar and cuffs and a snap front, early-2000s style, no text, no logos",
+    "negative": [
+      "long coat",
+      "leather shine",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#20"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/outerwear_jacket_suede_fur_collar_brown_01.jpg"
+  },
+  {
+    "id": "outerwear_trench_faux_leather_long_black_01",
+    "name": "Long black faux-leather trench coat",
+    "slot": "outerwear",
+    "subcategory": "trench",
+    "style_tags": [
+      "avant_garde_dark",
+      "gothic",
+      "rock_moto",
+      "leather_tailoring"
+    ],
+    "colors": [
+      "black"
+    ],
+    "materials": [
+      "faux leather"
+    ],
+    "patterns": [],
+    "fit_silhouette": "long ankle-length trench, belted",
+    "details": [
+      "double-breasted",
+      "wide lapels",
+      "self belt",
+      "glossy finish"
+    ],
+    "styling_notes": "dramatic topper over all-black and avant-garde looks",
+    "prompt": "a long ankle-length black faux leather trench coat, double-breasted with wide lapels and a self-tie belt, soft glossy finish, no text, no logos",
+    "negative": [
+      "short length",
+      "brown",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#21"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/outerwear_trench_faux_leather_long_black_01.jpg"
+  },
+  {
+    "id": "outerwear_tracksuit_velour_zip_purple_01",
+    "name": "Purple velour zip jacket",
+    "slot": "outerwear",
+    "subcategory": "track_jacket",
+    "style_tags": [
+      "y2k",
+      "gyaru",
+      "y2k_streetwear"
+    ],
+    "colors": [
+      "deep purple"
+    ],
+    "materials": [
+      "velour"
+    ],
+    "patterns": [],
+    "fit_silhouette": "fitted, slightly cropped zip jacket",
+    "details": [
+      "plush velour sheen",
+      "silver zipper",
+      "stand-up collar",
+      "ribbed hem and cuffs"
+    ],
+    "styling_notes": "the Y2K velour tracksuit top; with baby tees and low-rise jeans",
+    "prompt": "a fitted slightly cropped deep purple velour zip-up track jacket with a stand-up collar, plush sheen, silver zipper and ribbed hem and cuffs, early-2000s tracksuit style, plain with no text, no text, no logos",
+    "negative": [
+      "text on back",
+      "logos",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#23"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/outerwear_tracksuit_velour_zip_purple_01.jpg"
+  },
+  {
+    "id": "outerwear_cardigan_cropped_bow_black_01",
+    "name": "Black cropped cardigan with pearl buttons",
+    "slot": "outerwear",
+    "subcategory": "cardigan",
+    "style_tags": [
+      "coquette",
+      "vintage_romantic",
+      "preppy_90s"
+    ],
+    "colors": [
+      "black",
+      "ivory"
+    ],
+    "materials": [
+      "fine wool-blend knit"
+    ],
+    "patterns": [],
+    "fit_silhouette": "cropped fitted cardigan",
+    "details": [
+      "round neck",
+      "pearl buttons",
+      "small black satin bows down the front"
+    ],
+    "styling_notes": "over camis, slip dresses and tube tops",
+    "prompt": "a cropped fitted black fine-knit cardigan with a round neck, pearl buttons and tiny black satin bows down the front placket, no text, no logos",
+    "negative": [
+      "oversized chunky knit",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#28"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/outerwear_cardigan_cropped_bow_black_01.jpg"
+  },
+  {
+    "id": "outerwear_jacket_racer_leather_burgundy_01",
+    "name": "Burgundy leather racer jacket",
+    "slot": "outerwear",
+    "subcategory": "racer_jacket",
+    "style_tags": [
+      "rock_moto",
+      "y2k_streetwear",
+      "indie_sleaze"
+    ],
+    "colors": [
+      "burgundy",
+      "black"
+    ],
+    "materials": [
+      "leather"
+    ],
+    "patterns": [],
+    "fit_silhouette": "slim cropped racer",
+    "details": [
+      "band collar with snap tab",
+      "asymmetric front zip"
+    ],
+    "styling_notes": "a deep color that still works with black and denim",
+    "prompt": "a slim cropped burgundy leather racer jacket with a snap-tab band collar and silver front zip, no patches or logos, no text, no logos",
+    "negative": [
+      "patches",
+      "text",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch2#18"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/outerwear_jacket_racer_leather_burgundy_01.jpg"
+  },
+  {
+    "id": "outerwear_jacket_field_cotton_olive_01",
+    "name": "Olive green field jacket",
+    "slot": "outerwear",
+    "subcategory": "field_jacket",
+    "style_tags": [
+      "grunge",
+      "vintage_workwear",
+      "streetwear_90s"
+    ],
+    "colors": [
+      "olive green"
+    ],
+    "materials": [
+      "cotton twill"
+    ],
+    "patterns": [],
+    "fit_silhouette": "boxy hip-length utility jacket",
+    "details": [
+      "four flap pockets",
+      "snap front",
+      "drawcord waist"
+    ],
+    "styling_notes": "over hoodies, tees and slip dresses",
+    "prompt": "a boxy olive green cotton field jacket with four flap pockets, snap front and drawcord waist, no patches, no text, no logos",
+    "negative": [
+      "patches",
+      "camo",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch2#25"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/outerwear_jacket_field_cotton_olive_01.jpg"
+  },
+  {
+    "id": "outerwear_jacket_chore_canvas_brown_01",
+    "name": "Brown duck canvas work jacket",
+    "slot": "outerwear",
+    "subcategory": "work_jacket",
+    "style_tags": [
+      "menswear",
+      "vintage_workwear",
+      "americana",
+      "skater"
+    ],
+    "colors": [
+      "brown",
+      "dark brown"
+    ],
+    "materials": [
+      "cotton duck canvas",
+      "corduroy"
+    ],
+    "patterns": [],
+    "fit_silhouette": "boxy, hip-length",
+    "details": [
+      "dark brown corduroy collar",
+      "snap or button front",
+      "two lower patch pockets",
+      "washed, broken-in canvas"
+    ],
+    "styling_notes": "the workwear anchor: over hoodies with carpenter pants and work boots",
+    "prompt": "a boxy hip-length men's washed brown cotton duck canvas work jacket with a dark brown corduroy collar, button front and two lower patch pockets, no logo patch, no text, no logos",
+    "negative": [
+      "logo patch",
+      "hood",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch3#8"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/outerwear_jacket_chore_canvas_brown_01.jpg"
+  },
+  {
+    "id": "outerwear_track_jacket_forest_green_white_01",
+    "name": "Forest green and white retro track jacket",
+    "slot": "outerwear",
+    "subcategory": "track_jacket",
+    "style_tags": [
+      "menswear",
+      "sportswear",
+      "uk_drill",
+      "streetwear_90s"
+    ],
+    "colors": [
+      "forest green",
+      "white"
+    ],
+    "materials": [
+      "polyester tricot"
+    ],
+    "patterns": [
+      "contrast side panels"
+    ],
+    "fit_silhouette": "regular, hip-length",
+    "details": [
+      "stand collar",
+      "white sleeve stripes",
+      "full zip",
+      "ribbed cuffs and hem",
+      "no logos"
+    ],
+    "styling_notes": "full set with your forest green track pants, or over a white tee with jeans",
+    "prompt": "a men's forest green polyester tricot retro track jacket with a stand collar, full zip, white stripes down the sleeves and ribbed cuffs and hem, no logos, no text, no logos",
+    "negative": [
+      "three stripes",
+      "logo",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch3#11"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/outerwear_track_jacket_forest_green_white_01.jpg"
+  },
+  {
+    "id": "outerwear_zip_hoodie_rhinestone_tribal_black_01",
+    "name": "Fitted black zip hoodie with rhinestone tribal print",
+    "slot": "outerwear",
+    "subcategory": "zip_hoodie",
+    "style_tags": [
+      "menswear",
+      "archive",
+      "y2k",
+      "hip_hop_2000s"
+    ],
+    "colors": [
+      "black",
+      "silver"
+    ],
+    "materials": [
+      "cotton jersey",
+      "rhinestones"
+    ],
+    "patterns": [
+      "rhinestone tribal swirl"
+    ],
+    "fit_silhouette": "slim fitted men's zip-up, hip length",
+    "details": [
+      "curving tribal swirls in clear rhinestones on the back and down the sleeves",
+      "full zip",
+      "ribbed cuffs and hem"
+    ],
+    "styling_notes": "the 2000s club zip-up, with low-rise flared jeans and a trucker",
+    "prompt": "a slim fitted men's black cotton zip-up hoodie with curving tribal swirls in clear rhinestones across the body and down the sleeves, full zip and ribbed cuffs and hem, abstract pattern, no text, no letters, no logos",
+    "negative": [
+      "oversized",
+      "boxy",
+      "lettering",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch4#14"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/outerwear_zip_hoodie_rhinestone_tribal_black_01.jpg"
+  },
+  {
+    "id": "outerwear_jacket_denim_bleached_flame_black_01",
+    "name": "Washed black denim jacket with bleached flames",
+    "slot": "outerwear",
+    "subcategory": "denim_jacket",
+    "style_tags": [
+      "menswear",
+      "archive",
+      "rock_moto",
+      "grunge"
+    ],
+    "colors": [
+      "washed black",
+      "bleached gray"
+    ],
+    "materials": [
+      "denim"
+    ],
+    "patterns": [
+      "bleached-out flame print"
+    ],
+    "fit_silhouette": "fitted, slightly cropped men's trucker",
+    "details": [
+      "flames bleached into the hem and cuffs",
+      "silver shank buttons",
+      "chest flap pockets"
+    ],
+    "styling_notes": "over a fitted tank with flared jeans",
+    "prompt": "a fitted slightly cropped men's washed black denim trucker jacket with flames bleached into the hem and cuffs, silver shank buttons and chest flap pockets, abstract pattern, no text, no letters, no logos",
+    "negative": [
+      "oversized",
+      "boxy",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch4#15"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/outerwear_jacket_denim_bleached_flame_black_01.jpg"
+  },
+  {
+    "id": "outerwear_track_jacket_slim_silver_piping_black_01",
+    "name": "Slim black track jacket with curved silver piping",
+    "slot": "outerwear",
+    "subcategory": "track_jacket",
+    "style_tags": [
+      "menswear",
+      "archive",
+      "y2k",
+      "sportswear"
+    ],
+    "colors": [
+      "black",
+      "silver"
+    ],
+    "materials": [
+      "glossy nylon tricot"
+    ],
+    "patterns": [],
+    "fit_silhouette": "slim fitted men's track jacket",
+    "details": [
+      "curved reflective silver piping sweeping from the chest around the sleeves",
+      "funnel collar",
+      "full zip"
+    ],
+    "styling_notes": "with fitted printed long sleeves and sleek sneakers",
+    "prompt": "a slim fitted men's glossy black nylon track jacket with curved reflective silver piping sweeping from the chest around the sleeves, funnel collar and full zip, abstract pattern, no text, no letters, no logos",
+    "negative": [
+      "oversized",
+      "straight stripes",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch4#16"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/outerwear_track_jacket_slim_silver_piping_black_01.jpg"
+  },
+  {
+    "id": "outerwear_jacket_leather_cropped_distressed_brown_01",
+    "name": "Cropped distressed brown leather jacket",
+    "slot": "outerwear",
+    "subcategory": "leather_jacket",
+    "style_tags": [
+      "menswear",
+      "archive",
+      "rock_moto",
+      "grunge"
+    ],
+    "colors": [
+      "dark brown"
+    ],
+    "materials": [
+      "distressed leather"
+    ],
+    "patterns": [],
+    "fit_silhouette": "cropped, fitted men's jacket",
+    "details": [
+      "worn rub-off at seams and edges",
+      "point collar",
+      "front zip",
+      "snap-tab waist"
+    ],
+    "styling_notes": "over a fitted printed tee with flared jeans",
+    "prompt": "a cropped fitted men's distressed dark brown leather jacket with worn rub-off at the seams, point collar, front zip and snap-tab waist, abstract pattern, no text, no letters, no logos",
+    "negative": [
+      "oversized",
+      "long",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch4#17"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/outerwear_jacket_leather_cropped_distressed_brown_01.jpg"
+  },
+  {
     "id": "dress_onepiece_corset_bodysuit_floral_lace_rose_01",
     "name": "Rose floral lace corset bodysuit",
     "slot": "dress_onepiece",
@@ -3686,6 +5730,279 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "outfit_B1"
     ],
     "image": "/shots/items/dress_pinafore_plaid_belted_coral_01.jpg"
+  },
+  {
+    "id": "dress_onepiece_slip_satin_lace_black_01",
+    "name": "Black satin slip dress with lace trim",
+    "slot": "dress_onepiece",
+    "subcategory": "slip_dress",
+    "style_tags": [
+      "y2k",
+      "coquette",
+      "grunge",
+      "gothic"
+    ],
+    "colors": [
+      "black"
+    ],
+    "materials": [
+      "satin",
+      "lace"
+    ],
+    "patterns": [],
+    "fit_silhouette": "bias-cut slip, skims body, mid-thigh to knee length",
+    "details": [
+      "thin spaghetti straps",
+      "black lace trim at V neckline and hem"
+    ],
+    "styling_notes": "90s slip: over a tee or mesh top, with boots or Mary Janes",
+    "prompt": "black bias-cut satin slip dress with thin spaghetti straps, black lace trim along the V neckline and the hem, knee length, soft liquid sheen, no text, no logos",
+    "negative": [
+      "structured bodice",
+      "print",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#10"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/dress_onepiece_slip_satin_lace_black_01.jpg"
+  },
+  {
+    "id": "dress_onepiece_denim_corset_mini_lightwash_01",
+    "name": "Light-wash denim corset mini dress",
+    "slot": "dress_onepiece",
+    "subcategory": "corset_dress",
+    "style_tags": [
+      "y2k_streetwear",
+      "y2k",
+      "streetwear_90s"
+    ],
+    "colors": [
+      "light blue denim"
+    ],
+    "materials": [
+      "cotton denim"
+    ],
+    "patterns": [],
+    "fit_silhouette": "strapless, fitted corset bodice, short A-line mini",
+    "details": [
+      "visible seaming on corset bodice",
+      "silver front zip",
+      "faded wash"
+    ],
+    "styling_notes": "Y2K denim moment; with silver chains, sneakers or boots",
+    "prompt": "strapless light-wash denim corset mini dress with a fitted seamed bodice, silver front zipper and short flared mini skirt, faded vintage wash, no text, no logos",
+    "negative": [
+      "dark wash",
+      "long length",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#11"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/dress_onepiece_denim_corset_mini_lightwash_01.jpg"
+  },
+  {
+    "id": "dress_onepiece_racerback_maxi_heather_gray_01",
+    "name": "Heather gray ribbed racerback maxi dress",
+    "slot": "dress_onepiece",
+    "subcategory": "tank_dress",
+    "style_tags": [
+      "streetwear_90s",
+      "minimal_basics",
+      "sportswear"
+    ],
+    "colors": [
+      "heather gray"
+    ],
+    "materials": [
+      "cotton rib knit"
+    ],
+    "patterns": [],
+    "fit_silhouette": "body-skimming column maxi, racerback",
+    "details": [
+      "fine rib texture",
+      "scoop neck",
+      "ankle length"
+    ],
+    "styling_notes": "easy base under denim jackets, puffers and hoodies with sneakers",
+    "prompt": "heather gray ribbed cotton tank maxi dress with a scoop neck and racerback, slim body-skimming column silhouette to the ankle, no text, no logos",
+    "negative": [
+      "tight bodycon gloss",
+      "print",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#12"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/dress_onepiece_racerback_maxi_heather_gray_01.jpg"
+  },
+  {
+    "id": "dress_onepiece_babydoll_eyelet_ivory_01",
+    "name": "Ivory eyelet babydoll mini dress",
+    "slot": "dress_onepiece",
+    "subcategory": "babydoll_dress",
+    "style_tags": [
+      "coquette",
+      "vintage_romantic",
+      "mori_girl"
+    ],
+    "colors": [
+      "ivory"
+    ],
+    "materials": [
+      "cotton broderie anglaise eyelet"
+    ],
+    "patterns": [
+      "eyelet embroidery"
+    ],
+    "fit_silhouette": "empire waist, loose flared babydoll skirt, mini",
+    "details": [
+      "puff sleeves",
+      "square neckline",
+      "ribbon tie at bust",
+      "scalloped eyelet hem"
+    ],
+    "styling_notes": "romantic but easy: with loafers, white socks or a denim jacket",
+    "prompt": "ivory cotton eyelet babydoll mini dress with short puff sleeves, square neckline, empire waist with a thin ribbon tie and a scalloped eyelet hem, no text, no logos",
+    "negative": [
+      "bodycon",
+      "long length",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#13"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/dress_onepiece_babydoll_eyelet_ivory_01.jpg"
+  },
+  {
+    "id": "dress_onepiece_velvet_bow_strap_mini_black_01",
+    "name": "Black velvet mini dress with bow straps",
+    "slot": "dress_onepiece",
+    "subcategory": "mini_dress",
+    "style_tags": [
+      "coquette",
+      "gothic",
+      "vintage_romantic"
+    ],
+    "colors": [
+      "black"
+    ],
+    "materials": [
+      "velvet",
+      "satin ribbon"
+    ],
+    "patterns": [],
+    "fit_silhouette": "fitted bodice, short flared mini",
+    "details": [
+      "satin bow ties on each shoulder",
+      "sweetheart neckline"
+    ],
+    "styling_notes": "with lace-top thigh-highs and Mary Janes or with boots",
+    "prompt": "a black velvet mini dress with a sweetheart neckline, satin ribbon bows tied on each shoulder strap and a short flared skirt, no text, no logos",
+    "negative": [
+      "long",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch2#15"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/dress_onepiece_velvet_bow_strap_mini_black_01.jpg"
+  },
+  {
+    "id": "dress_onepiece_ribbed_longsleeve_slit_maxi_black_01",
+    "name": "Black ribbed long-sleeve maxi with side slit",
+    "slot": "dress_onepiece",
+    "subcategory": "maxi_dress",
+    "style_tags": [
+      "avant_garde_dark",
+      "minimal_basics",
+      "avant_garde_rick"
+    ],
+    "colors": [
+      "black"
+    ],
+    "materials": [
+      "rib knit"
+    ],
+    "patterns": [],
+    "fit_silhouette": "column maxi, high side slit",
+    "details": [
+      "mock neck",
+      "long sleeves",
+      "thigh-high side slit"
+    ],
+    "styling_notes": "sleek base for the trench, leather and platform boots",
+    "prompt": "a black ribbed knit long-sleeve maxi dress with a mock neck, slim column silhouette and a high side slit, no text, no logos",
+    "negative": [
+      "print",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch2#16"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/dress_onepiece_ribbed_longsleeve_slit_maxi_black_01.jpg"
+  },
+  {
+    "id": "dress_onepiece_slip_satin_olive_01",
+    "name": "Olive satin slip dress",
+    "slot": "dress_onepiece",
+    "subcategory": "slip_dress",
+    "style_tags": [
+      "y2k",
+      "grunge",
+      "french_casual"
+    ],
+    "colors": [
+      "olive green"
+    ],
+    "materials": [
+      "satin"
+    ],
+    "patterns": [],
+    "fit_silhouette": "bias-cut slip, midi length",
+    "details": [
+      "thin straps",
+      "cowl neckline"
+    ],
+    "styling_notes": "same slip you kept, in green; with black tees and boots",
+    "prompt": "an olive green bias-cut satin slip dress with thin straps, a soft cowl neckline and midi length, no text, no logos",
+    "negative": [
+      "lace",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch2#24"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/dress_onepiece_slip_satin_olive_01.jpg"
   },
   {
     "id": "bottom_bike_shorts_black_lace_hem_01",
@@ -5036,6 +7353,412 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
     "image": "/shots/items/bottom_trousers_pleated_wide_khaki_01.jpg"
   },
   {
+    "id": "bottom_cargo_pants_baggy_olive_01",
+    "name": "Baggy olive cargo pants",
+    "slot": "bottom",
+    "subcategory": "cargo_pants",
+    "style_tags": [
+      "streetwear_90s",
+      "y2k_streetwear",
+      "techwear"
+    ],
+    "colors": [
+      "olive green"
+    ],
+    "materials": [
+      "cotton twill"
+    ],
+    "patterns": [],
+    "fit_silhouette": "baggy low-slung, wide straight leg",
+    "details": [
+      "bellows cargo pockets on thighs",
+      "adjustable drawcord ankles"
+    ],
+    "styling_notes": "neutral green that goes with black, white and silver",
+    "prompt": "baggy olive green cotton twill cargo pants with bellows cargo pockets on the thighs and drawcord ankle hems, wide straight leg, no text, no logos",
+    "negative": [
+      "skinny fit",
+      "camo",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#24"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/bottom_cargo_pants_baggy_olive_01.jpg"
+  },
+  {
+    "id": "bottom_skirt_midi_lace_tiered_black_01",
+    "name": "Black lace tiered midi skirt",
+    "slot": "bottom",
+    "subcategory": "midi_skirt",
+    "style_tags": [
+      "vintage_romantic",
+      "gothic",
+      "coquette",
+      "grunge"
+    ],
+    "colors": [
+      "black"
+    ],
+    "materials": [
+      "cotton lace",
+      "chiffon lining"
+    ],
+    "patterns": [],
+    "fit_silhouette": "tiered flowy midi",
+    "details": [
+      "three lace tiers",
+      "elastic waist",
+      "scalloped hem"
+    ],
+    "styling_notes": "with tees, cropped knits, boots or sneakers",
+    "prompt": "a black tiered lace midi skirt with three flounced lace tiers, elastic waistband and a scalloped hem, soft and flowy, no text, no logos",
+    "negative": [
+      "mini length",
+      "tight pencil",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#31"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/bottom_skirt_midi_lace_tiered_black_01.jpg"
+  },
+  {
+    "id": "bottom_skirt_pleated_mini_tartan_red_01",
+    "name": "Red tartan pleated mini skirt",
+    "slot": "bottom",
+    "subcategory": "mini_skirt",
+    "style_tags": [
+      "punk",
+      "grunge",
+      "japanese_school"
+    ],
+    "colors": [
+      "red",
+      "black",
+      "white"
+    ],
+    "materials": [
+      "wool blend"
+    ],
+    "patterns": [
+      "red tartan"
+    ],
+    "fit_silhouette": "knife-pleated mini",
+    "details": [
+      "crisp pleats",
+      "side zip"
+    ],
+    "styling_notes": "with your flannel, mesh top and studded belts",
+    "prompt": "a red, black and white tartan knife-pleated mini skirt with a side zip, no text, no logos",
+    "negative": [
+      "long",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch2#20"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/bottom_skirt_pleated_mini_tartan_red_01.jpg"
+  },
+  {
+    "id": "bottom_skirt_cargo_mini_camo_green_01",
+    "name": "Green camo cargo mini skirt",
+    "slot": "bottom",
+    "subcategory": "mini_skirt",
+    "style_tags": [
+      "y2k_streetwear",
+      "streetwear_90s",
+      "uk_drill"
+    ],
+    "colors": [
+      "olive green",
+      "khaki",
+      "brown",
+      "black"
+    ],
+    "materials": [
+      "cotton twill"
+    ],
+    "patterns": [
+      "woodland camo"
+    ],
+    "fit_silhouette": "low-rise cargo mini",
+    "details": [
+      "flap cargo pockets",
+      "belt loops"
+    ],
+    "styling_notes": "Y2K street with tube tops and chunky sneakers",
+    "prompt": "a low-rise green woodland camo cotton cargo mini skirt with flap cargo pockets and belt loops, no text, no logos",
+    "negative": [
+      "long",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch2#26"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/bottom_skirt_cargo_mini_camo_green_01.jpg"
+  },
+  {
+    "id": "bottom_skirt_suede_mini_burnt_orange_01",
+    "name": "Burnt orange suede mini skirt",
+    "slot": "bottom",
+    "subcategory": "mini_skirt",
+    "style_tags": [
+      "y2k",
+      "western",
+      "indie_sleaze"
+    ],
+    "colors": [
+      "burnt orange"
+    ],
+    "materials": [
+      "faux suede"
+    ],
+    "patterns": [],
+    "fit_silhouette": "A-line mini",
+    "details": [
+      "front snap placket",
+      "topstitched seams"
+    ],
+    "styling_notes": "70s/Y2K warmth with black tops and boots; matches your orange beanie",
+    "prompt": "a burnt orange faux suede A-line mini skirt with a front snap placket and topstitched seams, no text, no logos",
+    "negative": [
+      "fringe",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch2#30"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/bottom_skirt_suede_mini_burnt_orange_01.jpg"
+  },
+  {
+    "id": "bottom_shorts_basketball_mesh_black_01",
+    "name": "Black mesh basketball shorts",
+    "slot": "bottom",
+    "subcategory": "shorts",
+    "style_tags": [
+      "menswear",
+      "sportswear",
+      "hip_hop_2000s",
+      "streetwear_90s"
+    ],
+    "colors": [
+      "black",
+      "white"
+    ],
+    "materials": [
+      "polyester mesh"
+    ],
+    "patterns": [],
+    "fit_silhouette": "long and baggy, below the knee",
+    "details": [
+      "white side piping",
+      "elastic drawcord waist",
+      "no logos"
+    ],
+    "styling_notes": "long 2000s shorts with a jersey or white tee, tall socks and sneakers",
+    "prompt": "long baggy below-the-knee men's black polyester mesh basketball shorts with white side piping and an elastic drawcord waist, no logos, no text, no logos",
+    "negative": [
+      "short length",
+      "logo",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch3#15"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/bottom_shorts_basketball_mesh_black_01.jpg"
+  },
+  {
+    "id": "bottom_jeans_flare_flame_embroidered_dark_01",
+    "name": "Dark flared jeans with black flame embroidery",
+    "slot": "bottom",
+    "subcategory": "jeans",
+    "style_tags": [
+      "menswear",
+      "archive",
+      "y2k",
+      "rock_moto"
+    ],
+    "colors": [
+      "dark indigo",
+      "black"
+    ],
+    "materials": [
+      "denim",
+      "embroidery thread"
+    ],
+    "patterns": [
+      "flame embroidery"
+    ],
+    "fit_silhouette": "slim through the thigh, flared from the knee, low rise",
+    "details": [
+      "black flames embroidered up from both hems",
+      "whiskered fade",
+      "five pockets"
+    ],
+    "styling_notes": "with a fitted printed thermal and pointy boots",
+    "prompt": "men's dark indigo low-rise flared jeans, slim through the thigh and flared from the knee, with black flames embroidered up from both hems and a whiskered fade, abstract pattern, no text, no letters, no logos",
+    "negative": [
+      "baggy",
+      "skinny",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch4#18"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/bottom_jeans_flare_flame_embroidered_dark_01.jpg"
+  },
+  {
+    "id": "bottom_jeans_bootcut_distressed_gray_01",
+    "name": "Faded gray distressed bootcut jeans",
+    "slot": "bottom",
+    "subcategory": "jeans",
+    "style_tags": [
+      "menswear",
+      "archive",
+      "grunge",
+      "punk"
+    ],
+    "colors": [
+      "faded gray"
+    ],
+    "materials": [
+      "denim"
+    ],
+    "patterns": [],
+    "fit_silhouette": "slim bootcut men's fit, long stacked hem",
+    "details": [
+      "heavy rips and repair patches at the knees",
+      "frayed hems",
+      "faded wash"
+    ],
+    "styling_notes": "stacked over boots with a fitted mesh top",
+    "prompt": "men's faded gray slim bootcut jeans with heavy rips and repair patches at the knees, frayed long stacking hems, abstract pattern, no text, no letters, no logos",
+    "negative": [
+      "baggy",
+      "clean",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch4#19"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/bottom_jeans_bootcut_distressed_gray_01.jpg"
+  },
+  {
+    "id": "bottom_jeans_bootcut_studded_seam_black_01",
+    "name": "Black bootcut jeans with studded side seams",
+    "slot": "bottom",
+    "subcategory": "jeans",
+    "style_tags": [
+      "menswear",
+      "archive",
+      "punk",
+      "rock_moto"
+    ],
+    "colors": [
+      "black",
+      "silver"
+    ],
+    "materials": [
+      "denim",
+      "metal studs"
+    ],
+    "patterns": [],
+    "fit_silhouette": "slim bootcut men's fit",
+    "details": [
+      "silver studs run down both outer seams",
+      "washed black",
+      "five pockets"
+    ],
+    "styling_notes": "with a studded tank or tattoo-flash tee",
+    "prompt": "men's washed black slim bootcut jeans with silver studs running down both outer side seams, abstract pattern, no text, no letters, no logos",
+    "negative": [
+      "baggy",
+      "wide",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch4#21"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/bottom_jeans_bootcut_studded_seam_black_01.jpg"
+  },
+  {
+    "id": "bottom_trousers_waxed_bootcut_curved_seam_olive_01",
+    "name": "Slim olive waxed bootcut trousers with curved seams",
+    "slot": "bottom",
+    "subcategory": "trousers",
+    "style_tags": [
+      "menswear",
+      "archive",
+      "techwear",
+      "avant_garde_dark"
+    ],
+    "colors": [
+      "olive"
+    ],
+    "materials": [
+      "waxed cotton"
+    ],
+    "patterns": [],
+    "fit_silhouette": "slim through the thigh, bootcut hem",
+    "details": [
+      "curved articulated seams over the knees",
+      "waxed sheen",
+      "zip-off-free clean front"
+    ],
+    "styling_notes": "with a fitted mesh top and sleek runners",
+    "prompt": "men's slim olive waxed-cotton bootcut trousers with curved articulated seams over the knees and a subtle waxed sheen, abstract pattern, no text, no letters, no logos",
+    "negative": [
+      "baggy",
+      "cargo pockets",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch4#22"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/bottom_trousers_waxed_bootcut_curved_seam_olive_01.jpg"
+  },
+  {
     "id": "belt_waist_braided_leather_tan_01",
     "name": "Tan braided leather belt",
     "slot": "belt_waist",
@@ -5418,6 +8141,88 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
     "image": "/shots/items/belt_waist_studded_oring_black_01.jpg"
   },
   {
+    "id": "belt_waist_corset_lace_up_black_01",
+    "name": "Black lace-up corset belt",
+    "slot": "belt_waist",
+    "subcategory": "corset_belt",
+    "style_tags": [
+      "gothic_lolita",
+      "coquette",
+      "gothic",
+      "vintage_romantic"
+    ],
+    "colors": [
+      "black"
+    ],
+    "materials": [
+      "faux leather",
+      "satin ribbon"
+    ],
+    "patterns": [],
+    "fit_silhouette": "wide underbust corset belt",
+    "details": [
+      "black satin ribbon lace-up front",
+      "boning channels",
+      "silver eyelets"
+    ],
+    "styling_notes": "cinch over blouses, tees and dresses",
+    "prompt": "a wide black faux leather underbust corset belt with boning channels, silver eyelets and black satin ribbon lacing up the front, no text, no logos",
+    "negative": [
+      "full corset top",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#29"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/belt_waist_corset_lace_up_black_01.jpg"
+  },
+  {
+    "id": "belt_waist_leather_cross_conchos_black_01",
+    "name": "Black leather belt with silver cross conchos",
+    "slot": "belt_waist",
+    "subcategory": "belt",
+    "style_tags": [
+      "menswear",
+      "archive",
+      "gothic",
+      "western"
+    ],
+    "colors": [
+      "black",
+      "silver"
+    ],
+    "materials": [
+      "leather",
+      "sterling silver"
+    ],
+    "patterns": [],
+    "fit_silhouette": "1.5 inch belt",
+    "details": [
+      "row of silver filigree cross conchos",
+      "ornate silver buckle with scrollwork",
+      "black leather strap"
+    ],
+    "styling_notes": "low on the hips over flared jeans",
+    "prompt": "a black leather belt lined with silver filigree cross conchos and an ornate scrollwork silver buckle, abstract pattern, no text, no letters, no logos",
+    "negative": [
+      "plain",
+      "logo buckle",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch4#26"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/belt_waist_leather_cross_conchos_black_01.jpg"
+  },
+  {
     "id": "legwear_knee_sock_cross_black_01",
     "name": "Black knee socks with silver cross",
     "slot": "legwear",
@@ -5765,6 +8570,168 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "outfit_D1"
     ],
     "image": "/shots/items/legwear_thigh_highs_sheer_white_01.jpg"
+  },
+  {
+    "id": "legwear_socks_frilly_lace_white_01",
+    "name": "White frilly lace ankle socks",
+    "slot": "legwear",
+    "subcategory": "ankle_socks",
+    "style_tags": [
+      "coquette",
+      "classic_lolita",
+      "kawaii",
+      "vintage_romantic"
+    ],
+    "colors": [
+      "white"
+    ],
+    "materials": [
+      "cotton",
+      "lace"
+    ],
+    "patterns": [],
+    "fit_silhouette": "ankle socks with folded ruffle cuff",
+    "details": [
+      "double lace ruffle cuff",
+      "sheer lace edge"
+    ],
+    "styling_notes": "with Mary Janes, loafers and pumps",
+    "prompt": "a pair of white cotton ankle socks with a folded double lace ruffle cuff, no text, no logos",
+    "negative": [
+      "knee length",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#30"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/legwear_socks_frilly_lace_white_01.jpg"
+  },
+  {
+    "id": "legwear_tights_fishnet_black_01",
+    "name": "Black fishnet tights",
+    "slot": "legwear",
+    "subcategory": "tights",
+    "style_tags": [
+      "punk",
+      "grunge",
+      "gothic",
+      "indie_sleaze"
+    ],
+    "colors": [
+      "black"
+    ],
+    "materials": [
+      "nylon fishnet"
+    ],
+    "patterns": [
+      "fishnet"
+    ],
+    "fit_silhouette": "full tights",
+    "details": [
+      "medium diamond net",
+      "solid waistband"
+    ],
+    "styling_notes": "under minis, shorts and ripped jeans",
+    "prompt": "a pair of black medium-diamond fishnet tights, shown flat, no text, no logos",
+    "negative": [
+      "solid opaque",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch2#21"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/legwear_tights_fishnet_black_01.jpg"
+  },
+  {
+    "id": "legwear_socks_striped_overknee_black_white_01",
+    "name": "Black and white striped over-knee socks",
+    "slot": "legwear",
+    "subcategory": "thigh_highs",
+    "style_tags": [
+      "punk",
+      "kawaii",
+      "grunge"
+    ],
+    "colors": [
+      "black",
+      "white"
+    ],
+    "materials": [
+      "cotton knit"
+    ],
+    "patterns": [
+      "horizontal stripes"
+    ],
+    "fit_silhouette": "over-the-knee",
+    "details": [
+      "even black and white stripes",
+      "ribbed top"
+    ],
+    "styling_notes": "with pleated minis and platform Mary Janes",
+    "prompt": "a pair of black and white horizontal striped over-the-knee socks with ribbed tops, no text, no logos",
+    "negative": [
+      "text",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch2#22"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/legwear_socks_striped_overknee_black_white_01.jpg"
+  },
+  {
+    "id": "legwear_socks_tube_stripe_white_navy_green_01",
+    "name": "White tube socks with navy and green stripes",
+    "slot": "legwear",
+    "subcategory": "socks",
+    "style_tags": [
+      "menswear",
+      "sportswear",
+      "streetwear_90s",
+      "skater"
+    ],
+    "colors": [
+      "white",
+      "navy",
+      "forest green"
+    ],
+    "materials": [
+      "cotton rib knit"
+    ],
+    "patterns": [
+      "double stripes at top"
+    ],
+    "fit_silhouette": "tall calf-length tube",
+    "details": [
+      "ribbed body",
+      "two stripes at the cuff"
+    ],
+    "styling_notes": "pulled up with basketball shorts or shown with skate shoes",
+    "prompt": "a pair of tall white cotton ribbed tube socks with navy and forest green stripes at the top, no text, no logos",
+    "negative": [
+      "logos",
+      "ankle length",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch3#26"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/legwear_socks_tube_stripe_white_navy_green_01.jpg"
   },
   {
     "id": "shoes_boots_chelsea_suede_brown_01",
@@ -6982,6 +9949,259 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
     "image": "/shots/items/shoes_sneakers_tweed_suede_beige_cc_01.jpg"
   },
   {
+    "id": "shoes_sneakers_retro_low_sage_white_01",
+    "name": "Sage green and white retro low sneakers",
+    "slot": "shoes",
+    "subcategory": "sneakers",
+    "style_tags": [
+      "streetwear_90s",
+      "sportswear",
+      "y2k_streetwear"
+    ],
+    "colors": [
+      "sage green",
+      "white",
+      "gum"
+    ],
+    "materials": [
+      "suede",
+      "leather"
+    ],
+    "patterns": [],
+    "fit_silhouette": "slim retro low-profile trainer",
+    "details": [
+      "sage suede overlays on white leather",
+      "gum rubber sole",
+      "white laces",
+      "no logos"
+    ],
+    "styling_notes": "green that still reads neutral; goes with all your denim",
+    "prompt": "slim retro low-top sneakers with white leather base and sage green suede overlays, gum rubber sole and white laces, no logos or stripes, no text, no logos",
+    "negative": [
+      "chunky sole",
+      "logos",
+      "brand stripes",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch1#27"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/shoes_sneakers_retro_low_sage_white_01.jpg"
+  },
+  {
+    "id": "shoes_ballet_flats_bow_leather_black_01",
+    "name": "Black leather ballet flats with bow",
+    "slot": "shoes",
+    "subcategory": "ballet_flats",
+    "style_tags": [
+      "coquette",
+      "french_casual",
+      "vintage_romantic"
+    ],
+    "colors": [
+      "black"
+    ],
+    "materials": [
+      "leather"
+    ],
+    "patterns": [],
+    "fit_silhouette": "slim round-toe flat",
+    "details": [
+      "small grosgrain bow at the toe",
+      "thin elastic edge"
+    ],
+    "styling_notes": "with the frilly socks, slip dress and baggy jeans",
+    "prompt": "a pair of black soft leather round-toe ballet flats with a small grosgrain bow at the toe, no text, no logos",
+    "negative": [
+      "heel",
+      "logo",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch2#23"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/shoes_ballet_flats_bow_leather_black_01.jpg"
+  },
+  {
+    "id": "shoes_sneakers_skate_suede_purple_01",
+    "name": "Purple suede chunky skate sneakers",
+    "slot": "shoes",
+    "subcategory": "skate_sneakers",
+    "style_tags": [
+      "skater",
+      "y2k_streetwear",
+      "streetwear_90s"
+    ],
+    "colors": [
+      "purple",
+      "white"
+    ],
+    "materials": [
+      "suede",
+      "rubber"
+    ],
+    "patterns": [],
+    "fit_silhouette": "puffy padded skate shoe",
+    "details": [
+      "padded tongue and collar",
+      "white rubber sole",
+      "no logos"
+    ],
+    "styling_notes": "Y2K skate pop with baggy denim and cargos",
+    "prompt": "a pair of chunky puffy purple suede skate sneakers with padded tongue and collar, white rubber cupsole and white laces, no logos, no text, no logos",
+    "negative": [
+      "logo",
+      "stripes",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch2#28"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/shoes_sneakers_skate_suede_purple_01.jpg"
+  },
+  {
+    "id": "shoes_boots_pointed_zip_buckle_black_01",
+    "name": "Pointed black leather boots with silver buckle",
+    "slot": "shoes",
+    "subcategory": "ankle_boots",
+    "style_tags": [
+      "menswear",
+      "archive",
+      "rock_moto",
+      "gothic"
+    ],
+    "colors": [
+      "black",
+      "silver"
+    ],
+    "materials": [
+      "leather"
+    ],
+    "patterns": [],
+    "fit_silhouette": "sharp pointed toe, slim ankle boot",
+    "details": [
+      "long sharp pointed toe",
+      "side zip",
+      "silver square buckle strap",
+      "stacked low Cuban heel"
+    ],
+    "styling_notes": "under flared or bootcut jeans",
+    "prompt": "men's black leather ankle boots with a long sharply pointed toe, side zip, a silver square buckle strap around the ankle and a stacked low Cuban heel, abstract pattern, no text, no letters, no logos",
+    "negative": [
+      "round toe",
+      "chunky lug sole",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch4#28"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/shoes_boots_pointed_zip_buckle_black_01.jpg"
+  },
+  {
+    "id": "shoes_creepers_flame_applique_black_01",
+    "name": "Black creepers with red flame appliqué",
+    "slot": "shoes",
+    "subcategory": "creepers",
+    "style_tags": [
+      "menswear",
+      "archive",
+      "punk",
+      "rock_moto"
+    ],
+    "colors": [
+      "black",
+      "red",
+      "gum"
+    ],
+    "materials": [
+      "leather",
+      "crepe rubber"
+    ],
+    "patterns": [
+      "flame appliqué"
+    ],
+    "fit_silhouette": "thick platform crepe sole",
+    "details": [
+      "red leather flame appliqués along the sides",
+      "woven leather interlace across the vamp",
+      "thick gum crepe platform sole",
+      "lace-up"
+    ],
+    "styling_notes": "with studded bootcut jeans and a tank",
+    "prompt": "men's black leather lace-up creeper shoes with red leather flame appliqués along the sides, woven leather interlace across the vamp and a thick gum crepe platform sole, abstract pattern, no text, no letters, no logos",
+    "negative": [
+      "sneaker sole",
+      "pointed toe",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch4#29"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/shoes_creepers_flame_applique_black_01.jpg"
+  },
+  {
+    "id": "shoes_sneakers_sleek_runner_silver_black_01",
+    "name": "Sleek silver and black low runners",
+    "slot": "shoes",
+    "subcategory": "sneakers",
+    "style_tags": [
+      "menswear",
+      "archive",
+      "y2k",
+      "techwear"
+    ],
+    "colors": [
+      "silver",
+      "black"
+    ],
+    "materials": [
+      "metallic leather",
+      "mesh"
+    ],
+    "patterns": [],
+    "fit_silhouette": "slim low-profile runner",
+    "details": [
+      "curved silver overlays sweeping along the sides",
+      "black mesh base",
+      "thin sculpted sole"
+    ],
+    "styling_notes": "with the slim track jacket or a printed long sleeve",
+    "prompt": "sleek low-profile men's running sneakers with curved metallic silver overlays sweeping along the sides, a black mesh base and a thin sculpted sole, abstract pattern, no text, no letters, no logos",
+    "negative": [
+      "chunky",
+      "high-top",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch4#30"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/shoes_sneakers_sleek_runner_silver_black_01.jpg"
+  },
+  {
     "id": "bag_baguette_croc_black_01",
     "name": "Black croc baguette bag",
     "slot": "bag",
@@ -7775,6 +10995,124 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "outfit_I4"
     ],
     "image": "/shots/items/accessory_watch_digital_black_01.jpg"
+  },
+  {
+    "id": "accessory_gloves_fingerless_leather_black_01",
+    "name": "Black leather fingerless gloves",
+    "slot": "accessory",
+    "subcategory": "gloves",
+    "style_tags": [
+      "punk",
+      "rock_moto",
+      "grunge",
+      "avant_garde_dark"
+    ],
+    "colors": [
+      "black",
+      "silver"
+    ],
+    "materials": [
+      "leather"
+    ],
+    "patterns": [],
+    "fit_silhouette": "wrist-length fingerless",
+    "details": [
+      "silver snap at the wrist",
+      "cut-out knuckles"
+    ],
+    "styling_notes": "edge for moto, trench and all-black looks",
+    "prompt": "a pair of black leather fingerless gloves, wrist length, with a silver snap closure at the wrist, no text, no logos",
+    "negative": [
+      "full fingers",
+      "logo",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch2#10"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/accessory_gloves_fingerless_leather_black_01.jpg"
+  },
+  {
+    "id": "accessory_wrist_cuff_studded_leather_black_01",
+    "name": "Black studded leather wrist cuff",
+    "slot": "accessory",
+    "subcategory": "wrist_cuff",
+    "style_tags": [
+      "punk",
+      "gothic",
+      "grunge"
+    ],
+    "colors": [
+      "black",
+      "silver"
+    ],
+    "materials": [
+      "leather",
+      "metal studs"
+    ],
+    "patterns": [],
+    "fit_silhouette": "wide wrist cuff",
+    "details": [
+      "two rows of silver pyramid studs",
+      "snap closure"
+    ],
+    "styling_notes": "match with the studded choker and belts",
+    "prompt": "a wide black leather wrist cuff with two rows of silver pyramid studs and a snap closure, no text, no logos",
+    "negative": [
+      "spikes",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch2#11"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/accessory_wrist_cuff_studded_leather_black_01.jpg"
+  },
+  {
+    "id": "accessory_keychain_carabiner_silver_01",
+    "name": "Silver carabiner key clip",
+    "slot": "accessory",
+    "subcategory": "keychain",
+    "style_tags": [
+      "menswear",
+      "vintage_workwear",
+      "techwear",
+      "skater"
+    ],
+    "colors": [
+      "silver"
+    ],
+    "materials": [
+      "metal"
+    ],
+    "patterns": [],
+    "fit_silhouette": "clipped to a belt loop",
+    "details": [
+      "large silver carabiner",
+      "split ring with a few plain keys"
+    ],
+    "styling_notes": "clipped to the belt loop of carpenter pants or cargos",
+    "prompt": "a large polished silver carabiner key clip with a split ring holding a few plain keys, no text, no logos",
+    "negative": [
+      "text",
+      "logo",
+      "text",
+      "logos",
+      "lettering"
+    ],
+    "source_images": [
+      "generated:drafts_batch3#30"
+    ],
+    "render_style_seen": "photo",
+    "outfit_ids": [],
+    "image": "/shots/items/accessory_keychain_carabiner_silver_01.jpg"
   }
 ];
 

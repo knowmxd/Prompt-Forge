@@ -38,6 +38,8 @@ import { WardrobeCatalogModal } from "@/components/wardrobe-catalog-modal";
 import {
   applyWardrobeItem,
   applyWardrobeOutfit,
+  WARDROBE_ITEMS,
+  WARDROBE_OUTFITS,
   type WardrobeItem,
   type WardrobeOutfit,
 } from "@/lib/prompt/wardrobe-database";
@@ -1120,7 +1122,7 @@ export function PromptForge() {
                       className="flex items-center gap-1.5 rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-400 hover:bg-rose-500/20 transition-all shadow-sm"
                     >
                       <Shirt className="size-3.5" />
-                      <span>Wardrobe Studio (213 Pieces & 49 Outfits)</span>
+                      <span>Wardrobe Studio ({WARDROBE_ITEMS.length} Pieces & {WARDROBE_OUTFITS.length} Outfits)</span>
                     </button>
                   )}
                   <button type="button" className="btn btn-ghost" aria-label="Bookmark this section" onClick={openBookmark}>
@@ -1276,7 +1278,7 @@ export function PromptForge() {
                     className="flex w-full items-center justify-center gap-2 rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-2.5 text-xs font-bold text-rose-400 hover:bg-rose-500/20 transition-all shadow-sm"
                   >
                     <Shirt className="h-4 w-4" />
-                    <span>Browse Wardrobe Studio (213 Pieces & 49 Outfits)</span>
+                    <span>Browse Wardrobe Studio ({WARDROBE_ITEMS.length} Pieces & {WARDROBE_OUTFITS.length} Outfits)</span>
                   </button>
                 ) : (
                   <button
