@@ -1,4 +1,4 @@
-import { POSESCRIPT_CORPUS } from "./posescript-corpus.ts";
+import { SHISEI_CORPUS } from "./shisei-corpus.ts";
 export type PoseCategory =
   | "all"
   | "standing"
@@ -1107,7 +1107,7 @@ export const CURATED_POSE_LIBRARY: PoseItem[] = [
 
 export const POSE_LIBRARY: PoseItem[] = [
   ...CURATED_POSE_LIBRARY,
-  ...POSESCRIPT_CORPUS,
+  ...SHISEI_CORPUS,
 ];
 
 const POSE_BY_ID = new Map<string, PoseItem>(POSE_LIBRARY.map((p) => [p.id, p]));
