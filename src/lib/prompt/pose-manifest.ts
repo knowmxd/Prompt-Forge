@@ -1,35 +1,39 @@
 import { setAt, type PoseReference, type PromptDoc } from "./model.ts";
 
-export type PoseCategoryId =
+export type PoseStyleCategoryId =
   | "all"
-  | "Standing"
-  | "Portrait"
-  | "Seated"
-  | "Action"
-  | "Editorial";
+  | "Streetwear"
+  | "Editorial Lookbook"
+  | "Cinematic Poster"
+  | "Expressive Signature";
 
 export type PoseFramingId = "all" | "full-body" | "medium" | "close-up";
+
+export type PoseSubjectTypeId = "all" | "solo" | "duo";
+
+export type PoseAngleId = "eye-level" | "three-quarter" | "profile" | "low-angle";
 
 export type PoseManifestItem = {
   id: string;
   imageUrl: string;
-  category: Exclude<PoseCategoryId, "all">;
-  subCategory: string;
   framing: Exclude<PoseFramingId, "all">;
+  subjectType: Exclude<PoseSubjectTypeId, "all">;
+  styleCategory: Exclude<PoseStyleCategoryId, "all">;
+  angle: PoseAngleId;
   tags: string[];
+  rawCaption: string;
   naturalPrompt: string;
 };
 
-export const POSE_CATEGORY_OPTIONS: Array<{
-  id: PoseCategoryId;
+export const POSE_STYLE_OPTIONS: Array<{
+  id: PoseStyleCategoryId;
   label: string;
 }> = [
-  { id: "all", label: "All" },
-  { id: "Standing", label: "Standing" },
-  { id: "Portrait", label: "Portrait" },
-  { id: "Seated", label: "Seated" },
-  { id: "Action", label: "Action" },
-  { id: "Editorial", label: "Editorial" },
+  { id: "all", label: "All Styles" },
+  { id: "Streetwear", label: "Streetwear" },
+  { id: "Editorial Lookbook", label: "Editorial Lookbook" },
+  { id: "Cinematic Poster", label: "Cinematic Poster" },
+  { id: "Expressive Signature", label: "Expressive Signature" },
 ];
 
 export const POSE_FRAMING_OPTIONS: Array<{
@@ -40,6 +44,15 @@ export const POSE_FRAMING_OPTIONS: Array<{
   { id: "full-body", label: "Full-Body" },
   { id: "medium", label: "Medium" },
   { id: "close-up", label: "Close-Up" },
+];
+
+export const POSE_SUBJECT_OPTIONS: Array<{
+  id: PoseSubjectTypeId;
+  label: string;
+}> = [
+  { id: "all", label: "All" },
+  { id: "solo", label: "Solo" },
+  { id: "duo", label: "Duo" },
 ];
 
 let cachedManifest: PoseManifestItem[] | null = null;
@@ -75,24 +88,33 @@ export function getCachedPoseManifest(): PoseManifestItem[] | null {
 export function filterPoseManifest(
   items: PoseManifestItem[],
   options: {
-    category?: PoseCategoryId;
+    styleCategory?: PoseStyleCategoryId;
     framing?: PoseFramingId;
+    subjectType?: PoseSubjectTypeId;
     query?: string;
   },
 ): PoseManifestItem[] {
-  const { category = "all", framing = "all", query = "" } = options;
+  const {
+    styleCategory = "all",
+    framing = "all",
+    subjectType = "all",
+    query = "",
+  } = options;
   const q = query.trim().toLowerCase();
 
   return items.filter((item) => {
-    if (category !== "all" && item.category !== category) return false;
+    if (styleCategory !== "all" && item.styleCategory !== styleCategory) return false;
     if (framing !== "all" && item.framing !== framing) return false;
+    if (subjectType !== "all" && item.subjectType !== subjectType) return false;
     if (!q) return true;
 
     return (
-      item.subCategory.toLowerCase().includes(q) ||
-      item.category.toLowerCase().includes(q) ||
+      item.styleCategory.toLowerCase().includes(q) ||
       item.framing.toLowerCase().includes(q) ||
+      item.subjectType.toLowerCase().includes(q) ||
+      item.angle.toLowerCase().includes(q) ||
       item.id.toLowerCase().includes(q) ||
+      item.rawCaption.toLowerCase().includes(q) ||
       item.naturalPrompt.toLowerCase().includes(q) ||
       item.tags.some((t) => t.toLowerCase().includes(q))
     );
@@ -107,14 +129,17 @@ export function applyPoseManifestItem(
   const poseRef: PoseReference = {
     reference_id: item.id,
     image_url: item.imageUrl,
-    category: item.category,
-    sub_category: item.subCategory,
+    style_category: item.styleCategory,
     framing: item.framing,
+    subject_type: item.subjectType,
+    angle: item.angle,
     tags: item.tags,
+    ...(item.rawCaption ? { raw_caption: item.rawCaption } : {}),
     ...(item.naturalPrompt ? { pose_description: item.naturalPrompt } : {}),
   };
   const postureFallback =
-    item.naturalPrompt.trim() || `${item.category.toLowerCase()} — ${item.subCategory} (${item.framing})`;
+    item.naturalPrompt.trim() ||
+    `${item.subjectType} ${item.framing} ${item.styleCategory.toLowerCase()} (${item.angle})`;
   const next = setAt(doc, `subjects.${subjectIndex}.kinetic_posture`, postureFallback);
   const subjects = next.subjects.map((subj, idx) =>
     idx === subjectIndex ? { ...subj, pose_reference: poseRef } : subj,
@@ -147,11 +172,14 @@ export function isPoseManifestApplied(
 
 export function pickRandomPoseManifestItem(
   items: PoseManifestItem[],
-  category: PoseCategoryId = "all",
+  filters: {
+    styleCategory?: PoseStyleCategoryId;
+    framing?: PoseFramingId;
+    subjectType?: PoseSubjectTypeId;
+  } = {},
   excludeId?: string,
 ): PoseManifestItem | undefined {
-  const pool =
-    category === "all" ? items : items.filter((item) => item.category === category);
+  const pool = filterPoseManifest(items, filters);
   if (pool.length === 0) return undefined;
   if (pool.length === 1) return pool[0];
   for (let i = 0; i < 6; i++) {

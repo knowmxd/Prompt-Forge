@@ -691,20 +691,23 @@ export function VisualBoardStudio({
                 <div className="flex gap-3">
                   <img
                     src={activeSubject.pose_reference.image_url}
-                    alt={activeSubject.pose_reference.sub_category || activeSubject.pose_reference.reference_id}
+                    alt={`${activeSubject.pose_reference.style_category} ${activeSubject.pose_reference.reference_id}`}
                     className="size-20 rounded-lg object-cover object-top bg-neutral-950 border border-neutral-700 shadow-xs shrink-0"
                   />
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="text-[10px] font-bold text-cyan-400 uppercase">
-                        {activeSubject.pose_reference.category}
+                        {activeSubject.pose_reference.subject_type}
                       </span>
                       <span className="rounded bg-neutral-800 px-1 py-0.2 text-[9px] font-medium text-neutral-300">
                         {activeSubject.pose_reference.framing}
                       </span>
+                      <span className="rounded bg-neutral-800 px-1 py-0.2 text-[9px] text-neutral-400">
+                        {activeSubject.pose_reference.angle}
+                      </span>
                     </div>
-                    <h3 className="font-bold text-foreground text-xs truncate mt-0.5 capitalize">
-                      {activeSubject.pose_reference.sub_category}
+                    <h3 className="font-bold text-foreground text-xs truncate mt-0.5">
+                      {activeSubject.pose_reference.style_category}
                     </h3>
                     <p className="text-[10px] text-muted truncate mt-0.5 font-mono">
                       {activeSubject.pose_reference.reference_id}

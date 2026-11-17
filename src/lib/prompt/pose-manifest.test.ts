@@ -16,29 +16,33 @@ const SAMPLE_ITEMS: PoseManifestItem[] = [
   {
     id: "pose_0001",
     imageUrl: "/poses/pose_0001.webp",
-    category: "Standing",
-    subCategory: "looking over shoulder",
     framing: "full-body",
-    tags: ["solo", "standing", "looking back", "full-body"],
+    subjectType: "solo",
+    styleCategory: "Streetwear",
+    angle: "three-quarter",
+    tags: ["solo", "full-body", "streetwear", "three-quarter"],
+    rawCaption: "PoseDreamer (laion) full-body solo three-quarter pose",
     naturalPrompt: "",
   },
   {
-    id: "pose_2501",
-    imageUrl: "/poses/pose_2501.webp",
-    category: "Seated",
-    subCategory: "sitting on bench",
+    id: "pose_4001",
+    imageUrl: "/poses/pose_4001.webp",
     framing: "medium",
-    tags: ["solo", "seated", "bench", "medium"],
+    subjectType: "duo",
+    styleCategory: "Editorial Lookbook",
+    angle: "eye-level",
+    tags: ["duo", "medium", "editorial", "eye-level"],
+    rawCaption: "2girls, editorial fashion duo standing side by side",
     naturalPrompt: "",
   },
 ];
 
 describe("pose manifest filtering and PromptDoc wiring", () => {
-  it("filters by category, framing, and search query", () => {
-    assert.equal(filterPoseManifest(SAMPLE_ITEMS, { category: "Standing" }).length, 1);
-    assert.equal(filterPoseManifest(SAMPLE_ITEMS, { category: "Seated" }).length, 1);
-    assert.equal(filterPoseManifest(SAMPLE_ITEMS, { framing: "medium" })[0]?.id, "pose_2501");
-    assert.equal(filterPoseManifest(SAMPLE_ITEMS, { query: "shoulder" })[0]?.id, "pose_0001");
+  it("filters by styleCategory, framing, subjectType, and search query", () => {
+    assert.equal(filterPoseManifest(SAMPLE_ITEMS, { styleCategory: "Streetwear" }).length, 1);
+    assert.equal(filterPoseManifest(SAMPLE_ITEMS, { subjectType: "duo" })[0]?.id, "pose_4001");
+    assert.equal(filterPoseManifest(SAMPLE_ITEMS, { framing: "medium" })[0]?.id, "pose_4001");
+    assert.equal(filterPoseManifest(SAMPLE_ITEMS, { query: "three-quarter" })[0]?.id, "pose_0001");
   });
 
   it("populates pose_reference JSON fields and fallback kinetic_posture cleanly when naturalPrompt is blank", () => {
@@ -47,18 +51,20 @@ describe("pose manifest filtering and PromptDoc wiring", () => {
 
     assert.equal(
       updated.subjects[0]?.kinetic_posture,
-      "standing — looking over shoulder (full-body)",
+      "solo full-body streetwear (three-quarter)",
     );
     assert.deepEqual(updated.subjects[0]?.pose_reference, {
       reference_id: "pose_0001",
       image_url: "/poses/pose_0001.webp",
-      category: "Standing",
-      sub_category: "looking over shoulder",
+      style_category: "Streetwear",
       framing: "full-body",
-      tags: ["solo", "standing", "looking back", "full-body"],
+      subject_type: "solo",
+      angle: "three-quarter",
+      tags: ["solo", "full-body", "streetwear", "three-quarter"],
+      raw_caption: "PoseDreamer (laion) full-body solo three-quarter pose",
     });
     assert.equal(isPoseManifestApplied(updated, SAMPLE_ITEMS[0]!, 0), true);
-    assert.ok(toPromptLine(updated).includes("looking over shoulder"));
+    assert.ok(toPromptLine(updated).includes("streetwear"));
     assert.ok(toJson(updated).includes('"reference_id": "pose_0001"'));
 
     const cleared = clearSubjectPose(updated, 0);
@@ -67,14 +73,14 @@ describe("pose manifest filtering and PromptDoc wiring", () => {
     assert.equal(isPoseManifestApplied(cleared, SAMPLE_ITEMS[0]!, 0), false);
   });
 
-  it("respects category filter when picking a random pose", () => {
+  it("respects filters when picking a random pose", () => {
     for (let i = 0; i < 10; i++) {
-      const picked = pickRandomPoseManifestItem(SAMPLE_ITEMS, "Seated");
-      assert.equal(picked?.category, "Seated");
+      const picked = pickRandomPoseManifestItem(SAMPLE_ITEMS, { subjectType: "duo" });
+      assert.equal(picked?.subjectType, "duo");
     }
   });
 
-  it("verifies 5,000 generated solo-pose manifest entries and local WebP assets on disk when present", () => {
+  it("verifies 5,000 generated PoseDreamer + Duo manifest entries and local WebP assets on disk when present", () => {
     const manifestPath = resolve(process.cwd(), "public/data/poses.json");
     if (!existsSync(manifestPath)) {
       return;
@@ -82,23 +88,30 @@ describe("pose manifest filtering and PromptDoc wiring", () => {
     const items = JSON.parse(readFileSync(manifestPath, "utf-8")) as PoseManifestItem[];
     assert.equal(items.length, 5000);
 
-    const counts: Record<string, number> = {};
+    const subjectCounts: Record<string, number> = {};
+    const framingCounts: Record<string, number> = {};
     for (const item of items) {
-      counts[item.category] = (counts[item.category] ?? 0) + 1;
+      subjectCounts[item.subjectType] = (subjectCounts[item.subjectType] ?? 0) + 1;
+      framingCounts[item.framing] = (framingCounts[item.framing] ?? 0) + 1;
       assert.ok(item.id.length > 0);
-      assert.ok(item.subCategory.length > 0);
       assert.equal(item.naturalPrompt, "");
       assert.ok(Array.isArray(item.tags) && item.tags.length > 0);
       assert.ok(["full-body", "medium", "close-up"].includes(item.framing));
+      assert.ok(["solo", "duo"].includes(item.subjectType));
+      assert.ok(
+        ["Streetwear", "Editorial Lookbook", "Cinematic Poster", "Expressive Signature"].includes(
+          item.styleCategory,
+        ),
+      );
+      assert.ok(["eye-level", "three-quarter", "profile", "low-angle"].includes(item.angle));
       const diskPath = resolve(process.cwd(), "public", item.imageUrl.replace(/^\/+/, ""));
       assert.ok(existsSync(diskPath), `Missing WebP asset on disk: ${diskPath}`);
     }
 
-    assert.equal(counts.Standing, 1250);
-    assert.equal(counts.Portrait, 1250);
-    assert.equal(counts.Seated, 900);
-    assert.equal(counts.Action, 900);
-    assert.equal(counts.Editorial, 700);
+    assert.equal(subjectCounts.solo, 4000);
+    assert.equal(subjectCounts.duo, 1000);
+    assert.equal(framingCounts["full-body"], 2500);
+    assert.equal(framingCounts.medium, 1500);
+    assert.equal(framingCounts["close-up"], 1000);
   });
 });
-

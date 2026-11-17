@@ -311,7 +311,7 @@ export function PoseManifestCard({
       <button
         type="button"
         onClick={onSelect}
-        title={`${pose.subCategory} (${pose.category} · ${pose.framing}) - Click to apply`}
+        title={`${pose.styleCategory} · ${pose.subjectType} · ${pose.framing} (${pose.angle}) - Click to apply`}
         aria-pressed={applied}
         className={cn(
           "group relative flex flex-col overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-amber-500/60 hover:shadow-xs",
@@ -321,13 +321,13 @@ export function PoseManifestCard({
         <div className="relative aspect-[3/4] w-full bg-neutral-950 overflow-hidden">
           <img
             src={pose.imageUrl}
-            alt={pose.subCategory}
+            alt={`${pose.styleCategory} ${pose.subjectType} ${pose.framing}`}
             loading="lazy"
             decoding="async"
             className="h-full w-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
           />
           <span className="absolute top-1 left-1 rounded bg-black/80 px-1 py-0.5 text-[8px] font-mono font-semibold text-amber-300 backdrop-blur-xs">
-            {pose.category}
+            {pose.subjectType.toUpperCase()}
           </span>
           {applied && (
             <span className="absolute top-1 right-1 z-20 flex size-4 items-center justify-center rounded-full bg-amber-500 text-black shadow font-bold">
@@ -336,10 +336,12 @@ export function PoseManifestCard({
           )}
         </div>
         <div className="p-1.5">
-          <p className="text-[11px] font-medium leading-tight text-foreground truncate capitalize group-hover:text-amber-400">
-            {pose.subCategory}
+          <p className="text-[11px] font-medium leading-tight text-foreground truncate group-hover:text-amber-400">
+            {pose.styleCategory}
           </p>
-          <p className="mt-0.5 text-[9px] text-muted truncate">{pose.framing}</p>
+          <p className="mt-0.5 text-[9px] text-muted truncate">
+            {pose.framing} · {pose.angle}
+          </p>
         </div>
       </button>
     );
@@ -358,16 +360,16 @@ export function PoseManifestCard({
       <div className="relative aspect-[3/4] w-full bg-neutral-950 overflow-hidden">
         <img
           src={pose.imageUrl}
-          alt={pose.subCategory}
+          alt={`${pose.styleCategory} ${pose.subjectType} ${pose.framing}`}
           loading="lazy"
           decoding="async"
           className="h-full w-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
         />
-        <span className="absolute top-1.5 left-1.5 rounded bg-black/80 px-1.5 py-0.5 text-[9px] font-mono font-bold text-amber-300 backdrop-blur-xs">
-          {pose.category}
+        <span className="absolute top-1.5 left-1.5 rounded bg-black/80 px-1.5 py-0.5 text-[9px] font-mono font-bold text-amber-300 backdrop-blur-xs uppercase">
+          {pose.subjectType}
         </span>
         <span className="absolute bottom-1.5 left-1.5 rounded bg-black/75 px-1.5 py-0.5 text-[9px] text-neutral-200 backdrop-blur-xs">
-          {pose.framing}
+          {pose.framing} · {pose.angle}
         </span>
         {applied && (
           <span className="absolute top-1.5 right-1.5 z-20 flex size-5 items-center justify-center rounded-full bg-amber-500 text-black shadow font-bold">
@@ -377,8 +379,8 @@ export function PoseManifestCard({
       </div>
       <div className="p-2.5 flex-1 flex flex-col justify-between">
         <div>
-          <h4 className="text-xs font-semibold leading-snug text-foreground line-clamp-1 capitalize group-hover:text-amber-400">
-            {pose.subCategory}
+          <h4 className="text-xs font-semibold leading-snug text-foreground line-clamp-1 group-hover:text-amber-400">
+            {pose.styleCategory}
           </h4>
         </div>
         <div className="mt-2 flex items-center justify-between pt-1 border-t border-border/50">

@@ -199,19 +199,23 @@ function mergeSubject(value: unknown): Subject {
     const pr = poseRef as Record<string, unknown>;
     const reference_id = asString(pr.reference_id);
     const image_url = asString(pr.image_url);
-    const category = asString(pr.category);
-    const sub_category = asString(pr.sub_category);
+    const style_category = asString(pr.style_category);
     const framing = asString(pr.framing);
+    const subject_type = asString(pr.subject_type);
+    const angle = asString(pr.angle);
+    const raw_caption = asString(pr.raw_caption);
     const pose_description = asString(pr.pose_description);
     const tags = asList(pr.tags);
     if (reference_id || image_url || pose_description) {
       base.pose_reference = {
         reference_id,
         image_url,
-        category,
-        sub_category,
+        style_category,
         framing,
+        subject_type,
+        angle,
         tags,
+        ...(raw_caption ? { raw_caption } : {}),
         ...(pose_description ? { pose_description } : {}),
       };
     }

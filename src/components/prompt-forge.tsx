@@ -79,16 +79,18 @@ import {
   POSE_LIBRARY,
 } from "@/lib/prompt/pose-database";
 import {
-  POSE_CATEGORY_OPTIONS,
   POSE_FRAMING_OPTIONS,
+  POSE_STYLE_OPTIONS,
+  POSE_SUBJECT_OPTIONS,
   applyPoseManifestItem,
   clearSubjectPose,
   filterPoseManifest,
   isPoseManifestApplied,
   pickRandomPoseManifestItem,
-  type PoseCategoryId,
   type PoseFramingId,
   type PoseManifestItem,
+  type PoseStyleCategoryId,
+  type PoseSubjectTypeId,
 } from "@/lib/prompt/pose-manifest";
 import { usePoseManifest } from "@/lib/prompt/use-pose-manifest";
 import { CameraCatalogModal } from "@/components/camera-catalog-modal";
@@ -380,8 +382,9 @@ export function PromptForge() {
   const [customItems, setCustomItems] = useState<WardrobeItem[]>([]);
   const [assetDensity, setAssetDensity] = useState<"comfortable" | "compact">("compact");
   const [assetFullscreen, setAssetFullscreen] = useState(false);
-  const [poseCategoryFilter, setPoseCategoryFilter] = useState<PoseCategoryId>("all");
+  const [poseStyleFilter, setPoseStyleFilter] = useState<PoseStyleCategoryId>("all");
   const [poseFramingFilter, setPoseFramingFilter] = useState<PoseFramingId>("all");
+  const [poseSubjectFilter, setPoseSubjectFilter] = useState<PoseSubjectTypeId>("all");
   const [poseSearch, setPoseSearch] = useState("");
   const [poseShelfLimit, setPoseShelfLimit] = useState(36);
   const [lightingCategoryFilter, setLightingCategoryFilter] = useState<LightingCategory>("all");
@@ -511,7 +514,11 @@ export function PromptForge() {
     }
 
     if (poseManifest.length > 0) {
-      const randomManifestPose = pickRandomPoseManifestItem(poseManifest, poseCategoryFilter);
+      const randomManifestPose = pickRandomPoseManifestItem(poseManifest, {
+        styleCategory: poseStyleFilter,
+        framing: poseFramingFilter,
+        subjectType: poseSubjectFilter,
+      });
       if (randomManifestPose) {
         next = applyPoseManifestItem(next, randomManifestPose, slot);
       }
@@ -595,32 +602,42 @@ export function PromptForge() {
     assetTab === "poses" || poseGalleryOpen,
   );
 
-  const poseCategoryCounts = useMemo(() => {
+  const poseStyleCounts = useMemo(() => {
     const counts: Record<string, number> = {
       all: poseManifest.length || 5000,
-      Standing: 0,
-      Portrait: 0,
-      Seated: 0,
-      Action: 0,
-      Editorial: 0,
+      Streetwear: 0,
+      "Editorial Lookbook": 0,
+      "Cinematic Poster": 0,
+      "Expressive Signature": 0,
     };
     for (const p of poseManifest) {
-      counts[p.category] = (counts[p.category] || 0) + 1;
+      counts[p.styleCategory] = (counts[p.styleCategory] || 0) + 1;
     }
     return counts;
   }, [poseManifest]);
 
   const displayedPoses = useMemo(() => {
     return filterPoseManifest(poseManifest, {
-      category: poseCategoryFilter,
+      styleCategory: poseStyleFilter,
       framing: poseFramingFilter,
+      subjectType: poseSubjectFilter,
       query: poseSearch,
     });
-  }, [poseManifest, poseCategoryFilter, poseFramingFilter, poseSearch]);
+  }, [poseManifest, poseStyleFilter, poseFramingFilter, poseSubjectFilter, poseSearch]);
 
   useEffect(() => {
     setPoseShelfLimit(36);
-  }, [poseCategoryFilter, poseFramingFilter, poseSearch]);
+  }, [poseStyleFilter, poseFramingFilter, poseSubjectFilter, poseSearch]);
+
+  const poseSubjectCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: 0, solo: 0, duo: 0 };
+    for (const p of poseManifest) {
+      if (poseStyleFilter !== "all" && p.styleCategory !== poseStyleFilter) continue;
+      counts.all += 1;
+      counts[p.subjectType] = (counts[p.subjectType] || 0) + 1;
+    }
+    return counts;
+  }, [poseManifest, poseStyleFilter]);
 
   const poseFramingCounts = useMemo(() => {
     const counts: Record<string, number> = {
@@ -630,12 +647,13 @@ export function PromptForge() {
       "close-up": 0,
     };
     for (const p of poseManifest) {
-      if (poseCategoryFilter !== "all" && p.category !== poseCategoryFilter) continue;
+      if (poseStyleFilter !== "all" && p.styleCategory !== poseStyleFilter) continue;
+      if (poseSubjectFilter !== "all" && p.subjectType !== poseSubjectFilter) continue;
       counts.all += 1;
       counts[p.framing] = (counts[p.framing] || 0) + 1;
     }
     return counts;
-  }, [poseManifest, poseCategoryFilter]);
+  }, [poseManifest, poseStyleFilter, poseSubjectFilter]);
 
   const visibleShelfPoses = useMemo(() => {
     return displayedPoses.slice(0, poseShelfLimit);
@@ -732,7 +750,7 @@ export function PromptForge() {
     setUntouched(false);
     commitDoc(
       next,
-      `Pinned ${pose.subCategory} (${pose.category} · ${pose.framing}) to ${doc.subjects[slot]?.subject_id.trim() || `Subject ${slot + 1}`}.`,
+      `Pinned ${pose.styleCategory} (${pose.subjectType} · ${pose.framing}) to ${doc.subjects[slot]?.subject_id.trim() || `Subject ${slot + 1}`}.`,
     );
   };
 
@@ -740,7 +758,11 @@ export function PromptForge() {
     const pool = displayedPoses.length > 0 ? displayedPoses : poseManifest;
     const picked = pickRandomPoseManifestItem(
       pool,
-      poseCategoryFilter,
+      {
+        styleCategory: poseStyleFilter,
+        framing: poseFramingFilter,
+        subjectType: poseSubjectFilter,
+      },
       doc.subjects[slot]?.pose_reference?.reference_id,
     );
     if (picked) {
@@ -1854,7 +1876,7 @@ export function PromptForge() {
                       : assetTab === "wardrobe"
                         ? `${allWardrobeItems.length} Pieces · ${allWardrobeOutfits.length} Outfits`
                         : assetTab === "poses"
-                          ? `${poseCategoryCounts.all.toLocaleString()} Poses`
+                          ? `${poseStyleCounts.all.toLocaleString()} Poses`
                           : assetTab === "lighting"
                             ? `${LIGHTING_LIBRARY.length} Setups`
                             : assetTab === "camera"
@@ -1910,7 +1932,7 @@ export function PromptForge() {
               {[
                 { id: "cast" as const, label: "Cast", icon: Users, count: CAST_MODELS.length },
                 { id: "wardrobe" as const, label: "Wardrobe", icon: Shirt, count: allWardrobeItems.length },
-                { id: "poses" as const, label: "Poses", icon: Sparkles, count: poseCategoryCounts.all },
+                { id: "poses" as const, label: "Poses", icon: Sparkles, count: poseStyleCounts.all },
                 { id: "lighting" as const, label: "Light", icon: SunMedium, count: LIGHTING_LIBRARY.length },
                 { id: "camera" as const, label: "Camera", icon: Camera, count: CAMERA_LIBRARY.length },
                 { id: "styles" as const, label: "Styles", icon: Palette, count: STYLE_LIBRARY.length },
@@ -2203,19 +2225,19 @@ export function PromptForge() {
             </>
           )}
 
-          {/* TAB 2: POSES (5,000 Solo Pose References) */}
+          {/* TAB 2: POSES (5,000 PoseDreamer + Duo Pose References) */}
           {assetTab === "poses" && (
             <>
               <div className="shrink-0 border-b border-border bg-surface/30 px-3 py-2 space-y-2">
                 <div className="flex items-center justify-between gap-1.5">
                   <select
-                    aria-label="Filter pose category"
-                    value={poseCategoryFilter}
-                    onChange={(e) => setPoseCategoryFilter(e.target.value as PoseCategoryId)}
+                    aria-label="Filter pose style"
+                    value={poseStyleFilter}
+                    onChange={(e) => setPoseStyleFilter(e.target.value as PoseStyleCategoryId)}
                     className="h-7 min-w-0 flex-1 rounded-md border border-border bg-bg px-2 text-[11px] font-semibold text-foreground focus:border-amber-500 focus:outline-none"
                   >
-                    {POSE_CATEGORY_OPTIONS.map((opt) => {
-                      const cnt = poseCategoryCounts[opt.id] ?? 0;
+                    {POSE_STYLE_OPTIONS.map((opt) => {
+                      const cnt = poseStyleCounts[opt.id] ?? 0;
                       return (
                         <option key={opt.id} value={opt.id}>
                           {cnt > 0 ? `${opt.label} (${cnt.toLocaleString()})` : opt.label}
@@ -2229,7 +2251,7 @@ export function PromptForge() {
                     onClick={handleRandomManifestPose}
                     disabled={poseManifest.length === 0}
                     className="flex h-7 shrink-0 items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 text-[11px] font-semibold text-amber-400 hover:bg-amber-500/20 disabled:opacity-40"
-                    title="Random Pose (respects active category)"
+                    title="Random Pose (respects active filters)"
                   >
                     <Shuffle className="size-3" />
                     <span>Random</span>
@@ -2256,24 +2278,53 @@ export function PromptForge() {
                   </button>
                 </div>
 
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted" />
-                  <input
-                    type="text"
-                    value={poseSearch}
-                    onChange={(e) => setPoseSearch(e.target.value)}
-                    placeholder={`Search ${displayedPoses.length.toLocaleString()} solo poses (e.g. shoulder, chair, jump)...`}
-                    className="w-full rounded-md border border-border bg-bg py-1.5 pl-8 pr-7 text-xs text-foreground placeholder-muted focus:border-primary focus:outline-none"
-                  />
-                  {poseSearch && (
-                    <button
-                      type="button"
-                      onClick={() => setPoseSearch("")}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground"
-                    >
-                      <X className="size-3.5" />
-                    </button>
-                  )}
+                <div className="flex items-center gap-1.5">
+                  <div className="relative flex-1 min-w-0">
+                    <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted" />
+                    <input
+                      type="text"
+                      value={poseSearch}
+                      onChange={(e) => setPoseSearch(e.target.value)}
+                      placeholder={`Search ${displayedPoses.length.toLocaleString()} poses...`}
+                      className="w-full rounded-md border border-border bg-bg py-1.5 pl-8 pr-7 text-xs text-foreground placeholder-muted focus:border-primary focus:outline-none"
+                    />
+                    {poseSearch && (
+                      <button
+                        type="button"
+                        onClick={() => setPoseSearch("")}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground"
+                      >
+                        <X className="size-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  <div
+                    role="group"
+                    aria-label="Filter subject type"
+                    className="flex shrink-0 items-center rounded-md border border-border bg-bg p-0.5"
+                  >
+                    {POSE_SUBJECT_OPTIONS.map((opt) => {
+                      const active = poseSubjectFilter === opt.id;
+                      const cnt = poseSubjectCounts[opt.id] ?? 0;
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => setPoseSubjectFilter(opt.id)}
+                          title={`${opt.label} (${cnt.toLocaleString()})`}
+                          className={cn(
+                            "rounded px-2 py-0.5 text-[10px] font-semibold transition-all",
+                            active
+                              ? "bg-cyan-500 text-black"
+                              : "text-muted hover:text-foreground",
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-1 overflow-x-auto pb-0.5 no-scrollbar text-xs">
