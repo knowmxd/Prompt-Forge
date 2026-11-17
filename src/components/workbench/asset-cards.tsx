@@ -311,30 +311,23 @@ export function PoseManifestCard({
       <button
         type="button"
         onClick={onSelect}
-        title={`${pose.title} (${pose.datasetLabel}) - Click to apply`}
+        title={`${pose.subCategory} (${pose.category} · ${pose.framing}) - Click to apply`}
         aria-pressed={applied}
         className={cn(
           "group relative flex flex-col overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-amber-500/60 hover:shadow-xs",
           applied ? "border-amber-500 ring-2 ring-amber-500/50" : "border-border",
         )}
       >
-        <div className="relative aspect-square w-full bg-neutral-950 overflow-hidden">
+        <div className="relative aspect-[3/4] w-full bg-neutral-950 overflow-hidden">
           <img
             src={pose.imageUrl}
-            alt={pose.title}
+            alt={pose.subCategory}
             loading="lazy"
             decoding="async"
-            className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
           />
-          <span
-            className={cn(
-              "absolute top-1 left-1 rounded px-1 py-0.5 text-[8px] font-mono font-bold uppercase",
-              pose.dataset === "booru3d"
-                ? "bg-black/85 text-amber-300"
-                : "bg-black/85 text-sky-300",
-            )}
-          >
-            {pose.dataset === "booru3d" ? "3D" : "DP"}
+          <span className="absolute top-1 left-1 rounded bg-black/80 px-1 py-0.5 text-[8px] font-mono font-semibold text-amber-300 backdrop-blur-xs">
+            {pose.category}
           </span>
           {applied && (
             <span className="absolute top-1 right-1 z-20 flex size-4 items-center justify-center rounded-full bg-amber-500 text-black shadow font-bold">
@@ -343,10 +336,10 @@ export function PoseManifestCard({
           )}
         </div>
         <div className="p-1.5">
-          <p className="text-[11px] font-medium leading-tight text-foreground truncate group-hover:text-amber-400">
-            {pose.title}
+          <p className="text-[11px] font-medium leading-tight text-foreground truncate capitalize group-hover:text-amber-400">
+            {pose.subCategory}
           </p>
-          <p className="mt-0.5 text-[9px] text-muted truncate">{pose.tags.slice(0, 2).join(" · ")}</p>
+          <p className="mt-0.5 text-[9px] text-muted truncate">{pose.framing}</p>
         </div>
       </button>
     );
@@ -362,26 +355,19 @@ export function PoseManifestCard({
         applied ? "border-amber-500 ring-2 ring-amber-500/50" : "border-border",
       )}
     >
-      <div className="relative aspect-[4/3] w-full bg-neutral-950 overflow-hidden">
+      <div className="relative aspect-[3/4] w-full bg-neutral-950 overflow-hidden">
         <img
           src={pose.imageUrl}
-          alt={pose.title}
+          alt={pose.subCategory}
           loading="lazy"
           decoding="async"
-          className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
+          className="h-full w-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
         />
-        <span
-          className={cn(
-            "absolute top-1.5 left-1.5 rounded px-1.5 py-0.5 text-[9px] font-mono font-bold",
-            pose.dataset === "booru3d"
-              ? "bg-black/85 text-amber-300"
-              : "bg-black/85 text-sky-300",
-          )}
-        >
-          {pose.dataset === "booru3d" ? "3D Mesh" : "DensePose"}
+        <span className="absolute top-1.5 left-1.5 rounded bg-black/80 px-1.5 py-0.5 text-[9px] font-mono font-bold text-amber-300 backdrop-blur-xs">
+          {pose.category}
         </span>
-        <span className="absolute bottom-1.5 left-1.5 rounded bg-black/75 px-1.5 py-0.5 text-[9px] text-neutral-300">
-          {pose.cameraAngle}
+        <span className="absolute bottom-1.5 left-1.5 rounded bg-black/75 px-1.5 py-0.5 text-[9px] text-neutral-200 backdrop-blur-xs">
+          {pose.framing}
         </span>
         {applied && (
           <span className="absolute top-1.5 right-1.5 z-20 flex size-5 items-center justify-center rounded-full bg-amber-500 text-black shadow font-bold">
@@ -391,10 +377,9 @@ export function PoseManifestCard({
       </div>
       <div className="p-2.5 flex-1 flex flex-col justify-between">
         <div>
-          <h4 className="text-xs font-semibold leading-snug text-foreground line-clamp-1 group-hover:text-amber-400">
-            {pose.title}
+          <h4 className="text-xs font-semibold leading-snug text-foreground line-clamp-1 capitalize group-hover:text-amber-400">
+            {pose.subCategory}
           </h4>
-          <p className="mt-1 text-[10px] text-muted line-clamp-2">{pose.naturalPrompt}</p>
         </div>
         <div className="mt-2 flex items-center justify-between pt-1 border-t border-border/50">
           <span className="text-[9px] font-medium text-faint truncate max-w-[120px]">

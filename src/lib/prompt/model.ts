@@ -47,10 +47,12 @@ export function coerceFields(value: unknown): PromptFields {
 
 export type PoseReference = {
   reference_id: string;
-  pose_description: string;
-  camera_angle: string;
+  image_url: string;
+  category: string;
+  sub_category: string;
+  framing: string;
   tags: string[];
-  dataset?: string;
+  pose_description?: string;
 };
 
 export type Subject = {

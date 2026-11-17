@@ -198,17 +198,21 @@ function mergeSubject(value: unknown): Subject {
   if (poseRef && typeof poseRef === "object" && !Array.isArray(poseRef)) {
     const pr = poseRef as Record<string, unknown>;
     const reference_id = asString(pr.reference_id);
+    const image_url = asString(pr.image_url);
+    const category = asString(pr.category);
+    const sub_category = asString(pr.sub_category);
+    const framing = asString(pr.framing);
     const pose_description = asString(pr.pose_description);
-    const camera_angle = asString(pr.camera_angle);
     const tags = asList(pr.tags);
-    const dataset = asString(pr.dataset);
-    if (reference_id || pose_description) {
+    if (reference_id || image_url || pose_description) {
       base.pose_reference = {
         reference_id,
-        pose_description,
-        camera_angle,
+        image_url,
+        category,
+        sub_category,
+        framing,
         tags,
-        ...(dataset ? { dataset } : {}),
+        ...(pose_description ? { pose_description } : {}),
       };
     }
   }

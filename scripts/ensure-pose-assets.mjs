@@ -6,18 +6,13 @@ import { Readable } from "node:stream";
 
 const ROOT = process.cwd();
 const RELEASE_BASE =
-  "https://github.com/knowmxd/Prompt-Forge/releases/download/v1.0-poses-assets";
+  "https://github.com/knowmxd/Prompt-Forge/releases/download/v2.0-poses-5k";
 
 const BUNDLES = [
   {
-    name: "booru3d",
-    archive: "poses-booru3d-5k.tar.gz",
-    sentinel: resolve(ROOT, "public/poses/booru3d/booru3d_5000.webp"),
-  },
-  {
-    name: "densepose",
-    archive: "poses-densepose-5k.tar.gz",
-    sentinel: resolve(ROOT, "public/poses/densepose/densepose_5000.webp"),
+    name: "poses-5k",
+    archive: "poses-5k.tar.gz",
+    sentinel: resolve(ROOT, "public/poses/pose_5000.webp"),
   },
 ];
 

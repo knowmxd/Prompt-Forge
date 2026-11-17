@@ -14,50 +14,52 @@ import {
 
 const SAMPLE_ITEMS: PoseManifestItem[] = [
   {
-    id: "booru3d_0001",
-    dataset: "booru3d",
-    datasetLabel: "3D Shaded Mannequins",
-    imageUrl: "/poses/booru3d/booru3d_0001.webp",
-    title: "Standing Looking Back Raised",
-    naturalPrompt: "Single subject standing tall, looking back over shoulder with right hand raised.",
-    tags: ["standing", "looking back", "hands"],
-    cameraAngle: "full-body",
+    id: "pose_0001",
+    imageUrl: "/poses/pose_0001.webp",
+    category: "Standing",
+    subCategory: "looking over shoulder",
+    framing: "full-body",
+    tags: ["solo", "standing", "looking back", "full-body"],
+    naturalPrompt: "",
   },
   {
-    id: "densepose_0001",
-    dataset: "densepose",
-    datasetLabel: "DensePose Body Maps",
-    imageUrl: "/poses/densepose/densepose_0001.webp",
-    title: "Sitting Bench Stretching Arms",
-    naturalPrompt: "Two individuals sitting on a wooden bench with arms stretched upward.",
-    tags: ["sitting", "duo", "hands"],
-    cameraAngle: "eye-level",
+    id: "pose_2501",
+    imageUrl: "/poses/pose_2501.webp",
+    category: "Seated",
+    subCategory: "sitting on bench",
+    framing: "medium",
+    tags: ["solo", "seated", "bench", "medium"],
+    naturalPrompt: "",
   },
 ];
 
 describe("pose manifest filtering and PromptDoc wiring", () => {
-  it("filters by dataset, tag pill, and search query", () => {
-    assert.equal(filterPoseManifest(SAMPLE_ITEMS, { dataset: "booru3d" }).length, 1);
-    assert.equal(filterPoseManifest(SAMPLE_ITEMS, { dataset: "densepose" }).length, 1);
-    assert.equal(filterPoseManifest(SAMPLE_ITEMS, { tag: "sitting" })[0]?.id, "densepose_0001");
-    assert.equal(filterPoseManifest(SAMPLE_ITEMS, { query: "shoulder" })[0]?.id, "booru3d_0001");
+  it("filters by category, framing, and search query", () => {
+    assert.equal(filterPoseManifest(SAMPLE_ITEMS, { category: "Standing" }).length, 1);
+    assert.equal(filterPoseManifest(SAMPLE_ITEMS, { category: "Seated" }).length, 1);
+    assert.equal(filterPoseManifest(SAMPLE_ITEMS, { framing: "medium" })[0]?.id, "pose_2501");
+    assert.equal(filterPoseManifest(SAMPLE_ITEMS, { query: "shoulder" })[0]?.id, "pose_0001");
   });
 
-  it("populates pose_reference JSON fields and natural-language prompt output cleanly", () => {
+  it("populates pose_reference JSON fields and fallback kinetic_posture cleanly when naturalPrompt is blank", () => {
     const doc = emptyDoc();
     const updated = applyPoseManifestItem(doc, SAMPLE_ITEMS[0]!, 0);
 
-    assert.equal(updated.subjects[0]?.kinetic_posture, SAMPLE_ITEMS[0]!.naturalPrompt);
+    assert.equal(
+      updated.subjects[0]?.kinetic_posture,
+      "standing — looking over shoulder (full-body)",
+    );
     assert.deepEqual(updated.subjects[0]?.pose_reference, {
-      reference_id: "booru3d_0001",
-      pose_description: SAMPLE_ITEMS[0]!.naturalPrompt,
-      camera_angle: "full-body",
-      tags: ["standing", "looking back", "hands"],
-      dataset: "booru3d",
+      reference_id: "pose_0001",
+      image_url: "/poses/pose_0001.webp",
+      category: "Standing",
+      sub_category: "looking over shoulder",
+      framing: "full-body",
+      tags: ["solo", "standing", "looking back", "full-body"],
     });
     assert.equal(isPoseManifestApplied(updated, SAMPLE_ITEMS[0]!, 0), true);
-    assert.ok(toPromptLine(updated).includes("looking back over shoulder"));
-    assert.ok(toJson(updated).includes('"reference_id": "booru3d_0001"'));
+    assert.ok(toPromptLine(updated).includes("looking over shoulder"));
+    assert.ok(toJson(updated).includes('"reference_id": "pose_0001"'));
 
     const cleared = clearSubjectPose(updated, 0);
     assert.equal(cleared.subjects[0]?.kinetic_posture, "");
@@ -65,34 +67,38 @@ describe("pose manifest filtering and PromptDoc wiring", () => {
     assert.equal(isPoseManifestApplied(cleared, SAMPLE_ITEMS[0]!, 0), false);
   });
 
-  it("respects dataset filter when picking a random pose", () => {
+  it("respects category filter when picking a random pose", () => {
     for (let i = 0; i < 10; i++) {
-      const picked = pickRandomPoseManifestItem(SAMPLE_ITEMS, "densepose");
-      assert.equal(picked?.dataset, "densepose");
+      const picked = pickRandomPoseManifestItem(SAMPLE_ITEMS, "Seated");
+      assert.equal(picked?.category, "Seated");
     }
   });
 
-  it("verifies 10,000 generated manifest entries and local WebP assets on disk when present", () => {
+  it("verifies 5,000 generated solo-pose manifest entries and local WebP assets on disk when present", () => {
     const manifestPath = resolve(process.cwd(), "public/data/poses.json");
     if (!existsSync(manifestPath)) {
       return;
     }
     const items = JSON.parse(readFileSync(manifestPath, "utf-8")) as PoseManifestItem[];
-    assert.equal(items.length, 10000);
-    const booruCount = items.filter((p) => p.dataset === "booru3d").length;
-    const denseCount = items.filter((p) => p.dataset === "densepose").length;
-    assert.equal(booruCount, 5000);
-    assert.equal(denseCount, 5000);
+    assert.equal(items.length, 5000);
 
+    const counts: Record<string, number> = {};
     for (const item of items) {
+      counts[item.category] = (counts[item.category] ?? 0) + 1;
       assert.ok(item.id.length > 0);
-      assert.ok(item.title.length > 0);
-      assert.ok(item.naturalPrompt.length > 0);
+      assert.ok(item.subCategory.length > 0);
+      assert.equal(item.naturalPrompt, "");
       assert.ok(Array.isArray(item.tags) && item.tags.length > 0);
-      assert.ok(["eye-level", "low-angle", "high-angle", "full-body", "close-up"].includes(item.cameraAngle));
+      assert.ok(["full-body", "medium", "close-up"].includes(item.framing));
       const diskPath = resolve(process.cwd(), "public", item.imageUrl.replace(/^\/+/, ""));
       assert.ok(existsSync(diskPath), `Missing WebP asset on disk: ${diskPath}`);
     }
+
+    assert.equal(counts.Standing, 1250);
+    assert.equal(counts.Portrait, 1250);
+    assert.equal(counts.Seated, 900);
+    assert.equal(counts.Action, 900);
+    assert.equal(counts.Editorial, 700);
   });
 });
 

@@ -1,113 +1,201 @@
 #!/usr/bin/env python3
 """
-Ingests, curates, deduplicates, and normalizes 10,000 pose conditioning references:
-  - 5,000 from toyxyz/booru3dpose_10k ("booru3d" / "3D Shaded Mannequins")
-  - 5,000 from fAIseh00d/dense_pose_controlnet ("densepose" / "DensePose Body Maps")
+Weighted Solo-Subject Pose Reference Ingestion Pipeline (5,000 Poses)
+Streams CaptionEmporium/pexels-568k-internvl2, enforces strict solo-subject &
+portrait/square framing rules, distributes across 5 weighted pose buckets
+(Standing 1,250 / Portrait 1,250 / Seated 900 / Action 900 / Editorial 700),
+deduplicates via ID + perceptual dHash, and saves local WebP thumbnails +
+public/data/poses.json.
 
-Supports staged execution so each dataset checkpoints safely:
-  python scripts/ingest-poses.py --stage densepose
-  python scripts/ingest-poses.py --stage booru3d
-  python scripts/ingest-poses.py --stage merge
-  python scripts/ingest-poses.py --stage all
-
-Outputs:
-  - public/poses/booru3d/booru3d_0001.webp ... booru3d_5000.webp
-  - public/poses/densepose/densepose_0001.webp ... densepose_5000.webp
-  - public/data/poses.json (10,000 unified items)
+Important Scope Rule: Leaves naturalPrompt as "" (visual-first layout pass).
 """
 
-import argparse
 import concurrent.futures
+import gzip
 import io
 import json
-import os
 import re
-import tarfile
 import time
 import urllib.request
 from pathlib import Path
 
-import fsspec
 import numpy as np
-import pyarrow.parquet as pq
 from PIL import Image
-from sklearn.feature_extraction.text import TfidfVectorizer
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT_JSON = ROOT / "public" / "data" / "poses.json"
-BOORU_DIR = ROOT / "public" / "poses" / "booru3d"
-DENSE_DIR = ROOT / "public" / "poses" / "densepose"
-BOORU_META_CACHE = Path("/tmp/booru3d_items.json")
-DENSE_META_CACHE = Path("/tmp/densepose_items.json")
+POSES_DIR = ROOT / "public" / "poses"
+DATASET_URL = "https://huggingface.co/datasets/CaptionEmporium/pexels-568k-internvl2/resolve/main/train.jsonl.gz"
 
-TARGET_PER_DATASET = 5000
 MAX_EDGE = 384
-WEBP_QUALITY = 76
+WEBP_QUALITY = 78
 
-BOORU_SHARDS = [
-    "archives/train-000.tar",
-    "archives/train-001.tar",
-    "archives/train-002.tar",
-    "archives/train-003.tar",
-    "archives/train-004.tar",
-    "archives/train-005.tar",
-    "archives/train-006.tar",
-    "archives/validation-000.tar",
-    "archives/test-000.tar",
-]
-
-DENSE_SHARD_COUNT = 72  # 72 * 150 = ~10,800 candidates -> deduplicate cleanly to 5,000
-
-POSE_SIGNAL_WORDS = {
-    "standing", "stand", "sitting", "sit", "kneeling", "kneel", "crouching", "crouch",
-    "squatting", "squat", "lying", "reclining", "leaning", "bending", "arched", "arch",
-    "walking", "walk", "running", "run", "jumping", "jump", "floating", "flying",
-    "dancing", "dance", "stretching", "stretch", "turning", "twisting", "reaching",
-    "holding", "hugging", "embracing", "kissing", "fighting", "kicking", "punching",
-    "pointing", "waving", "saluting", "bowing", "praying", "sleeping", "looking",
-    "looking back", "looking at viewer", "looking away", "looking up", "looking down",
-    "looking to the side", "profile", "from behind", "from side", "from above", "from below",
-    "dutch angle", "upside-down", "head tilt", "contrapposto", "crossed legs", "crossed arms",
-    "arms behind back", "arms up", "arm up", "arms crossed", "arms at sides", "outstretched arms",
-    "hand raised", "hands up", "hand on hip", "hands on hips", "hand on chest", "hand on cheek",
-    "hand to mouth", "finger to mouth", "peace sign", "v", "open hand", "clenched hand",
-    "grasping", "carrying", "sword", "weapon", "chair", "bench", "bed", "floor", "ground",
-    "full body", "cowboy shot", "upper body", "portrait", "close-up", "wide shot",
-    "1girl", "1boy", "2girls", "2boys", "1other", "multiple girls", "multiple boys", "couple",
-    "solo", "2people", "two people", "group",
+BUCKET_TARGETS = {
+    "Standing": 1250,
+    "Portrait": 1250,
+    "Seated": 900,
+    "Action": 900,
+    "Editorial": 700,
 }
 
-NOISE_BOORU_PATTERNS = [
-    r"^score_\d+$",
-    r"^year\s*\d+$",
-    r"^\d+s$",
+# Negative / noise filter: reject multi-person, crowd, distant, or non-pose clutter
+NEGATIVE_RE = re.compile(
+    r"\b("
+    r"group|crowd|crowded|couple|couples|family|families|team|teams|audience|"
+    r"meeting|party|wedding|bride and groom|two people|two women|two men|"
+    r"two girls|two boys|two individuals|three people|several people|multiple people|"
+    r"many people|friends|colleagues|gathering|pedestrians|passersby|spectators|"
+    r"players|children|kids|toddler|baby|infant|newborn|pregnant belly|"
+    r"mannequin|statue|sculpture|doll|figurine|painting|illustration|drawing|sketch|"
+    r"cartoon|anime|3d render|blurry|out of focus|silhouette of crowd|"
+    r"in the distance|from afar|tiny figure|aerial view|bird'?s[- ]eye|drone shot|"
+    r"dog|puppy|cat|kitten|horse|cow|sheep|bird|food|plate|laptop|computer screen|"
+    r"smartphone screen|steering wheel|car interior|hospital|surgery|dentist|"
+    r"text overlay|watermark|collage|split screen|before and after|mirror selfie of two"
+    r")\b",
+    re.I,
+)
+
+# Explicit solo-subject anchoring
+SOLO_ANCHOR_RE = re.compile(
+    r"\b("
+    r"a woman|a young woman|a man|a young man|a person|a girl|a boy|"
+    r"a model|a fashion model|a dancer|a ballerina|an athlete|a runner|"
+    r"a performer|a martial artist|a yogi|solo|single woman|single man|"
+    r"one person|one woman|one man|individual|portrait of a|she is|he is|"
+    r"woman is|man is|woman standing|man standing|woman sitting|man sitting|"
+    r"woman wearing|man wearing|young woman|young man"
+    r")\b",
+    re.I,
+)
+
+# Secondary multi-person guard in caption prose (e.g. "two figures", "people walking", "others in background")
+MULTI_PERSON_PROSE_RE = re.compile(
+    r"\b("
+    r"people|persons|individuals|men and women|women and men|both of them|"
+    r"each other|holding hands|hugging|kissing|embracing|shaking hands|"
+    r"talking to someone|group of|pair of|duo|trio|four |five |six |"
+    r"background people|other people|onlookers|bystanders"
+    r")\b",
+    re.I,
+)
+
+# Weighted taxonomy: (category, subCategory, default_framing, regex_pattern, tags)
+SUBQUERY_RULES = [
+    # 1. Standing (Target: 1,250)
+    ("Standing", "looking over shoulder", "medium",
+     re.compile(r"\b(looking back|over (her|his|the) shoulder|glancing back|turned away looking)\b", re.I),
+     ["solo", "standing", "looking back"]),
+    ("Standing", "leaning against wall", "full-body",
+     re.compile(r"\b(leaning against|leans against|against a wall|against the wall|leaning on a wall)\b", re.I),
+     ["solo", "standing", "leaning"]),
+    ("Standing", "hands in pockets", "full-body",
+     re.compile(r"\b(hands in (her|his|the)? ?pockets|hand in pocket|pockets)\b", re.I),
+     ["solo", "standing", "hands in pockets"]),
+    ("Standing", "arms crossed", "medium",
+     re.compile(r"\b(arms crossed|crossed arms|arms folded|folded arms)\b", re.I),
+     ["solo", "standing", "arms crossed"]),
+    ("Standing", "walking toward camera", "full-body",
+     re.compile(r"\b(walking toward|walking forward|striding|stepping forward|walking down|walking along)\b", re.I),
+     ["solo", "standing", "walking"]),
+    ("Standing", "walking away", "full-body",
+     re.compile(r"\b(walking away|from behind|back to the camera|facing away)\b", re.I),
+     ["solo", "standing", "back view"]),
+    ("Standing", "contrapposto stance", "full-body",
+     re.compile(r"\b(hand on hip|hands on hips|weight shifted|one leg|contrapposto|posing confidently)\b", re.I),
+     ["solo", "standing", "contrapposto"]),
+    ("Standing", "street-style standing", "full-body",
+     re.compile(r"\b(standing|stands)\b.*\b(street|sidewalk|urban|outfit|coat|jacket|jeans|dress|full[- ]body|full[- ]length)\b|\b(standing tall|standing upright|standing pose)\b", re.I),
+     ["solo", "standing", "street style"]),
+    ("Standing", "casual standing", "medium",
+     re.compile(r"\b(standing|stands)\b", re.I),
+     ["solo", "standing", "casual"]),
+
+    # 2. Portrait (Target: 1,250)
+    ("Portrait", "hand near chin/face", "close-up",
+     re.compile(r"\b(hand (on|near|to|touching|resting) (her|his|the)? ?(chin|face|cheek|jaw|lips|neck)|resting (her|his) chin)\b", re.I),
+     ["solo", "portrait", "hand near face"]),
+    ("Portrait", "side profile", "close-up",
+     re.compile(r"\b(side profile|in profile|profile view|looking to the side|turned sideways)\b", re.I),
+     ["solo", "portrait", "profile"]),
+    ("Portrait", "head tilted", "close-up",
+     re.compile(r"\b(head tilt|tilted head|tilting (her|his) head|chin up|looking up)\b", re.I),
+     ["solo", "portrait", "head tilt"]),
+    ("Portrait", "expressive hands", "medium",
+     re.compile(r"\b(raising (her|his) hand|hand gesture|hands near|fingers|reaching|touching (her|his) hair|adjusting)\b", re.I),
+     ["solo", "portrait", "hands"]),
+    ("Portrait", "dramatic lighting portrait", "close-up",
+     re.compile(r"\b(dramatic lighting|chiaroscuro|rim light|shadow|neon|studio light|moody portrait)\b", re.I),
+     ["solo", "portrait", "dramatic lighting"]),
+    ("Portrait", "studio portrait", "close-up",
+     re.compile(r"\b(close[- ]up|headshot|portrait|upper body|bust|studio background|plain background)\b", re.I),
+     ["solo", "portrait", "studio"]),
+
+    # 3. Seated (Target: 900)
+    ("Seated", "sitting on stairs", "full-body",
+     re.compile(r"\b(sitting on (the )?stairs|seated on (the )?steps|on a staircase|steps)\b", re.I),
+     ["solo", "seated", "stairs"]),
+    ("Seated", "crouching stance", "full-body",
+     re.compile(r"\b(crouching|crouches|squatting|squats|low stance)\b", re.I),
+     ["solo", "seated", "crouching"]),
+    ("Seated", "kneeling pose", "full-body",
+     re.compile(r"\b(kneeling|kneels|on one knee|on knees)\b", re.I),
+     ["solo", "seated", "kneeling"]),
+    ("Seated", "lounging on floor", "full-body",
+     re.compile(r"\b(sitting on the floor|seated on the floor|on the ground|lounging|reclining|lying down|lying on)\b", re.I),
+     ["solo", "seated", "floor"]),
+    ("Seated", "sitting on stool/chair", "medium",
+     re.compile(r"\b(sitting on a stool|sitting on a chair|seated on a|armchair|wooden chair|bench|sofa|couch|leaning forward)\b", re.I),
+     ["solo", "seated", "chair"]),
+    ("Seated", "seated posture", "medium",
+     re.compile(r"\b(sitting|seated|sits)\b", re.I),
+     ["solo", "seated", "posture"]),
+
+    # 4. Action (Target: 900)
+    ("Action", "mid-air jump", "full-body",
+     re.compile(r"\b(jumping|mid[- ]air|leap|leaping|airborne|in the air)\b", re.I),
+     ["solo", "action", "jump"]),
+    ("Action", "contemporary dance", "full-body",
+     re.compile(r"\b(dancing|dance|ballet|ballerina|pirouette|arabesque|choreography|graceful movement)\b", re.I),
+     ["solo", "action", "dance"]),
+    ("Action", "running stride", "full-body",
+     re.compile(r"\b(running|sprinting|jogging|sprint|mid[- ]stride)\b", re.I),
+     ["solo", "action", "running"]),
+    ("Action", "yoga/stretching", "full-body",
+     re.compile(r"\b(yoga|stretching|stretch|flexible|split|handstand|acrobatic|gymnastics|balance pose)\b", re.I),
+     ["solo", "action", "yoga"]),
+    ("Action", "martial arts stance", "full-body",
+     re.compile(r"\b(martial arts|karate|boxing|kickboxing|punching|kicking|fighting stance|athlete|workout|exercising)\b", re.I),
+     ["solo", "action", "athletic"]),
+
+    # 5. Editorial (Target: 700)
+    ("Editorial", "low-angle heroic", "full-body",
+     re.compile(r"\b(low[- ]angle|from below|worm'?s[- ]eye|looking up at (the )?(woman|man|model|person))\b", re.I),
+     ["solo", "editorial", "low-angle"]),
+    ("Editorial", "high-angle shot", "full-body",
+     re.compile(r"\b(high[- ]angle|from above|looking down at)\b", re.I),
+     ["solo", "editorial", "high-angle"]),
+    ("Editorial", "flowing coat/fabric", "full-body",
+     re.compile(r"\b(flowing|billowing|wind[- ]blown|trench coat|long coat|silk dress|gown|cape|fabric movement)\b", re.I),
+     ["solo", "editorial", "flowing"]),
+    ("Editorial", "back-view silhouette", "full-body",
+     re.compile(r"\b(silhouette|backlit|rim[- ]lit|shadowy figure)\b", re.I),
+     ["solo", "editorial", "silhouette"]),
+    ("Editorial", "high-fashion lookbook", "full-body",
+     re.compile(r"\b(high[- ]fashion|editorial|lookbook|avant[- ]garde|runway|couture|fashion model|monochrome outfit|minimalist studio)\b", re.I),
+     ["solo", "editorial", "fashion"]),
 ]
 
-NOISE_BOORU_EXACT = {
-    "masterpiece", "best quality", "high quality", "good quality", "normal quality",
-    "low quality", "worst quality", "highres", "absurdres", "newest", "recent", "early",
-    "mid", "safe", "general", "sensitive", "questionable", "explicit", "nsfw", "sfw",
-    "blurry", "bokeh", "depth of field", "chromatic aberration", "film grain", "jpeg artifacts",
-    "signature", "watermark", "artist name", "commentary", "english commentary",
-    "simple background", "white background", "black background", "transparent background",
-    "monochrome", "greyscale", "color", "sketch", "lineart", "anime", "illustration",
-    "digital art", "virtual youtuber", "vtuber", "original", "official art",
-    "1girl", "1boy", "solo", "2girls", "2boys", "multiple girls", "multiple boys",
-}
 
-CATEGORY_TAGS = [
-    ("standing", ("standing", "stand", "upright", "contrapposto")),
-    ("sitting", ("sitting", "sit", "seated", "chair", "bench", "stool", "throne", "lap")),
-    ("kneeling", ("kneeling", "kneel", "all fours", "on one knee")),
-    ("crouching", ("crouching", "crouch", "squatting", "squat")),
-    ("reclining", ("lying", "reclining", "on back", "on stomach", "on side", "bed")),
-    ("action", ("running", "jumping", "kicking", "punching", "fighting", "walking", "lunging", "swinging", "throwing", "dancing", "leap")),
-    ("hands", ("hand", "hands", "finger", "fingers", "peace sign", "pointing", "waving", "clenched", "palm", "gesture")),
-    ("looking back", ("looking back", "over shoulder", "from behind")),
-    ("portrait", ("upper body", "portrait", "close-up", "headshot", "bust")),
-    ("full-body", ("full body", "full-body", "head to toe")),
-    ("duo", ("2girls", "2boys", "couple", "two ", "two people", "two individuals", "together", "hugging", "partner")),
-]
+def infer_framing(text_lower: str, default_framing: str) -> str:
+    if any(k in text_lower for k in ("full-body", "full body", "full-length", "head to toe", "shoes", "sneakers", "boots", "heels", "standing on", "walking", "jumping", "crouching", "kneeling")):
+        return "full-body"
+    if any(k in text_lower for k in ("close-up", "closeup", "headshot", "face", "eyes", "chin", "cheek", "lips", "neck")):
+        if not any(k in text_lower for k in ("waist", "torso", "hips", "legs")):
+            return "close-up"
+    if any(k in text_lower for k in ("waist-up", "medium shot", "half-body", "upper body", "torso", "hips")):
+        return "medium"
+    return default_framing
 
 
 def compute_dhash(img: Image.Image, hash_size: int = 8) -> int:
@@ -120,405 +208,220 @@ def compute_dhash(img: Image.Image, hash_size: int = 8) -> int:
     return bits
 
 
-def encode_webp(img: Image.Image) -> bytes:
-    rgb = img.convert("RGB")
-    rgb.thumbnail((MAX_EDGE, MAX_EDGE), Image.Resampling.LANCZOS)
-    buf = io.BytesIO()
-    rgb.save(buf, format="WEBP", quality=WEBP_QUALITY, method=3)
-    return buf.getvalue()
+def build_pexels_thumb_url(raw_url: str, pid: int) -> str:
+    # Pexels image CDN supports fast ?auto=compress&cs=tinysrgb&w=420 resizing
+    base = raw_url.split("?", 1)[0]
+    if "images.pexels.com/photos/" in base:
+        return f"{base}?auto=compress&cs=tinysrgb&w=420"
+    return f"https://images.pexels.com/photos/{pid}/pexels-photo-{pid}.jpeg?auto=compress&cs=tinysrgb&w=420"
 
 
-def infer_camera_angle(text_lower: str, aspect_w_h: float, is_upper_only: bool = False) -> str:
-    if any(k in text_lower for k in ("from below", "low-angle", "low angle", "worm's eye", "looking upward")):
-        return "low-angle"
-    if any(k in text_lower for k in ("from above", "high-angle", "high angle", "bird's eye", "overhead", "looking down at")):
-        return "high-angle"
-    if any(k in text_lower for k in ("close-up", "closeup", "portrait", "headshot", "upper body", "face close", "bust shot")) or is_upper_only:
-        return "close-up"
-    if any(k in text_lower for k in ("full body", "full-body", "wide shot", "standing", "walking", "running", "jumping")):
-        return "full-body"
-    if aspect_w_h < 0.78:
-        return "full-body"
-    return "eye-level"
+def collect_candidates():
+    t0 = time.time()
+    # Oversample 2.1x per bucket so network drops + dHash dedup still hit exact 5,000
+    oversample_caps = {k: int(v * 2.1) for k, v in BUCKET_TARGETS.items()}
+    buckets: dict[str, list[dict]] = {k: [] for k in BUCKET_TARGETS}
+    sub_counts: dict[str, int] = {}
+    seen_ids = set()
 
+    print(f"[ingest] Streaming {DATASET_URL} for 5,000 solo-subject pose candidates...", flush=True)
+    req = urllib.request.Request(DATASET_URL, headers={"User-Agent": "PromptForge-Ingest/2.0"})
+    rows_scanned = 0
 
-def extract_clean_tags(text_lower: str, extra_tokens=()) -> list[str]:
-    tags = []
-    seen = set()
-    for label, keywords in CATEGORY_TAGS:
-        if any(kw in text_lower for kw in keywords):
-            if label not in seen:
-                seen.add(label)
-                tags.append(label)
-    for tok in extra_tokens:
-        t = tok.strip().lower()
-        if t and t not in seen and len(t) <= 28:
-            seen.add(t)
-            tags.append(t)
-        if len(tags) >= 6:
-            break
-    if not tags:
-        tags.append("pose")
-    return tags[:6]
+    with urllib.request.urlopen(req, timeout=180) as resp:
+        gz = gzip.GzipFile(fileobj=resp)
+        for line in gz:
+            rows_scanned += 1
+            if rows_scanned % 50000 == 0:
+                counts_str = ", ".join(f"{k}:{len(v)}/{oversample_caps[k]}" for k, v in buckets.items())
+                print(f"[ingest] Scanned {rows_scanned:,} rows ({time.time()-t0:.1f}s) -> {counts_str}", flush=True)
 
+            # Stop early once every bucket has reached its oversample cap
+            if all(len(buckets[k]) >= oversample_caps[k] for k in BUCKET_TARGETS):
+                print(f"[ingest] All buckets reached oversample cap at row {rows_scanned:,}!", flush=True)
+                break
 
-def make_short_title(phrases: list[str], fallback: str = "Studio Pose Reference") -> str:
-    words = []
-    for p in phrases:
-        for w in re.findall(r"[A-Za-z0-9'-]+", p):
-            lw = w.lower()
-            if lw in {"the", "a", "an", "is", "are", "of", "in", "on", "at", "with", "to", "for", "and", "or", "person", "someone", "individual", "subject"}:
+            try:
+                row = json.loads(line)
+            except Exception:
                 continue
-            words.append(w.capitalize())
-            if len(words) >= 4:
-                return " ".join(words)
-    if words:
-        return " ".join(words[:5])
-    return fallback
 
+            if row.get("type") != "photo":
+                continue
 
-# ==============================================================================
-# PART 1: BOORU3DPOSE_10K
-# ==============================================================================
+            pid = row.get("id")
+            if not pid or pid in seen_ids:
+                continue
 
-def clean_booru_caption(raw_caption: str):
-    parts = [p.strip() for p in raw_caption.split(",") if p.strip()]
-    pose_tags = []
-    sentences = []
-    subject_count = "single subject"
+            w = row.get("width") or 0
+            h = row.get("height") or 0
+            if w < 500 or h < 500:
+                continue
+            # Portrait or square orientation preference (h >= w * 0.90)
+            if h < w * 0.90:
+                continue
 
-    for part in parts:
-        pl = part.lower()
-        if any(re.match(pat, pl) for pat in NOISE_BOORU_PATTERNS):
-            continue
-        if pl in NOISE_BOORU_EXACT:
-            if pl in ("2girls", "2boys", "couple"):
-                subject_count = "two subjects"
-            elif "multiple" in pl:
-                subject_count = "multiple subjects"
-            continue
+            title = row.get("title") or ""
+            alt = row.get("alt") or ""
+            tags_raw = row.get("tags") or ""
+            cap1 = row.get("internvl2_caption") or ""
+            cap2 = row.get("cogvlm_caption") or ""
+            combined = f"{title} | {alt} | {tags_raw} | {cap1} | {cap2}"
 
-        if len(part.split()) >= 6:
-            if any(w in pl for w in ("pose", "posture", "stand", "sit", "kneel", "lean", "arm", "hand", "head", "body", "camera", "angle", "viewpoint", "frame", "shot", "look", "crouch", "lying")):
-                sentences.append(part)
-            continue
+            if not SOLO_ANCHOR_RE.search(combined):
+                continue
+            if NEGATIVE_RE.search(combined) or MULTI_PERSON_PROSE_RE.search(f"{title} {alt} {cap1} {cap2}"):
+                continue
 
-        if pl in POSE_SIGNAL_WORDS or any(kw in pl for kw in ("pose", "stand", "sit", "kneel", "crouch", "lying", "lean", "hand", "arm", "finger", "leg", "look", "from ", "shot", "angle", "profile", "back", "turn", "tilt", "hug", "hold", "walk", "run", "jump", "dance", "stretch")):
-            pose_tags.append(pl)
-
-    pose_tags = list(dict.fromkeys(pose_tags))
-
-    if sentences:
-        cleaned_sents = []
-        for s in sentences[:2]:
-            s = s.strip().rstrip(".")
-            s = s[0].upper() + s[1:]
-            cleaned_sents.append(s)
-        extra_cues = [t for t in pose_tags if t not in " ".join(cleaned_sents).lower()][:5]
-        prompt = ". ".join(cleaned_sents) + "."
-        if extra_cues:
-            prompt += f" Key posture cues: {', '.join(extra_cues)}."
-    elif pose_tags:
-        framing = [t for t in pose_tags if t in ("full body", "cowboy shot", "upper body", "portrait", "close-up", "from behind", "from side", "from above", "from below")]
-        actions = [t for t in pose_tags if t not in framing][:8]
-        parts_txt = []
-        if actions:
-            parts_txt.append(f"{subject_count.capitalize()} captured with {', '.join(actions)}")
-        else:
-            parts_txt.append(f"{subject_count.capitalize()} in articulated 3D studio pose")
-        if framing:
-            parts_txt.append(f"framed as {', '.join(framing[:3])}")
-        prompt = ", ".join(parts_txt) + "."
-    else:
-        fallback_bits = [p for p in parts if p.lower() not in NOISE_BOORU_EXACT][:6]
-        prompt = f"3D mannequin reference posture ({', '.join(fallback_bits)})." if fallback_bits else "Articulated 3D mannequin posture reference."
-
-    title = make_short_title(pose_tags[:4] if pose_tags else sentences[:1], "3D Mannequin Pose")
-    return pose_tags, prompt, title
-
-
-def stream_booru_shard(shard_rel_path: str):
-    """Stream tar shard AND decode/encode WebP inside worker thread for 4x speed."""
-    url = f"https://huggingface.co/datasets/toyxyz/booru3dpose_10k/resolve/main/{shard_rel_path}"
-    pairs = {}
-    req = urllib.request.Request(url, headers={"User-Agent": "PromptForge-Ingest/1.0"})
-    with urllib.request.urlopen(req, timeout=300) as resp:
-        with tarfile.open(fileobj=resp, mode="r|") as tar:
-            for member in tar:
-                if not member.isfile():
+            # Match against weighted taxonomy rules
+            matched_rule = None
+            for cat, subcat, def_framing, pat, base_tags in SUBQUERY_RULES:
+                if len(buckets[cat]) >= oversample_caps[cat]:
                     continue
-                name = member.name
-                if "/condition/" in name and name.endswith(".png"):
-                    stem = os.path.splitext(os.path.basename(name))[0]
-                    pairs.setdefault(stem, {})["cond"] = tar.extractfile(member).read()
-                elif name.endswith(".txt"):
-                    stem = os.path.splitext(os.path.basename(name))[0]
-                    pairs.setdefault(stem, {})["txt"] = tar.extractfile(member).read().decode("utf-8", errors="replace").strip()
+                if pat.search(combined):
+                    # Cap individual sub-categories so no single generic query dominates
+                    max_sub = max(240, int(oversample_caps[cat] * 0.35))
+                    if sub_counts.get(f"{cat}:{subcat}", 0) >= max_sub:
+                        continue
+                    matched_rule = (cat, subcat, def_framing, base_tags)
+                    break
 
-    candidates = []
-    for stem, rec in pairs.items():
-        if "cond" not in rec:
-            continue
-        raw_txt = rec.get("txt", "")
-        try:
-            im = Image.open(io.BytesIO(rec["cond"])).convert("RGB")
-        except Exception:
-            continue
-        arr = np.asarray(im.resize((96, 96), Image.Resampling.BILINEAR))
-        non_black = float(np.mean(np.max(arr, axis=2) > 18))
-        if non_black < 0.015 or non_black > 0.94:
-            continue
+            if not matched_rule:
+                continue
 
+            cat, subcat, def_framing, base_tags = matched_rule
+            raw_url = row.get("url") or ""
+            if not raw_url:
+                continue
+
+            seen_ids.add(pid)
+            sub_counts[f"{cat}:{subcat}"] = sub_counts.get(f"{cat}:{subcat}", 0) + 1
+            framing = infer_framing(combined.lower(), def_framing)
+            tags = list(dict.fromkeys(base_tags + [framing]))[:4]
+
+            buckets[cat].append({
+                "pid": pid,
+                "thumbUrl": build_pexels_thumb_url(raw_url, pid),
+                "category": cat,
+                "subCategory": subcat,
+                "framing": framing,
+                "tags": tags,
+            })
+
+    print(f"[ingest] Finished scanning {rows_scanned:,} rows in {time.time()-t0:.1f}s.", flush=True)
+    for k, v in buckets.items():
+        print(f"  Bucket {k}: {len(v)} candidates (target {BUCKET_TARGETS[k]})", flush=True)
+    return buckets
+
+
+def download_and_encode(cand: dict):
+    url = cand["thumbUrl"]
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (PromptForge/2.0)"})
+        with urllib.request.urlopen(req, timeout=15) as r:
+            if r.status != 200:
+                return None
+            raw = r.read()
+        im = Image.open(io.BytesIO(raw)).convert("RGB")
+        w, h = im.size
+        if w < 180 or h < 180:
+            return None
         dhash = compute_dhash(im)
-        pose_tags, natural_prompt, title = clean_booru_caption(raw_txt)
-        richness = len(pose_tags) * 2 + (5 if len(natural_prompt) > 65 else 0)
-        w, h = im.size
-        is_upper = any(t in ("upper body", "portrait", "close-up") for t in pose_tags)
-        camera_angle = infer_camera_angle(raw_txt.lower(), w / max(h, 1), is_upper)
-        tags = extract_clean_tags(raw_txt.lower(), pose_tags)
-
-        candidates.append({
-            "stem": stem,
-            "richness": richness,
-            "dhash": dhash,
-            "tag_set": set(pose_tags) if pose_tags else set(tags),
-            "webp": encode_webp(im),
-            "title": title,
-            "naturalPrompt": natural_prompt,
-            "tags": tags,
-            "cameraAngle": camera_angle,
-        })
-
-    print(f"[booru3d] Processed {shard_rel_path}: {len(candidates)} valid candidates", flush=True)
-    return candidates
-
-
-def ingest_booru3d():
-    BOORU_DIR.mkdir(parents=True, exist_ok=True)
-    for old in BOORU_DIR.glob("*.webp"):
-        old.unlink()
-
-    t0 = time.time()
-    all_candidates = []
-    print("[booru3d] Streaming & encoding 9 TAR shards across 4 workers...", flush=True)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as ex:
-        for shard_candidates in ex.map(stream_booru_shard, BOORU_SHARDS):
-            all_candidates.extend(shard_candidates)
-
-    print(f"[booru3d] Collected {len(all_candidates)} valid candidates in {time.time() - t0:.1f}s. Deduplicating to {TARGET_PER_DATASET}...", flush=True)
-    all_candidates.sort(key=lambda c: (-c["richness"], c["stem"]))
-
-    kept = []
-    kept_hashes_np = np.zeros(TARGET_PER_DATASET, dtype=np.uint64)
-    kept_tag_sets = []
-    popcount16 = np.array([bin(i).count("1") for i in range(65536)], dtype=np.uint8)
-
-    def hamming_arr(h_val: int, count: int):
-        xor = kept_hashes_np[:count] ^ np.uint64(h_val)
-        return (
-            popcount16[xor & np.uint64(0xFFFF)]
-            + popcount16[(xor >> np.uint64(16)) & np.uint64(0xFFFF)]
-            + popcount16[(xor >> np.uint64(32)) & np.uint64(0xFFFF)]
-            + popcount16[(xor >> np.uint64(48)) & np.uint64(0xFFFF)]
-        )
-
-    rejected = []
-    for c in all_candidates:
-        if len(kept) >= TARGET_PER_DATASET:
-            break
-        n = len(kept)
-        if n > 0:
-            dists = hamming_arr(c["dhash"], n)
-            if int(dists.min()) <= 4:
-                rejected.append(c)
-                continue
-            tset = c["tag_set"]
-            too_close_tags = False
-            if len(tset) >= 3:
-                for idx in np.where(dists <= 11)[0]:
-                    other = kept_tag_sets[idx]
-                    union = len(tset | other)
-                    if union > 0 and (len(tset & other) / union) >= 0.72:
-                        too_close_tags = True
-                        break
-            if too_close_tags:
-                rejected.append(c)
-                continue
-        kept_hashes_np[n] = np.uint64(c["dhash"])
-        kept_tag_sets.append(c["tag_set"])
-        kept.append(c)
-
-    if len(kept) < TARGET_PER_DATASET:
-        for c in rejected:
-            if len(kept) >= TARGET_PER_DATASET:
-                break
-            if int(hamming_arr(c["dhash"], len(kept)).min()) >= 2:
-                kept_hashes_np[len(kept)] = np.uint64(c["dhash"])
-                kept.append(c)
-
-    items = []
-    for i, c in enumerate(kept[:TARGET_PER_DATASET], 1):
-        pid = f"booru3d_{i:04d}"
-        (BOORU_DIR / f"{pid}.webp").write_bytes(c["webp"])
-        items.append({
-            "id": pid,
-            "dataset": "booru3d",
-            "datasetLabel": "3D Shaded Mannequins",
-            "imageUrl": f"/poses/booru3d/{pid}.webp",
-            "title": c["title"],
-            "naturalPrompt": c["naturalPrompt"],
-            "tags": c["tags"],
-            "cameraAngle": c["cameraAngle"],
-        })
-
-    BOORU_META_CACHE.write_text(json.dumps(items, separators=(",", ":")), encoding="utf-8")
-    print(f"[booru3d] Saved {len(items)} WebP poses + metadata checkpoint in {time.time() - t0:.1f}s", flush=True)
-    return items
-
-
-# ==============================================================================
-# PART 2: DENSE_POSE_CONTROLNET
-# ==============================================================================
-
-def fetch_dense_shard(shard_idx: int):
-    url = f"https://huggingface.co/datasets/fAIseh00d/dense_pose_controlnet/resolve/main/data/train-{shard_idx:05d}-of-00133.parquet"
-    rows_out = []
-    with fsspec.open(url, mode="rb") as f:
-        pf = pq.ParquetFile(f)
-        table = pf.read(columns=["id", "conditioning_image", "text"])
-    d = table.to_pydict()
-    for rid, cbytes, text in zip(d["id"], d["conditioning_image"], d["text"]):
-        if not cbytes or not text or len(text.strip()) < 15:
-            continue
-        try:
-            im = Image.open(io.BytesIO(cbytes)).convert("RGB")
-        except Exception:
-            continue
-
-        small = np.asarray(im.resize((96, 96), Image.Resampling.BILINEAR), dtype=np.int16)
-        bg = small[0, 0]
-        fg_ratio = float(np.mean(np.abs(small - bg).sum(axis=2) > 35))
-        if fg_ratio < 0.025 or fg_ratio > 0.88 or float(small.std()) < 12.0:
-            continue
-
-        w, h = im.size
-        clean_txt = " ".join(text.strip().split())
-        if not clean_txt.endswith((".", "!", "?")):
-            clean_txt += "."
-        clean_txt = clean_txt[0].upper() + clean_txt[1:]
-
-        rows_out.append({
-            "rid": rid,
-            "dhash": compute_dhash(im),
-            "webp": encode_webp(im),
-            "title": make_short_title([clean_txt], "DensePose Action Reference"),
-            "naturalPrompt": clean_txt,
-            "tags": extract_clean_tags(clean_txt.lower()),
-            "cameraAngle": infer_camera_angle(clean_txt.lower(), w / max(h, 1), False),
-        })
-    return shard_idx, rows_out
-
-
-def ingest_densepose():
-    DENSE_DIR.mkdir(parents=True, exist_ok=True)
-    for old in DENSE_DIR.glob("*.webp"):
-        old.unlink()
-
-    t0 = time.time()
-    all_candidates = []
-    print(f"[densepose] Streaming {DENSE_SHARD_COUNT} Parquet shards (columns: id, conditioning_image, text)...", flush=True)
-
-    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as ex:
-        for idx, rows in ex.map(fetch_dense_shard, range(DENSE_SHARD_COUNT)):
-            all_candidates.extend(rows)
-            if (idx + 1) % 10 == 0 or (idx + 1) == DENSE_SHARD_COUNT:
-                print(f"[densepose] Shard {idx + 1}/{DENSE_SHARD_COUNT} -> {len(all_candidates)} valid candidates...", flush=True)
-
-    print(f"[densepose] Collected {len(all_candidates)} valid UV maps in {time.time() - t0:.1f}s. Computing TF-IDF + dHash deduplication...", flush=True)
-
-    vec = TfidfVectorizer(stop_words="english", max_features=8000, ngram_range=(1, 2))
-    tfidf = vec.fit_transform([c["naturalPrompt"] for c in all_candidates])
-
-    popcount16 = np.array([bin(i).count("1") for i in range(65536)], dtype=np.uint8)
-    kept = []
-    kept_indices = []
-    kept_hashes_np = np.zeros(TARGET_PER_DATASET, dtype=np.uint64)
-    rejected = []
-
-    def hamming_arr(h_val: int, count: int):
-        xor = kept_hashes_np[:count] ^ np.uint64(h_val)
-        return (
-            popcount16[xor & np.uint64(0xFFFF)]
-            + popcount16[(xor >> np.uint64(16)) & np.uint64(0xFFFF)]
-            + popcount16[(xor >> np.uint64(32)) & np.uint64(0xFFFF)]
-            + popcount16[(xor >> np.uint64(48)) & np.uint64(0xFFFF)]
-        )
-
-    for idx, c in enumerate(all_candidates):
-        if len(kept) >= TARGET_PER_DATASET:
-            break
-        n = len(kept)
-        if n > 0:
-            if int(hamming_arr(c["dhash"], n).min()) <= 5:
-                rejected.append(c)
-                continue
-            check_idx = kept_indices[-400:]
-            sims = (tfidf[idx] @ tfidf[check_idx].T).toarray()[0]
-            if sims.size > 0 and float(sims.max()) >= 0.76:
-                rejected.append(c)
-                continue
-        kept_hashes_np[n] = np.uint64(c["dhash"])
-        kept_indices.append(idx)
-        kept.append(c)
-
-    if len(kept) < TARGET_PER_DATASET:
-        for c in rejected:
-            if len(kept) >= TARGET_PER_DATASET:
-                break
-            if int(hamming_arr(c["dhash"], len(kept)).min()) >= 2:
-                kept_hashes_np[len(kept)] = np.uint64(c["dhash"])
-                kept.append(c)
-
-    items = []
-    for i, c in enumerate(kept[:TARGET_PER_DATASET], 1):
-        pid = f"densepose_{i:04d}"
-        (DENSE_DIR / f"{pid}.webp").write_bytes(c["webp"])
-        items.append({
-            "id": pid,
-            "dataset": "densepose",
-            "datasetLabel": "DensePose Body Maps",
-            "imageUrl": f"/poses/densepose/{pid}.webp",
-            "title": c["title"],
-            "naturalPrompt": c["naturalPrompt"],
-            "tags": c["tags"],
-            "cameraAngle": c["cameraAngle"],
-        })
-
-    DENSE_META_CACHE.write_text(json.dumps(items, separators=(",", ":")), encoding="utf-8")
-    print(f"[densepose] Saved {len(items)} WebP poses + metadata checkpoint in {time.time() - t0:.1f}s", flush=True)
-    return items
-
-
-def merge_manifests():
-    OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
-    booru_items = json.loads(BOORU_META_CACHE.read_text(encoding="utf-8"))
-    dense_items = json.loads(DENSE_META_CACHE.read_text(encoding="utf-8"))
-    combined = booru_items + dense_items
-    OUT_JSON.write_text(json.dumps(combined, separators=(",", ":")), encoding="utf-8")
-    print(f"DONE! Wrote {len(combined)} total poses to {OUT_JSON} ({OUT_JSON.stat().st_size / 1e6:.2f} MB)", flush=True)
+        im.thumbnail((MAX_EDGE, MAX_EDGE), Image.Resampling.LANCZOS)
+        buf = io.BytesIO()
+        im.save(buf, format="WEBP", quality=WEBP_QUALITY, method=3)
+        return {**cand, "dhash": dhash, "webp": buf.getvalue()}
+    except Exception:
+        return None
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--stage", choices=["all", "booru3d", "densepose", "merge"], default="all")
-    args = parser.parse_args()
+    t0 = time.time()
+    POSES_DIR.mkdir(parents=True, exist_ok=True)
+    OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
 
-    if args.stage in ("all", "booru3d"):
-        ingest_booru3d()
-    if args.stage in ("all", "densepose"):
-        ingest_densepose()
-    if args.stage in ("all", "merge"):
-        merge_manifests()
+    # Remove previous pose_*.webp files cleanly
+    for old in POSES_DIR.glob("pose_*.webp"):
+        old.unlink()
+
+    buckets = collect_candidates()
+
+    popcount16 = np.array([bin(i).count("1") for i in range(65536)], dtype=np.uint8)
+    kept_hashes = np.zeros(sum(BUCKET_TARGETS.values()) + 500, dtype=np.uint64)
+    kept_count = 0
+
+    def min_hamming(h_val: int) -> int:
+        if kept_count == 0:
+            return 64
+        xor = kept_hashes[:kept_count] ^ np.uint64(h_val)
+        dists = (
+            popcount16[xor & np.uint64(0xFFFF)]
+            + popcount16[(xor >> np.uint64(16)) & np.uint64(0xFFFF)]
+            + popcount16[(xor >> np.uint64(32)) & np.uint64(0xFFFF)]
+            + popcount16[(xor >> np.uint64(48)) & np.uint64(0xFFFF)]
+        )
+        return int(dists.min())
+
+    final_items = []
+    pose_idx = 0
+
+    for cat, target in BUCKET_TARGETS.items():
+        cands = buckets[cat]
+        # Interleave sub-categories so variety is maximized
+        by_sub: dict[str, list[dict]] = {}
+        for c in cands:
+            by_sub.setdefault(c["subCategory"], []).append(c)
+        ordered = []
+        sub_lists = list(by_sub.values())
+        max_len = max((len(lst) for lst in sub_lists), default=0)
+        for i in range(max_len):
+            for lst in sub_lists:
+                if i < len(lst):
+                    ordered.append(lst[i])
+
+        print(f"[download] Fetching & dHash-deduplicating {cat} (target {target} from {len(ordered)} candidates)...", flush=True)
+        cat_kept = 0
+        batch_size = 160
+        pos = 0
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=20) as ex:
+            while cat_kept < target and pos < len(ordered):
+                needed = target - cat_kept
+                take = min(len(ordered) - pos, max(needed + 40, batch_size))
+                batch = ordered[pos : pos + take]
+                pos += take
+
+                for res in ex.map(download_and_encode, batch):
+                    if res is None:
+                        continue
+                    if min_hamming(res["dhash"]) <= 5:
+                        continue
+                    kept_hashes[kept_count] = np.uint64(res["dhash"])
+                    kept_count += 1
+                    cat_kept += 1
+                    pose_idx += 1
+
+                    pid_str = f"pose_{pose_idx:04d}"
+                    (POSES_DIR / f"{pid_str}.webp").write_bytes(res["webp"])
+                    final_items.append({
+                        "id": pid_str,
+                        "imageUrl": f"/poses/{pid_str}.webp",
+                        "category": res["category"],
+                        "subCategory": res["subCategory"],
+                        "framing": res["framing"],
+                        "tags": res["tags"],
+                        "naturalPrompt": "",
+                    })
+                    if cat_kept >= target:
+                        break
+
+        print(f"[download] {cat}: saved {cat_kept}/{target} WebP poses.", flush=True)
+
+    OUT_JSON.write_text(json.dumps(final_items, separators=(",", ":")), encoding="utf-8")
+    print(
+        f"DONE! Saved {len(final_items)} solo pose WebPs & {OUT_JSON} ({OUT_JSON.stat().st_size / 1e6:.2f} MB) in {time.time()-t0:.1f}s",
+        flush=True,
+    )
 
 
 if __name__ == "__main__":

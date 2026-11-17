@@ -1,48 +1,45 @@
 import { setAt, type PoseReference, type PromptDoc } from "./model.ts";
 
-export type PoseDatasetId = "all" | "booru3d" | "densepose";
+export type PoseCategoryId =
+  | "all"
+  | "Standing"
+  | "Portrait"
+  | "Seated"
+  | "Action"
+  | "Editorial";
 
-export type PoseCameraAngle =
-  | "eye-level"
-  | "low-angle"
-  | "high-angle"
-  | "full-body"
-  | "close-up";
+export type PoseFramingId = "all" | "full-body" | "medium" | "close-up";
 
 export type PoseManifestItem = {
   id: string;
-  dataset: "booru3d" | "densepose";
-  datasetLabel: "3D Shaded Mannequins" | "DensePose Body Maps";
   imageUrl: string;
-  title: string;
-  naturalPrompt: string;
+  category: Exclude<PoseCategoryId, "all">;
+  subCategory: string;
+  framing: Exclude<PoseFramingId, "all">;
   tags: string[];
-  cameraAngle: PoseCameraAngle;
+  naturalPrompt: string;
 };
 
-export const DATASET_FILTER_OPTIONS: Array<{
-  id: PoseDatasetId;
+export const POSE_CATEGORY_OPTIONS: Array<{
+  id: PoseCategoryId;
   label: string;
-  shortLabel: string;
 }> = [
-  { id: "all", label: "All Datasets (10,000)", shortLabel: "All (10k)" },
-  { id: "booru3d", label: "3D Shaded Mannequins (5,000)", shortLabel: "3D Mannequins" },
-  { id: "densepose", label: "DensePose Body Maps (5,000)", shortLabel: "DensePose" },
+  { id: "all", label: "All" },
+  { id: "Standing", label: "Standing" },
+  { id: "Portrait", label: "Portrait" },
+  { id: "Seated", label: "Seated" },
+  { id: "Action", label: "Action" },
+  { id: "Editorial", label: "Editorial" },
 ];
 
-export const POSE_TAG_PILLS: Array<{ id: string; label: string }> = [
-  { id: "all", label: "All" },
-  { id: "standing", label: "Standing" },
-  { id: "sitting", label: "Sitting" },
-  { id: "action", label: "Action" },
-  { id: "portrait", label: "Portrait" },
-  { id: "hands", label: "Hands" },
-  { id: "kneeling", label: "Kneeling" },
-  { id: "crouching", label: "Crouching" },
-  { id: "reclining", label: "Reclining" },
-  { id: "looking back", label: "Looking Back" },
+export const POSE_FRAMING_OPTIONS: Array<{
+  id: PoseFramingId;
+  label: string;
+}> = [
+  { id: "all", label: "All Framing" },
   { id: "full-body", label: "Full-Body" },
-  { id: "duo", label: "Duo" },
+  { id: "medium", label: "Medium" },
+  { id: "close-up", label: "Close-Up" },
 ];
 
 let cachedManifest: PoseManifestItem[] | null = null;
@@ -78,35 +75,25 @@ export function getCachedPoseManifest(): PoseManifestItem[] | null {
 export function filterPoseManifest(
   items: PoseManifestItem[],
   options: {
-    dataset?: PoseDatasetId;
-    tag?: string;
+    category?: PoseCategoryId;
+    framing?: PoseFramingId;
     query?: string;
   },
 ): PoseManifestItem[] {
-  const { dataset = "all", tag = "all", query = "" } = options;
+  const { category = "all", framing = "all", query = "" } = options;
   const q = query.trim().toLowerCase();
-  const normalizedTag = tag.trim().toLowerCase();
 
   return items.filter((item) => {
-    if (dataset !== "all" && item.dataset !== dataset) return false;
-
-    if (normalizedTag && normalizedTag !== "all") {
-      const hasTag = item.tags.some((t) => t.toLowerCase() === normalizedTag);
-      const matchesAngle = item.cameraAngle.toLowerCase() === normalizedTag;
-      const matchesText =
-        normalizedTag === "portrait"
-          ? hasTag || item.cameraAngle === "close-up" || item.naturalPrompt.toLowerCase().includes("portrait")
-          : hasTag || matchesAngle;
-      if (!matchesText) return false;
-    }
-
+    if (category !== "all" && item.category !== category) return false;
+    if (framing !== "all" && item.framing !== framing) return false;
     if (!q) return true;
 
     return (
-      item.title.toLowerCase().includes(q) ||
-      item.naturalPrompt.toLowerCase().includes(q) ||
+      item.subCategory.toLowerCase().includes(q) ||
+      item.category.toLowerCase().includes(q) ||
+      item.framing.toLowerCase().includes(q) ||
       item.id.toLowerCase().includes(q) ||
-      item.cameraAngle.toLowerCase().includes(q) ||
+      item.naturalPrompt.toLowerCase().includes(q) ||
       item.tags.some((t) => t.toLowerCase().includes(q))
     );
   });
@@ -119,12 +106,16 @@ export function applyPoseManifestItem(
 ): PromptDoc {
   const poseRef: PoseReference = {
     reference_id: item.id,
-    pose_description: item.naturalPrompt,
-    camera_angle: item.cameraAngle,
+    image_url: item.imageUrl,
+    category: item.category,
+    sub_category: item.subCategory,
+    framing: item.framing,
     tags: item.tags,
-    dataset: item.dataset,
+    ...(item.naturalPrompt ? { pose_description: item.naturalPrompt } : {}),
   };
-  const next = setAt(doc, `subjects.${subjectIndex}.kinetic_posture`, item.naturalPrompt);
+  const postureFallback =
+    item.naturalPrompt.trim() || `${item.category.toLowerCase()} — ${item.subCategory} (${item.framing})`;
+  const next = setAt(doc, `subjects.${subjectIndex}.kinetic_posture`, postureFallback);
   const subjects = next.subjects.map((subj, idx) =>
     idx === subjectIndex ? { ...subj, pose_reference: poseRef } : subj,
   );
@@ -151,24 +142,21 @@ export function isPoseManifestApplied(
 ): boolean {
   const subject = doc.subjects[subjectIndex];
   if (!subject) return false;
-  if (subject.pose_reference?.reference_id === item.id) return true;
-  return (
-    subject.kinetic_posture.trim().length > 0 &&
-    subject.kinetic_posture.trim().toLowerCase() === item.naturalPrompt.trim().toLowerCase()
-  );
+  return subject.pose_reference?.reference_id === item.id;
 }
 
 export function pickRandomPoseManifestItem(
   items: PoseManifestItem[],
-  dataset: PoseDatasetId = "all",
+  category: PoseCategoryId = "all",
   excludeId?: string,
 ): PoseManifestItem | undefined {
-  const pool = dataset === "all" ? items : items.filter((item) => item.dataset === dataset);
+  const pool =
+    category === "all" ? items : items.filter((item) => item.category === category);
   if (pool.length === 0) return undefined;
   if (pool.length === 1) return pool[0];
-  let candidate = pool[Math.floor(Math.random() * pool.length)];
-  if (excludeId && candidate?.id === excludeId) {
-    candidate = pool[(pool.indexOf(candidate) + 1) % pool.length];
+  for (let i = 0; i < 6; i++) {
+    const candidate = pool[Math.floor(Math.random() * pool.length)];
+    if (candidate && candidate.id !== excludeId) return candidate;
   }
-  return candidate;
+  return pool[Math.floor(Math.random() * pool.length)];
 }
