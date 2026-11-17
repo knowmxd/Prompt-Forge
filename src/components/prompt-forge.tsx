@@ -16,8 +16,10 @@ import {
   Minimize2,
   Palette,
   Plus,
+  RotateCcw,
   Search,
   Shirt,
+  Shuffle,
   Sparkles,
   SunMedium,
   Trash2,
@@ -28,7 +30,7 @@ import {
 import {
   WardrobeItemCard,
   WardrobeOutfitCard,
-  PoseCard,
+  PoseManifestCard,
   LightingCard,
   CameraCard,
   CastModelCard,
@@ -72,16 +74,22 @@ import {
 } from "@/lib/prompt/cast-database";
 import { applySection, captureFields, fieldsHaveContent, normalizeTag, sectionBlurb } from "@/lib/prompt/bookmarks";
 import { applyLook, lookIsApplied, looksFor, LOOK_FILTERS, LOOKS, customOutfitToLook, type Look, type LookFilter } from "@/lib/prompt/looks";
-import { PoseCardVisual } from "@/components/pose-art";
 import { PoseCatalogModal } from "@/components/pose-catalog-modal";
 import {
   POSE_LIBRARY,
-  POSE_CATEGORIES,
-  filterPoses,
-  isPoseApplied,
-  type PoseItem,
-  type PoseCategory,
 } from "@/lib/prompt/pose-database";
+import {
+  DATASET_FILTER_OPTIONS,
+  POSE_TAG_PILLS,
+  applyPoseManifestItem,
+  clearSubjectPose,
+  filterPoseManifest,
+  isPoseManifestApplied,
+  pickRandomPoseManifestItem,
+  type PoseDatasetId,
+  type PoseManifestItem,
+} from "@/lib/prompt/pose-manifest";
+import { usePoseManifest } from "@/lib/prompt/use-pose-manifest";
 import { CameraCatalogModal } from "@/components/camera-catalog-modal";
 import {
   CAMERA_LIBRARY,
@@ -371,14 +379,14 @@ export function PromptForge() {
   const [customItems, setCustomItems] = useState<WardrobeItem[]>([]);
   const [assetDensity, setAssetDensity] = useState<"comfortable" | "compact">("compact");
   const [assetFullscreen, setAssetFullscreen] = useState(false);
-  const [poseCategoryFilter, setPoseCategoryFilter] = useState<PoseCategory>("all");
+  const [poseDatasetFilter, setPoseDatasetFilter] = useState<PoseDatasetId>("all");
+  const [poseTagFilter, setPoseTagFilter] = useState<string>("all");
   const [poseSearch, setPoseSearch] = useState("");
   const [poseShelfLimit, setPoseShelfLimit] = useState(36);
   const [lightingCategoryFilter, setLightingCategoryFilter] = useState<LightingCategory>("all");
   const [lightingSearch, setLightingSearch] = useState("");
   const [cameraCategoryFilter, setCameraCategoryFilter] = useState<CameraCategory>("all");
   const [cameraSearch, setCameraSearch] = useState("");
-  const [poseStanceFilter, setPoseStanceFilter] = useState<LookFilter>("pose");
   const [lookFilter, setLookFilter] = useState<LookFilter>("pose");
   const [poseGalleryOpen, setPoseGalleryOpen] = useState(false);
   const [cameraGalleryOpen, setCameraGalleryOpen] = useState(false);
@@ -501,9 +509,16 @@ export function PromptForge() {
       setAppliedOutfitId(randomOutfit.id);
     }
 
-    const randomPose = pick(POSE_LIBRARY);
-    if (randomPose) {
-      next = setAt(next, `subjects.${slot}.kinetic_posture`, randomPose.posture);
+    if (poseManifest.length > 0) {
+      const randomManifestPose = pickRandomPoseManifestItem(poseManifest, poseDatasetFilter);
+      if (randomManifestPose) {
+        next = applyPoseManifestItem(next, randomManifestPose, slot);
+      }
+    } else {
+      const randomPose = pick(POSE_LIBRARY);
+      if (randomPose) {
+        next = setAt(next, `subjects.${slot}.kinetic_posture`, randomPose.posture);
+      }
     }
 
     if (!lockedSlots.lighting) {
@@ -575,25 +590,54 @@ export function PromptForge() {
     commitDoc(updated, `Pinned "${model.name}" to Subject ${slot + 1}.`);
   };
 
+  const { poses: poseManifest, loading: poseManifestLoading } = usePoseManifest(
+    assetTab === "poses" || poseGalleryOpen,
+  );
+
+  const poseDatasetCounts = useMemo(() => {
+    let booru3d = 0;
+    let densepose = 0;
+    for (const p of poseManifest) {
+      if (p.dataset === "booru3d") booru3d += 1;
+      else if (p.dataset === "densepose") densepose += 1;
+    }
+    return {
+      all: poseManifest.length || 10000,
+      booru3d: booru3d || 5000,
+      densepose: densepose || 5000,
+    };
+  }, [poseManifest]);
+
   const displayedPoses = useMemo(() => {
-    return filterPoses({
-      category: poseCategoryFilter === "all" ? undefined : poseCategoryFilter,
+    return filterPoseManifest(poseManifest, {
+      dataset: poseDatasetFilter,
+      tag: poseTagFilter,
       query: poseSearch,
-      includeAdult: false,
     });
-  }, [poseCategoryFilter, poseSearch]);
+  }, [poseManifest, poseDatasetFilter, poseTagFilter, poseSearch]);
 
   useEffect(() => {
     setPoseShelfLimit(36);
-  }, [poseCategoryFilter, poseSearch]);
+  }, [poseDatasetFilter, poseTagFilter, poseSearch]);
 
-  const poseCategoryCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: POSE_LIBRARY.length };
-    for (const p of POSE_LIBRARY) {
-      counts[p.category] = (counts[p.category] || 0) + 1;
+  const poseTagCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: 0 };
+    for (const p of poseManifest) {
+      if (poseDatasetFilter !== "all" && p.dataset !== poseDatasetFilter) continue;
+      counts.all += 1;
+      for (const pill of POSE_TAG_PILLS) {
+        if (pill.id === "all") continue;
+        const matches =
+          p.tags.some((t) => t.toLowerCase() === pill.id) ||
+          p.cameraAngle.toLowerCase() === pill.id ||
+          (pill.id === "portrait" && p.cameraAngle === "close-up");
+        if (matches) {
+          counts[pill.id] = (counts[pill.id] || 0) + 1;
+        }
+      }
     }
     return counts;
-  }, []);
+  }, [poseManifest, poseDatasetFilter]);
 
   const visibleShelfPoses = useMemo(() => {
     return displayedPoses.slice(0, poseShelfLimit);
@@ -660,7 +704,7 @@ export function PromptForge() {
   };
 
   const handleClearPose = () => {
-    const next = setAt(doc, `subjects.${slot}.kinetic_posture`, "");
+    const next = clearSubjectPose(doc, slot);
     commitDoc(next, `Cleared posture for Subject ${slot + 1}.`);
   };
 
@@ -685,15 +729,25 @@ export function PromptForge() {
     commitDoc(emptyDoc(), "Cleared all pins from board.");
   };
 
-  const handleSelectPose = (pose: PoseItem) => {
-    let next = setAt(doc, `subjects.${slot}.kinetic_posture`, pose.posture);
-    if (pose.props && pose.props.length > 0) {
-      const currentProps = doc.scene_composition.environmental_staging.grounded_props ?? [];
-      const merged = Array.from(new Set([...currentProps, ...pose.props]));
-      next = setAt(next, "scene_composition.environmental_staging.grounded_props", merged);
-    }
+  const handleSelectManifestPose = (pose: PoseManifestItem) => {
+    const next = applyPoseManifestItem(doc, pose, slot);
     setUntouched(false);
-    commitDoc(next, `Pinned ${pose.name} to ${doc.subjects[slot]?.subject_id.trim() || `Subject ${slot + 1}`}.`);
+    commitDoc(
+      next,
+      `Pinned ${pose.title} (${pose.datasetLabel}) to ${doc.subjects[slot]?.subject_id.trim() || `Subject ${slot + 1}`}.`,
+    );
+  };
+
+  const handleRandomManifestPose = () => {
+    const pool = displayedPoses.length > 0 ? displayedPoses : poseManifest;
+    const picked = pickRandomPoseManifestItem(
+      pool,
+      poseDatasetFilter,
+      doc.subjects[slot]?.pose_reference?.reference_id,
+    );
+    if (picked) {
+      handleSelectManifestPose(picked);
+    }
   };
 
   const handleSelectLighting = (item: LightingItem) => {
@@ -1802,7 +1856,7 @@ export function PromptForge() {
                       : assetTab === "wardrobe"
                         ? `${allWardrobeItems.length} Pieces · ${allWardrobeOutfits.length} Outfits`
                         : assetTab === "poses"
-                          ? `${POSE_LIBRARY.length} Poses`
+                          ? `${poseDatasetCounts.all.toLocaleString()} Poses`
                           : assetTab === "lighting"
                             ? `${LIGHTING_LIBRARY.length} Setups`
                             : assetTab === "camera"
@@ -1858,7 +1912,7 @@ export function PromptForge() {
               {[
                 { id: "cast" as const, label: "Cast", icon: Users, count: CAST_MODELS.length },
                 { id: "wardrobe" as const, label: "Wardrobe", icon: Shirt, count: allWardrobeItems.length },
-                { id: "poses" as const, label: "Poses", icon: Sparkles, count: POSE_LIBRARY.length },
+                { id: "poses" as const, label: "Poses", icon: Sparkles, count: poseDatasetCounts.all },
                 { id: "lighting" as const, label: "Light", icon: SunMedium, count: LIGHTING_LIBRARY.length },
                 { id: "camera" as const, label: "Camera", icon: Camera, count: CAMERA_LIBRARY.length },
                 { id: "styles" as const, label: "Styles", icon: Palette, count: STYLE_LIBRARY.length },
@@ -2151,21 +2205,61 @@ export function PromptForge() {
             </>
           )}
 
-          {/* TAB 2: POSES (97 Poses) */}
+          {/* TAB 2: POSES (10,000 Pose References) */}
           {assetTab === "poses" && (
             <>
               <div className="shrink-0 border-b border-border bg-surface/30 px-3 py-2 space-y-2">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-xs text-muted">
-                    Kinetic postures for {doc.subjects[slot]?.subject_id.trim() || `Subject ${slot + 1}`}
-                  </p>
+                <div className="flex items-center justify-between gap-1.5">
+                  <select
+                    aria-label="Filter pose dataset"
+                    value={poseDatasetFilter}
+                    onChange={(e) => setPoseDatasetFilter(e.target.value as PoseDatasetId)}
+                    className="h-7 min-w-0 flex-1 rounded-md border border-border bg-bg px-2 text-[11px] font-semibold text-foreground focus:border-amber-500 focus:outline-none"
+                  >
+                    {DATASET_FILTER_OPTIONS.map((opt) => {
+                      const cnt =
+                        opt.id === "all"
+                          ? poseDatasetCounts.all
+                          : opt.id === "booru3d"
+                            ? poseDatasetCounts.booru3d
+                            : poseDatasetCounts.densepose;
+                      return (
+                        <option key={opt.id} value={opt.id}>
+                          {opt.label.replace(/\s*\([^)]*\)/, "")} ({cnt.toLocaleString()})
+                        </option>
+                      );
+                    })}
+                  </select>
+
+                  <button
+                    type="button"
+                    onClick={handleRandomManifestPose}
+                    disabled={poseManifest.length === 0}
+                    className="flex h-7 shrink-0 items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 text-[11px] font-semibold text-amber-400 hover:bg-amber-500/20 disabled:opacity-40"
+                    title="Random Pose (respects active dataset)"
+                  >
+                    <Shuffle className="size-3" />
+                    <span>Random</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleClearPose}
+                    className="flex h-7 shrink-0 items-center gap-1 rounded-md border border-border bg-bg px-2 text-[11px] font-medium text-muted hover:text-foreground"
+                    title="Clear active subject pose"
+                  >
+                    <RotateCcw className="size-3" />
+                    <span>Clear</span>
+                  </button>
+
                   <button
                     type="button"
                     onClick={() => setPoseGalleryOpen(true)}
-                    className="flex shrink-0 items-center gap-1 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-400 hover:bg-amber-500/20 transition-all shadow-xs"
+                    className="flex h-7 shrink-0 items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 text-[11px] font-semibold text-amber-400 hover:bg-amber-500/20 transition-all shadow-xs"
+                    title="Open Fullscreen Virtualized 10,000-Card Gallery"
                   >
-                    <Sparkles className="size-3.5" />
-                    <span>Large Gallery ({POSE_LIBRARY.length})</span>
+                    <Sparkles className="size-3" />
+                    <span>10k Grid</span>
                   </button>
                 </div>
 
@@ -2175,7 +2269,7 @@ export function PromptForge() {
                     type="text"
                     value={poseSearch}
                     onChange={(e) => setPoseSearch(e.target.value)}
-                    placeholder={`Search ${POSE_LIBRARY.length} poses (e.g. guard, casting, casual)...`}
+                    placeholder={`Search ${displayedPoses.length.toLocaleString()} poses (e.g. sitting, hands, looking back)...`}
                     className="w-full rounded-md border border-border bg-bg py-1.5 pl-8 pr-7 text-xs text-foreground placeholder-muted focus:border-primary focus:outline-none"
                   />
                   {poseSearch && (
@@ -2190,14 +2284,14 @@ export function PromptForge() {
                 </div>
 
                 <div className="flex items-center gap-1 overflow-x-auto pb-0.5 no-scrollbar text-xs">
-                  {POSE_CATEGORIES.map((cat) => {
-                    const active = poseCategoryFilter === cat.id;
-                    const count = poseCategoryCounts[cat.id] ?? 0;
+                  {POSE_TAG_PILLS.map((pill) => {
+                    const active = poseTagFilter === pill.id;
+                    const count = poseTagCounts[pill.id] ?? 0;
                     return (
                       <button
-                        key={cat.id}
+                        key={pill.id}
                         type="button"
-                        onClick={() => setPoseCategoryFilter(cat.id)}
+                        onClick={() => setPoseTagFilter(pill.id)}
                         className={cn(
                           "h-7 shrink-0 rounded-full px-2.5 text-[11px] font-medium transition-all flex items-center gap-1",
                           active
@@ -2205,9 +2299,9 @@ export function PromptForge() {
                             : "border border-border bg-bg text-muted hover:text-foreground",
                         )}
                       >
-                        <span>{cat.label}</span>
-                        <span className={cn("text-[9px] px-1 rounded-full", active ? "bg-black/30 text-white" : "text-muted")}>
-                          {count}
+                        <span>{pill.label}</span>
+                        <span className={cn("text-[9px] px-1 rounded-full tabular-nums", active ? "bg-black/30 text-white" : "text-muted")}>
+                          {count.toLocaleString()}
                         </span>
                       </button>
                     );
@@ -2216,7 +2310,12 @@ export function PromptForge() {
               </div>
 
               <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
-                {displayedPoses.length === 0 ? (
+                {poseManifestLoading ? (
+                  <div className="py-12 text-center text-xs text-muted">
+                    <Sparkles className="mx-auto size-8 opacity-40 mb-2 animate-pulse text-amber-400" />
+                    <p>Loading 10,000 Pose References...</p>
+                  </div>
+                ) : displayedPoses.length === 0 ? (
                   <div className="py-12 text-center text-xs text-muted">
                     <Sparkles className="mx-auto size-8 opacity-30 mb-2" />
                     <p>No poses match "{poseSearch}".</p>
@@ -2232,12 +2331,12 @@ export function PromptForge() {
                       )}
                     >
                       {visibleShelfPoses.map((pose) => (
-                        <PoseCard
+                        <PoseManifestCard
                           key={pose.id}
                           pose={pose}
-                          applied={isPoseApplied(doc, pose, slot)}
+                          applied={isPoseManifestApplied(doc, pose, slot)}
                           density={assetDensity}
-                          onSelect={() => handleSelectPose(pose)}
+                          onSelect={() => handleSelectManifestPose(pose)}
                         />
                       ))}
                     </div>
@@ -2249,14 +2348,14 @@ export function PromptForge() {
                           onClick={() => setPoseShelfLimit((c) => c + 36)}
                           className="w-full rounded-lg border border-border bg-surface py-2 text-xs font-semibold text-foreground hover:bg-surface-hover hover:border-primary transition-all shadow-xs"
                         >
-                          Load More Poses (+36)
+                          Load More Poses (+36 · {Math.min(poseShelfLimit, displayedPoses.length).toLocaleString()} / {displayedPoses.length.toLocaleString()})
                         </button>
                         <button
                           type="button"
                           onClick={() => setPoseGalleryOpen(true)}
                           className="text-[11px] text-amber-400 hover:underline"
                         >
-                          Open Large Gallery ({displayedPoses.length} poses)
+                          Open Virtualized 10k Gallery ({displayedPoses.length.toLocaleString()} poses)
                         </button>
                       </div>
                     )}
@@ -2960,23 +3059,9 @@ export function PromptForge() {
       <PoseCatalogModal
         isOpen={poseGalleryOpen}
         onClose={() => setPoseGalleryOpen(false)}
-        onSelectPose={(pose: PoseItem) => {
-          const matchedLook = LOOKS.find((l) => l.id === pose.id);
-          if (matchedLook) {
-            onApplyLook(matchedLook);
-          } else {
-            const dynamicLook: Look = {
-              id: pose.id,
-              name: pose.name,
-              kind: "pose",
-              posture: pose.posture,
-              props: pose.props,
-              category: pose.category,
-              stance: pose.stance,
-            };
-            onApplyLook(dynamicLook);
-          }
-        }}
+        onSelectPose={handleSelectManifestPose}
+        onClearPose={handleClearPose}
+        activePoseId={doc.subjects[slot]?.pose_reference?.reference_id}
         activePosture={doc.subjects[slot]?.kinetic_posture}
       />
       <CameraCatalogModal

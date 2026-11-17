@@ -194,6 +194,24 @@ function mergeSubject(value: unknown): Subject {
     base.casting_and_physique.hair_and_grooming = asString(face.hair_and_grooming);
   }
   base.kinetic_posture = asString(item.kinetic_posture);
+  const poseRef = item.pose_reference;
+  if (poseRef && typeof poseRef === "object" && !Array.isArray(poseRef)) {
+    const pr = poseRef as Record<string, unknown>;
+    const reference_id = asString(pr.reference_id);
+    const pose_description = asString(pr.pose_description);
+    const camera_angle = asString(pr.camera_angle);
+    const tags = asList(pr.tags);
+    const dataset = asString(pr.dataset);
+    if (reference_id || pose_description) {
+      base.pose_reference = {
+        reference_id,
+        pose_description,
+        camera_angle,
+        tags,
+        ...(dataset ? { dataset } : {}),
+      };
+    }
+  }
   base.environmental_interaction = asString(item.environmental_interaction);
   const wardrobe = item.wardrobe_architecture;
   if (wardrobe && typeof wardrobe === "object" && !Array.isArray(wardrobe)) {

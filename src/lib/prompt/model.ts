@@ -45,6 +45,14 @@ export function coerceFields(value: unknown): PromptFields {
   return fields;
 }
 
+export type PoseReference = {
+  reference_id: string;
+  pose_description: string;
+  camera_angle: string;
+  tags: string[];
+  dataset?: string;
+};
+
 export type Subject = {
   subject_id: string;
   casting_and_physique: {
@@ -53,6 +61,7 @@ export type Subject = {
     hair_and_grooming: string;
   };
   kinetic_posture: string;
+  pose_reference?: PoseReference;
   wardrobe_architecture: {
     layering_system: { base_layer: string; mid_layer: string; outerwear: string };
     textiles_and_weight: string;

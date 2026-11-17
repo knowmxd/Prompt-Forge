@@ -687,7 +687,31 @@ export function VisualBoardStudio({
             </div>
 
             <div className="mt-2.5 flex-1 min-h-[110px]">
-              {matchedPose ? (
+              {activeSubject?.pose_reference ? (
+                <div className="flex gap-3">
+                  <img
+                    src={`/poses/${activeSubject.pose_reference.dataset}/${activeSubject.pose_reference.reference_id}.webp`}
+                    alt={activeSubject.pose_reference.reference_id}
+                    className="size-20 rounded-lg object-contain bg-neutral-950 border border-neutral-700 shadow-xs shrink-0"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-bold text-cyan-400 uppercase">
+                        {activeSubject.pose_reference.dataset === "booru3d" ? "3D Mannequin" : "DensePose"}
+                      </span>
+                      <span className="rounded bg-neutral-800 px-1 py-0.2 text-[9px] font-medium text-neutral-300">
+                        {activeSubject.pose_reference.camera_angle}
+                      </span>
+                    </div>
+                    <h3 className="font-bold text-foreground text-xs truncate mt-0.5 font-mono">
+                      {activeSubject.pose_reference.reference_id}
+                    </h3>
+                    <p className="text-[11px] text-muted line-clamp-2 mt-0.5 leading-snug">
+                      {activeSubject.pose_reference.pose_description}
+                    </p>
+                  </div>
+                </div>
+              ) : matchedPose ? (
                 <div>
                   <span className="text-[10px] font-bold text-cyan-400 uppercase">{matchedPose.category}</span>
                   <h3 className="font-bold text-foreground text-sm truncate">{matchedPose.name}</h3>

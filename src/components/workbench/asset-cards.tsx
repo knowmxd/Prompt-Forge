@@ -3,6 +3,7 @@ import { CatalogItemImage, CatalogOutfitImage } from "@/components/wardrobe-cata
 import { PoseCardVisual } from "@/components/pose-art";
 import type { WardrobeItem, WardrobeOutfit } from "@/lib/prompt/wardrobe-database";
 import type { PoseItem } from "@/lib/prompt/pose-database";
+import type { PoseManifestItem } from "@/lib/prompt/pose-manifest";
 import type { LightingItem } from "@/lib/prompt/lighting-database";
 import type { CameraItem } from "@/lib/prompt/camera-database";
 import type { CastModelItem } from "@/lib/prompt/cast-database";
@@ -287,6 +288,120 @@ export function PoseCard({
           </span>
           <span className={cn("text-[10px] font-semibold", applied ? "text-amber-500" : "text-primary group-hover:underline")}>
             {applied ? "Applied" : "+ Apply"}
+          </span>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+export function PoseManifestCard({
+  pose,
+  applied,
+  density,
+  onSelect,
+}: {
+  pose: PoseManifestItem;
+  applied: boolean;
+  density: "comfortable" | "compact";
+  onSelect: () => void;
+}) {
+  if (density === "compact") {
+    return (
+      <button
+        type="button"
+        onClick={onSelect}
+        title={`${pose.title} (${pose.datasetLabel}) - Click to apply`}
+        aria-pressed={applied}
+        className={cn(
+          "group relative flex flex-col overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-amber-500/60 hover:shadow-xs",
+          applied ? "border-amber-500 ring-2 ring-amber-500/50" : "border-border",
+        )}
+      >
+        <div className="relative aspect-square w-full bg-neutral-950 overflow-hidden">
+          <img
+            src={pose.imageUrl}
+            alt={pose.title}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
+          />
+          <span
+            className={cn(
+              "absolute top-1 left-1 rounded px-1 py-0.5 text-[8px] font-mono font-bold uppercase",
+              pose.dataset === "booru3d"
+                ? "bg-black/85 text-amber-300"
+                : "bg-black/85 text-sky-300",
+            )}
+          >
+            {pose.dataset === "booru3d" ? "3D" : "DP"}
+          </span>
+          {applied && (
+            <span className="absolute top-1 right-1 z-20 flex size-4 items-center justify-center rounded-full bg-amber-500 text-black shadow font-bold">
+              <Check className="size-2.5 stroke-[3]" />
+            </span>
+          )}
+        </div>
+        <div className="p-1.5">
+          <p className="text-[11px] font-medium leading-tight text-foreground truncate group-hover:text-amber-400">
+            {pose.title}
+          </p>
+          <p className="mt-0.5 text-[9px] text-muted truncate">{pose.tags.slice(0, 2).join(" · ")}</p>
+        </div>
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={applied}
+      className={cn(
+        "group relative flex flex-col overflow-hidden rounded-xl border bg-surface text-left transition-all hover:border-amber-500/60 hover:shadow-md",
+        applied ? "border-amber-500 ring-2 ring-amber-500/50" : "border-border",
+      )}
+    >
+      <div className="relative aspect-[4/3] w-full bg-neutral-950 overflow-hidden">
+        <img
+          src={pose.imageUrl}
+          alt={pose.title}
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
+        />
+        <span
+          className={cn(
+            "absolute top-1.5 left-1.5 rounded px-1.5 py-0.5 text-[9px] font-mono font-bold",
+            pose.dataset === "booru3d"
+              ? "bg-black/85 text-amber-300"
+              : "bg-black/85 text-sky-300",
+          )}
+        >
+          {pose.dataset === "booru3d" ? "3D Mesh" : "DensePose"}
+        </span>
+        <span className="absolute bottom-1.5 left-1.5 rounded bg-black/75 px-1.5 py-0.5 text-[9px] text-neutral-300">
+          {pose.cameraAngle}
+        </span>
+        {applied && (
+          <span className="absolute top-1.5 right-1.5 z-20 flex size-5 items-center justify-center rounded-full bg-amber-500 text-black shadow font-bold">
+            <Check className="size-3 stroke-[3]" />
+          </span>
+        )}
+      </div>
+      <div className="p-2.5 flex-1 flex flex-col justify-between">
+        <div>
+          <h4 className="text-xs font-semibold leading-snug text-foreground line-clamp-1 group-hover:text-amber-400">
+            {pose.title}
+          </h4>
+          <p className="mt-1 text-[10px] text-muted line-clamp-2">{pose.naturalPrompt}</p>
+        </div>
+        <div className="mt-2 flex items-center justify-between pt-1 border-t border-border/50">
+          <span className="text-[9px] font-medium text-faint truncate max-w-[120px]">
+            {pose.tags.slice(0, 2).map((t) => `#${t}`).join(" ")}
+          </span>
+          <span className={cn("text-[10px] font-semibold", applied ? "text-amber-500" : "text-primary group-hover:underline")}>
+            {applied ? "Selected" : "+ Apply"}
           </span>
         </div>
       </div>

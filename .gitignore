@@ -4,3 +4,6 @@ node_modules/
 .env
 .env.*
 .DS_Store
+public/poses/booru3d/
+public/poses/densepose/
+
