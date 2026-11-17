@@ -196,24 +196,30 @@ export function PaletteField({
 
 export function AccountSlot({ compact = false }: { compact?: boolean }) {
   const { isPending } = useCurrentUserState();
-  if (isPending) return compact ? null : <div className="h-11 w-24 animate-pulse rounded-md bg-surface" />;
   if (compact) {
     return (
       <div className="border-t border-border px-3 py-2 lg:hidden">
-        <SignedOut>
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-sm text-muted">Sign in to keep this in your account.</p>
-            <Link to="/login" className="btn btn-primary shrink-0">
-              Sign in
-            </Link>
-          </div>
-        </SignedOut>
-        <SignedIn>
-          <UserButton />
-        </SignedIn>
+        {isPending ? (
+          <div className="h-9 w-full animate-pulse rounded-md bg-surface" />
+        ) : (
+          <>
+            <SignedOut>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm text-muted">Sign in to keep this in your account.</p>
+                <Link to="/login" className="btn btn-primary shrink-0">
+                  Sign in
+                </Link>
+              </div>
+            </SignedOut>
+            <SignedIn>
+              <UserButton />
+            </SignedIn>
+          </>
+        )}
       </div>
     );
   }
+  if (isPending) return <div className="h-11 w-24 animate-pulse rounded-md bg-surface" />;
   return (
     <>
       <SignedOut>
