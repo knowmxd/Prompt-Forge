@@ -1,34 +1,66 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "@tanstack/react-router";
-import { SignedIn, SignedOut, UserButton } from "@/lib/auth/gates";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
-import { deleteBookmarkImage, loadBookmarkImage, loadCloud, saveBookmarkImage, saveCloudBlob } from "@/lib/prompt/cloud";
+import { deleteBookmarkImage, loadCloud, saveBookmarkImage, saveCloudBlob } from "@/lib/prompt/cloud";
 import {
   Bookmark as BookmarkIcon,
   BookmarkPlus,
   Camera,
   Check,
-  ChevronDown,
-  ChevronUp,
-  Copy,
   FilePlus,
   Flame,
   Grid2X2,
   Grid3X3,
   ImagePlus,
   Layers,
-  Library,
   Maximize2,
   Minimize2,
+  Palette,
   Plus,
   Search,
   Shirt,
   Sparkles,
   SunMedium,
   Trash2,
+  Undo2,
   Users,
   X,
 } from "lucide-react";
+import {
+  WardrobeItemCard,
+  WardrobeOutfitCard,
+  PoseCard,
+  LightingCard,
+  CameraCard,
+  CastModelCard,
+  StyleCard,
+} from "@/components/workbench/asset-cards";
+import {
+  ClusterMenu,
+  FieldCard,
+  AccountSlot,
+  AssetCard,
+} from "@/components/workbench/forge-fields";
+import {
+  Actions,
+  JsonBlock,
+  type Copied,
+  type JsonMode,
+} from "@/components/workbench/json-panel";
+import {
+  PromptSummaryPills,
+  type LockedSlots,
+} from "@/components/workbench/prompt-summary-pills";
+import { VisualBoardStudio } from "@/components/workbench/visual-board-studio";
+import { StyleCatalogModal } from "@/components/style-catalog-modal";
+import {
+  STYLE_LIBRARY,
+  STYLE_CATEGORIES,
+  filterStyleGuides,
+  applyStyleGuide,
+  isStyleGuideApplied,
+  type StyleGuideItem,
+  type StyleCategory,
+} from "@/lib/prompt/style-database";
 import {
   CAST_MODELS,
   CAST_CATEGORIES,
@@ -68,11 +100,7 @@ import {
   type LightingItem,
   type LightingCategory,
 } from "@/lib/prompt/lighting-database";
-import {
-  WardrobeCatalogModal,
-  CatalogItemImage,
-  CatalogOutfitImage,
-} from "@/components/wardrobe-catalog-modal";
+import { WardrobeCatalogModal } from "@/components/wardrobe-catalog-modal";
 import {
   applyWardrobeItem,
   applyWardrobeOutfit,
@@ -152,9 +180,7 @@ const FILTERS: Array<{ id: "all" | SnippetCategory; label: string }> = [
 ];
 
 type Pane = "source" | "forge" | "assets";
-type AssetTab = "cast" | "wardrobe" | "poses" | "lighting" | "camera" | "saved";
-type Copied = "json" | "line" | null;
-type JsonMode = "peek" | "full" | "hidden";
+type AssetTab = "cast" | "wardrobe" | "poses" | "lighting" | "camera" | "styles" | "saved";
 
 const WARDROBE_SLOT_PILLS: Array<{ id: WardrobeSlot | "all"; label: string }> = [
   { id: "all", label: "All Pieces" },
@@ -173,594 +199,6 @@ const WARDROBE_SLOT_PILLS: Array<{ id: WardrobeSlot | "all"; label: string }> = 
   { id: "layer_top", label: "Mid-Layers" },
   { id: "legwear", label: "Legwear" },
 ];
-
-function WardrobeItemCard({
-  item,
-  applied,
-  density,
-  onSelect,
-}: {
-  item: WardrobeItem;
-  applied: boolean;
-  density: "comfortable" | "compact";
-  onSelect: () => void;
-}) {
-  if (density === "compact") {
-    return (
-      <button
-        type="button"
-        onClick={onSelect}
-        title={`${item.name} (${item.slot}) - Click to apply to active subject`}
-        aria-pressed={applied}
-        className={cn(
-          "group relative flex flex-col overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-xs",
-          applied ? "border-emerald-500 ring-2 ring-emerald-500/40" : "border-border",
-        )}
-      >
-        <div className="relative aspect-square w-full bg-neutral-900/40 overflow-hidden">
-          <CatalogItemImage item={item} />
-          <span className="absolute top-1 left-1 rounded bg-black/75 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-neutral-300">
-            {item.slot.replace("dress_onepiece", "dress").replace("belt_waist", "belt").slice(0, 5)}
-          </span>
-          {applied && (
-            <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-emerald-500 text-white shadow">
-              <Check className="size-2.5 stroke-[3]" />
-            </span>
-          )}
-          {item.is_custom && (
-            <span className="absolute bottom-1 right-1 rounded bg-purple-500/90 px-1 py-0.5 text-[8px] font-bold uppercase text-white">
-              Custom
-            </span>
-          )}
-        </div>
-        <div className="p-1.5">
-          <p className="text-[11px] font-medium leading-tight text-foreground truncate group-hover:text-primary">
-            {item.name}
-          </p>
-        </div>
-      </button>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      aria-pressed={applied}
-      className={cn(
-        "group relative flex flex-col overflow-hidden rounded-xl border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-md",
-        applied ? "border-emerald-500 ring-2 ring-emerald-500/40" : "border-border",
-      )}
-    >
-      <div className="relative aspect-[4/3] w-full bg-neutral-900/40 overflow-hidden">
-        <CatalogItemImage item={item} />
-        <span className="absolute top-1.5 left-1.5 rounded-md bg-black/80 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neutral-200">
-          {item.slot.replace("_", " ")}
-        </span>
-        {applied && (
-          <span className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-emerald-500 text-white shadow-md">
-            <Check className="size-3 stroke-[3]" />
-          </span>
-        )}
-        {item.is_custom && (
-          <span className="absolute bottom-1.5 right-1.5 rounded bg-purple-500/90 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">
-            Custom
-          </span>
-        )}
-      </div>
-      <div className="p-2.5 flex-1 flex flex-col justify-between">
-        <div>
-          <h4 className="text-xs font-semibold leading-snug text-foreground line-clamp-2 group-hover:text-primary">
-            {item.name}
-          </h4>
-          <p className="mt-1 text-[10px] text-muted line-clamp-1 capitalize">
-            {item.colors[0] ? `${item.colors[0]} · ` : ""}{item.subcategory.replace("_", " ")}
-          </p>
-        </div>
-        <div className="mt-2 flex items-center justify-between pt-1 border-t border-border/50">
-          <span className="text-[9px] font-medium text-faint">
-            {item.style_tags[0] ? `#${item.style_tags[0].replace("_", " ")}` : item.slot}
-          </span>
-          <span className={cn("text-[10px] font-semibold", applied ? "text-emerald-500" : "text-primary group-hover:underline")}>
-            {applied ? "Applied" : "+ Apply"}
-          </span>
-        </div>
-      </div>
-    </button>
-  );
-}
-
-function WardrobeOutfitCard({
-  outfit,
-  applied,
-  density,
-  onSelect,
-}: {
-  outfit: WardrobeOutfit;
-  applied: boolean;
-  density: "comfortable" | "compact";
-  onSelect: () => void;
-}) {
-  const pieceCount = outfit.item_ids?.length || 0;
-
-  if (density === "compact") {
-    return (
-      <button
-        type="button"
-        onClick={onSelect}
-        title={`${outfit.name} - Click to apply full outfit`}
-        aria-pressed={applied}
-        className={cn(
-          "group relative flex flex-col overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-xs",
-          applied ? "border-rose-500 ring-2 ring-rose-500/40" : "border-border",
-        )}
-      >
-        <div className="relative aspect-square w-full bg-neutral-900/40 overflow-hidden">
-          <CatalogOutfitImage outfit={outfit} />
-          <span className="absolute top-1 left-1 rounded bg-rose-500/90 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-white">
-            Outfit
-          </span>
-          {applied && (
-            <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-rose-500 text-white shadow">
-              <Check className="size-2.5 stroke-[3]" />
-            </span>
-          )}
-        </div>
-        <div className="p-1.5">
-          <p className="text-[11px] font-medium leading-tight text-foreground truncate group-hover:text-primary">
-            {outfit.name}
-          </p>
-        </div>
-      </button>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      aria-pressed={applied}
-      className={cn(
-        "group relative flex flex-col overflow-hidden rounded-xl border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-md",
-        applied ? "border-rose-500 ring-2 ring-rose-500/40" : "border-border",
-      )}
-    >
-      <div className="relative aspect-[4/3] w-full bg-neutral-900/40 overflow-hidden">
-        <CatalogOutfitImage outfit={outfit} />
-        <span className="absolute top-1.5 left-1.5 rounded-md bg-rose-500/90 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
-          Full Look
-        </span>
-        {applied && (
-          <span className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-rose-500 text-white shadow-md">
-            <Check className="size-3 stroke-[3]" />
-          </span>
-        )}
-      </div>
-      <div className="p-2.5 flex-1 flex flex-col justify-between">
-        <div>
-          <h4 className="text-xs font-semibold leading-snug text-foreground line-clamp-2 group-hover:text-primary">
-            {outfit.name}
-          </h4>
-          <p className="mt-1 text-[10px] text-muted line-clamp-1">
-            {pieceCount ? `${pieceCount} pieces` : "Preset outfit"}
-          </p>
-        </div>
-        <div className="mt-2 flex items-center justify-between pt-1 border-t border-border/50">
-          <span className="text-[9px] font-medium text-faint">
-            {outfit.style_tags[0] ? `#${outfit.style_tags[0].replace("_", " ")}` : "Preset"}
-          </span>
-          <span className={cn("text-[10px] font-semibold", applied ? "text-rose-400" : "text-primary group-hover:underline")}>
-            {applied ? "Applied" : "+ Apply Outfit"}
-          </span>
-        </div>
-      </div>
-    </button>
-  );
-}
-
-function PoseCard({
-  pose,
-  applied,
-  density,
-  onSelect,
-}: {
-  pose: PoseItem;
-  applied: boolean;
-  density: "comfortable" | "compact";
-  onSelect: () => void;
-}) {
-  if (density === "compact") {
-    return (
-      <button
-        type="button"
-        onClick={onSelect}
-        title={`${pose.name} (${pose.stance}) - Click to apply posture`}
-        aria-pressed={applied}
-        className={cn(
-          "group relative flex flex-col overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-xs",
-          applied ? "border-amber-500 ring-2 ring-amber-500/40" : "border-border",
-        )}
-      >
-        <div className="relative aspect-square w-full bg-neutral-900/60 overflow-hidden">
-          {pose.image ? (
-            <img
-              src={pose.image}
-              alt={pose.name}
-              loading="lazy"
-              className="h-full w-full object-cover transition-transform group-hover:scale-105"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-muted font-mono text-[9px] uppercase">
-              {pose.category}
-            </div>
-          )}
-          <span className="absolute top-1 left-1 rounded bg-black/80 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-amber-400">
-            {pose.category.slice(0, 7)}
-          </span>
-          {applied && (
-            <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-amber-500 text-black shadow font-bold">
-              <Check className="size-2.5 stroke-[3]" />
-            </span>
-          )}
-          <span className="absolute bottom-1 right-1 rounded bg-black/75 px-1 py-0.5 text-[7px] font-medium text-neutral-300 capitalize">
-            {pose.stance}
-          </span>
-        </div>
-        <div className="p-1.5">
-          <p className="text-[11px] font-medium leading-tight text-foreground truncate group-hover:text-primary">
-            {pose.name}
-          </p>
-        </div>
-      </button>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      aria-pressed={applied}
-      className={cn(
-        "group relative flex flex-col overflow-hidden rounded-xl border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-md",
-        applied ? "border-amber-500 ring-2 ring-amber-500/40" : "border-border",
-      )}
-    >
-      <div className="relative aspect-[4/3] w-full bg-neutral-900/60 overflow-hidden">
-        {pose.image ? (
-          <img
-            src={pose.image}
-            alt={pose.name}
-            loading="lazy"
-            className="h-full w-full object-cover transition-transform group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-muted font-mono text-xs uppercase">
-            {pose.category}
-          </div>
-        )}
-        <span className="absolute top-1.5 left-1.5 rounded-md bg-black/80 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-400">
-          {pose.category}
-        </span>
-        {applied && (
-          <span className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-amber-500 text-black shadow font-bold">
-            <Check className="size-3 stroke-[3]" />
-          </span>
-        )}
-        <span className="absolute bottom-1.5 right-1.5 rounded bg-black/80 px-1.5 py-0.5 text-[8px] font-medium text-neutral-300 capitalize">
-          {pose.stance}
-        </span>
-      </div>
-      <div className="p-2.5 flex-1 flex flex-col justify-between">
-        <div>
-          <h4 className="text-xs font-semibold leading-snug text-foreground line-clamp-2 group-hover:text-primary">
-            {pose.name}
-          </h4>
-          {pose.subtitle && (
-            <p className="mt-1 text-[10px] text-muted line-clamp-1">
-              {pose.subtitle}
-            </p>
-          )}
-        </div>
-        <div className="mt-2 flex items-center justify-between pt-1 border-t border-border/50">
-          <span className="text-[9px] font-medium text-faint truncate max-w-[120px]">
-            {pose.tags[0] ? `#${pose.tags[0]}` : pose.stance}
-          </span>
-          <span className={cn("text-[10px] font-semibold", applied ? "text-amber-500" : "text-primary group-hover:underline")}>
-            {applied ? "Applied" : "+ Apply"}
-          </span>
-        </div>
-      </div>
-    </button>
-  );
-}
-
-function LightingCard({
-  item,
-  applied,
-  density,
-  onSelect,
-}: {
-  item: LightingItem;
-  applied: boolean;
-  density: "comfortable" | "compact";
-  onSelect: () => void;
-}) {
-  if (density === "compact") {
-    return (
-      <button
-        type="button"
-        onClick={onSelect}
-        title={`${item.name} (${item.badge}) - Click to apply lighting setup`}
-        aria-pressed={applied}
-        className={cn(
-          "group relative flex flex-col overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-xs",
-          applied ? "border-amber-500 ring-2 ring-amber-500/40" : "border-border",
-        )}
-      >
-        <div className="relative aspect-square w-full bg-neutral-900/60 overflow-hidden">
-          <img
-            src={item.image}
-            alt={item.name}
-            loading="lazy"
-            className="h-full w-full object-cover transition-transform group-hover:scale-105"
-          />
-          <span className="absolute top-1 left-1 rounded bg-black/80 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-amber-400">
-            {item.badge}
-          </span>
-          {applied && (
-            <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-amber-500 text-black shadow font-bold">
-              <Check className="size-2.5 stroke-[3]" />
-            </span>
-          )}
-        </div>
-        <div className="p-1.5">
-          <p className="text-[11px] font-medium leading-tight text-foreground truncate group-hover:text-primary">
-            {item.name}
-          </p>
-        </div>
-      </button>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      aria-pressed={applied}
-      className={cn(
-        "group relative flex flex-col overflow-hidden rounded-xl border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-md",
-        applied ? "border-amber-500 ring-2 ring-amber-500/40" : "border-border",
-      )}
-    >
-      <div className="relative aspect-[4/3] w-full bg-neutral-900/60 overflow-hidden">
-        <img
-          src={item.image}
-          alt={item.name}
-          loading="lazy"
-          className="h-full w-full object-cover transition-transform group-hover:scale-105"
-        />
-        <span className="absolute top-1.5 left-1.5 rounded-md bg-black/80 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-400">
-          {item.badge}
-        </span>
-        {applied && (
-          <span className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-amber-500 text-black shadow font-bold">
-            <Check className="size-3 stroke-[3]" />
-          </span>
-        )}
-      </div>
-      <div className="p-2.5 flex-1 flex flex-col justify-between">
-        <div>
-          <h4 className="text-xs font-semibold leading-snug text-foreground line-clamp-2 group-hover:text-primary">
-            {item.name}
-          </h4>
-          <p className="mt-1 text-[10px] text-muted line-clamp-1">
-            {item.subtitle}
-          </p>
-        </div>
-        <div className="mt-2 flex items-center justify-between pt-1 border-t border-border/50">
-          <span className="text-[9px] font-medium text-faint capitalize">
-            {item.category}
-          </span>
-          <span className={cn("text-[10px] font-semibold", applied ? "text-amber-500" : "text-primary group-hover:underline")}>
-            {applied ? "Applied" : "+ Apply"}
-          </span>
-        </div>
-      </div>
-    </button>
-  );
-}
-
-function CameraCard({
-  item,
-  applied,
-  density,
-  onSelect,
-}: {
-  item: CameraItem;
-  applied: boolean;
-  density: "comfortable" | "compact";
-  onSelect: () => void;
-}) {
-  if (density === "compact") {
-    return (
-      <button
-        type="button"
-        onClick={onSelect}
-        title={`${item.name} (${item.badge}) - Click to apply camera framing & optics`}
-        aria-pressed={applied}
-        className={cn(
-          "group relative flex flex-col overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-xs",
-          applied ? "border-emerald-500 ring-2 ring-emerald-500/40" : "border-border",
-        )}
-      >
-        <div className="relative aspect-square w-full bg-neutral-900/60 overflow-hidden">
-          <img
-            src={item.image}
-            alt={item.name}
-            loading="lazy"
-            className="h-full w-full object-cover transition-transform group-hover:scale-105"
-          />
-          <span className="absolute top-1 left-1 rounded bg-black/80 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-emerald-400">
-            {item.badge}
-          </span>
-          {applied && (
-            <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-emerald-500 text-white shadow font-bold">
-              <Check className="size-2.5 stroke-[3]" />
-            </span>
-          )}
-        </div>
-        <div className="p-1.5">
-          <p className="text-[11px] font-medium leading-tight text-foreground truncate group-hover:text-primary">
-            {item.name}
-          </p>
-        </div>
-      </button>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      aria-pressed={applied}
-      className={cn(
-        "group relative flex flex-col overflow-hidden rounded-xl border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-md",
-        applied ? "border-emerald-500 ring-2 ring-emerald-500/40" : "border-border",
-      )}
-    >
-      <div className="relative aspect-[4/3] w-full bg-neutral-900/60 overflow-hidden">
-        <img
-          src={item.image}
-          alt={item.name}
-          loading="lazy"
-          className="h-full w-full object-cover transition-transform group-hover:scale-105"
-        />
-        <span className="absolute top-1.5 left-1.5 rounded-md bg-black/80 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-400">
-          {item.badge}
-        </span>
-        {applied && (
-          <span className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-emerald-500 text-white shadow font-bold">
-            <Check className="size-3 stroke-[3]" />
-          </span>
-        )}
-      </div>
-      <div className="p-2.5 flex-1 flex flex-col justify-between">
-        <div>
-          <h4 className="text-xs font-semibold leading-snug text-foreground line-clamp-2 group-hover:text-primary">
-            {item.name}
-          </h4>
-          <p className="mt-1 text-[10px] text-muted line-clamp-1">
-            {item.subtitle}
-          </p>
-        </div>
-        <div className="mt-2 flex items-center justify-between pt-1 border-t border-border/50">
-          <span className="text-[9px] font-medium text-faint capitalize">
-            {item.lens || item.category}
-          </span>
-          <span className={cn("text-[10px] font-semibold", applied ? "text-emerald-500" : "text-primary group-hover:underline")}>
-            {applied ? "Applied" : "+ Apply"}
-          </span>
-        </div>
-      </div>
-    </button>
-  );
-}
-
-function CastModelCard({
-  model,
-  applied,
-  density,
-  onSelect,
-}: {
-  model: CastModelItem;
-  applied: boolean;
-  density: "comfortable" | "compact";
-  onSelect: () => void;
-}) {
-  if (density === "compact") {
-    return (
-      <button
-        type="button"
-        onClick={onSelect}
-        title={`${model.name} (${model.badge}) - Click to set as active subject model`}
-        aria-pressed={applied}
-        className={cn(
-          "group relative flex flex-col overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-xs",
-          applied ? "border-purple-500 ring-2 ring-purple-500/40" : "border-border",
-        )}
-      >
-        <div className="relative aspect-[4/5] w-full bg-neutral-900/60 overflow-hidden">
-          <img
-            src={model.image}
-            alt={model.name}
-            loading="lazy"
-            className="h-full w-full object-cover transition-transform group-hover:scale-105"
-          />
-          <span className="absolute top-1 left-1 rounded bg-black/80 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-purple-400">
-            {model.badge}
-          </span>
-          {applied && (
-            <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-purple-500 text-white shadow font-bold">
-              <Check className="size-2.5 stroke-[3]" />
-            </span>
-          )}
-        </div>
-        <div className="p-1.5">
-          <p className="text-[11px] font-medium leading-tight text-foreground truncate group-hover:text-primary">
-            {model.name}
-          </p>
-        </div>
-      </button>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      aria-pressed={applied}
-      className={cn(
-        "group relative flex flex-col overflow-hidden rounded-xl border bg-surface text-left transition-all hover:border-primary/60 hover:shadow-md",
-        applied ? "border-purple-500 ring-2 ring-purple-500/40" : "border-border",
-      )}
-    >
-      <div className="relative aspect-[4/5] w-full bg-neutral-900/60 overflow-hidden">
-        <img
-          src={model.image}
-          alt={model.name}
-          loading="lazy"
-          className="h-full w-full object-cover transition-transform group-hover:scale-105"
-        />
-        <span className="absolute top-1.5 left-1.5 rounded-md bg-black/80 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-purple-400">
-          {model.badge}
-        </span>
-        {applied && (
-          <span className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-purple-500 text-white shadow font-bold">
-            <Check className="size-3 stroke-[3]" />
-          </span>
-        )}
-      </div>
-      <div className="p-2.5 flex-1 flex flex-col justify-between">
-        <div>
-          <h4 className="text-xs font-semibold leading-snug text-foreground line-clamp-2 group-hover:text-primary">
-            {model.name}
-          </h4>
-          <p className="mt-1 text-[10px] text-muted line-clamp-2">
-            {model.description}
-          </p>
-        </div>
-        <div className="mt-2 flex items-center justify-between pt-1 border-t border-border/50">
-          <span className="text-[9px] font-medium text-faint">
-            {model.tags[0] ? `#${model.tags[0]}` : model.category.replace("_", " ")}
-          </span>
-          <span className={cn("text-[10px] font-semibold", applied ? "text-purple-400" : "text-primary group-hover:underline")}>
-            {applied ? "Applied" : "+ Apply"}
-          </span>
-        </div>
-      </div>
-    </button>
-  );
-}
 
 function cn(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(" ");
@@ -944,6 +382,20 @@ export function PromptForge() {
   const [poseGalleryOpen, setPoseGalleryOpen] = useState(false);
   const [cameraGalleryOpen, setCameraGalleryOpen] = useState(false);
   const [lightingGalleryOpen, setLightingGalleryOpen] = useState(false);
+  const [styleCategoryFilter, setStyleCategoryFilter] = useState<StyleCategory>("all");
+  const [styleSearch, setStyleSearch] = useState("");
+  const [styleGalleryOpen, setStyleGalleryOpen] = useState(false);
+  const [workbenchMode, setWorkbenchMode] = useState<"board" | "segmented">("board");
+  const [sourceDrawerOpen, setSourceDrawerOpen] = useState(false);
+  const [docHistory, setDocHistory] = useState<PromptDoc[]>([]);
+  const [toast, setToast] = useState<{ message: string; id: number } | null>(null);
+  const toastTimerRef = useRef<number | null>(null);
+  const [lockedSlots, setLockedSlots] = useState<LockedSlots>({
+    palette: false,
+    optics: false,
+    lighting: false,
+    exclusions: false,
+  });
   const [wardrobeGalleryOpen, setWardrobeGalleryOpen] = useState(false);
   const [appliedOutfitId, setAppliedOutfitId] = useState<string | null>(null);
   const [customOutfits, setCustomOutfits] = useState<WardrobeOutfit[]>([]);
@@ -1001,22 +453,106 @@ export function PromptForge() {
     return filterWardrobeOutfits(allWardrobeOutfits, wardrobeSearch);
   }, [allWardrobeOutfits, wardrobeSearch]);
 
+  function showToast(message: string) {
+    setStatus(message);
+    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    const id = Date.now();
+    setToast({ message, id });
+    toastTimerRef.current = window.setTimeout(() => {
+      setToast((current) => (current?.id === id ? null : current));
+    }, 3500);
+  }
+
+  function commitDoc(nextDoc: PromptDoc, message?: string) {
+    setDocHistory((prev) => [...prev.slice(-19), doc]);
+    setDoc(nextDoc);
+    if (message) showToast(message);
+  }
+
+  function handleUndo() {
+    setDocHistory((prev) => {
+      if (prev.length === 0) return prev;
+      const previous = prev[prev.length - 1];
+      setDoc(previous);
+      showToast("Undid last change.");
+      return prev.slice(0, -1);
+    });
+  }
+
+  function handleRemixUnlocked() {
+    const pick = <T,>(arr: T[]): T | undefined =>
+      arr.length > 0 ? arr[Math.floor(Math.random() * arr.length)] : undefined;
+
+    let next = doc;
+    const randomStyle = pick(STYLE_LIBRARY);
+    if (randomStyle) {
+      next = applyStyleGuide(next, randomStyle, lockedSlots);
+    }
+
+    const randomModel = pick(CAST_MODELS);
+    if (randomModel) {
+      next = applyCastModel(next, randomModel, slot);
+    }
+
+    const randomOutfit = pick(allWardrobeOutfits);
+    if (randomOutfit) {
+      next = applyWardrobeOutfit(next, randomOutfit, slot);
+      setAppliedOutfitId(randomOutfit.id);
+    }
+
+    const randomPose = pick(POSE_LIBRARY);
+    if (randomPose) {
+      next = setAt(next, `subjects.${slot}.kinetic_posture`, randomPose.posture);
+    }
+
+    if (!lockedSlots.lighting) {
+      const randomLighting = pick(LIGHTING_LIBRARY);
+      if (randomLighting) {
+        next = setAt(next, "aesthetic_dna.lighting_architecture.lighting_style", randomLighting.style);
+        if (randomLighting.fixture) {
+          next = setAt(next, "aesthetic_dna.lighting_architecture.key_source.fixture_or_origin", randomLighting.fixture);
+        }
+        if (randomLighting.angle) {
+          next = setAt(next, "aesthetic_dna.lighting_architecture.key_source.angle_and_elevation", randomLighting.angle);
+        }
+        if (randomLighting.shadow) {
+          next = setAt(next, "aesthetic_dna.lighting_architecture.fill_and_negative_space.shadow_depth", randomLighting.shadow);
+        }
+      }
+    }
+
+    if (!lockedSlots.optics) {
+      const randomCamera = pick(CAMERA_LIBRARY);
+      if (randomCamera) {
+        next = setAt(next, "scene_composition.framing_doctrine.named_principle", randomCamera.principle);
+        next = setAt(next, "scene_composition.framing_doctrine.camera_elevation_and_axis", randomCamera.axis);
+        if (randomCamera.lens) {
+          next = setAt(next, "aesthetic_dna.optics.lens_type_and_focal_length", randomCamera.lens);
+        }
+        if (randomCamera.dof) {
+          next = setAt(next, "aesthetic_dna.optics.aperture_and_dof", randomCamera.dof);
+        }
+      }
+    }
+
+    setUntouched(false);
+    commitDoc(next, "Remixed unlocked board slots.");
+  }
+
   function handleSelectWardrobeItem(item: WardrobeItem) {
     const updated = applyWardrobeItem(doc, item, slot);
-    setDoc(updated);
     setUntouched(false);
     const slotLabel = item.slot.replace("_", " ");
     const who = doc.subjects[slot]?.subject_id.trim() || `Subject ${slot + 1}`;
-    setStatus(`Applied ${item.name} to ${who} (${slotLabel}).`);
+    commitDoc(updated, `Pinned ${item.name} to ${who} (${slotLabel}).`);
   }
 
   function handleSelectWardrobeOutfit(outfit: WardrobeOutfit) {
     const updated = applyWardrobeOutfit(doc, outfit, slot);
-    setDoc(updated);
     setUntouched(false);
     setAppliedOutfitId(outfit.id);
     const who = doc.subjects[slot]?.subject_id.trim() || `Subject ${slot + 1}`;
-    setStatus(`Applied ${outfit.name} to ${who} (full outfit).`);
+    commitDoc(updated, `Pinned ${outfit.name} to ${who}.`);
   }
 
   const shelfLooks = useMemo(() => {
@@ -1034,9 +570,8 @@ export function PromptForge() {
 
   const handleSelectCastModel = (model: CastModelItem) => {
     const updated = applyCastModel(doc, model, slot);
-    setDoc(updated);
     setUntouched(false);
-    setStatus(`Applied Exile Model "${model.name}" to Subject ${slot + 1} (${model.badge}). Consistent character JSON updated.`);
+    commitDoc(updated, `Pinned "${model.name}" to Subject ${slot + 1}.`);
   };
 
   const displayedPoses = useMemo(() => {
@@ -1058,6 +593,81 @@ export function PromptForge() {
     });
   }, [cameraCategoryFilter, cameraSearch]);
 
+  const displayedStyles = useMemo(() => {
+    return filterStyleGuides(styleSearch, styleCategoryFilter);
+  }, [styleSearch, styleCategoryFilter]);
+
+  const handleSelectStyle = (style: StyleGuideItem) => {
+    const next = applyStyleGuide(doc, style, lockedSlots);
+    setUntouched(false);
+    setCluster("medium");
+    const locksActive = Object.entries(lockedSlots)
+      .filter(([_, v]) => v)
+      .map(([k]) => k);
+    const lockNote = locksActive.length > 0 ? ` (kept locked: ${locksActive.join(", ")})` : "";
+    commitDoc(next, `Pinned "${style.name}" style${lockNote}.`);
+  };
+
+  const handleToggleLock = (slotKey: keyof LockedSlots) => {
+    setLockedSlots((prev) => {
+      const next = { ...prev, [slotKey]: !prev[slotKey] };
+      showToast(`${slotKey.toUpperCase()} slot ${next[slotKey] ? "locked" : "unlocked"}.`);
+      return next;
+    });
+  };
+
+  const handleClearStyle = () => {
+    let next = setAt(doc, "aesthetic_dna.medium_format", "");
+    next = setAt(next, "aesthetic_dna.optics.physical_optical_imperfections", "");
+    next = setAt(next, "aesthetic_dna.color_science.dominant_palette", []);
+    next = setAt(next, "aesthetic_dna.color_science.tonal_behavior", "");
+    commitDoc(next, "Cleared Style & Aesthetic DNA.");
+  };
+
+  const handleClearModel = () => {
+    let next = setAt(doc, `subjects.${slot}.casting_and_physique.demographics_and_features`, "");
+    next = setAt(next, `subjects.${slot}.casting_and_physique.skin_and_surface_microdetails`, "");
+    next = setAt(next, `subjects.${slot}.casting_and_physique.hair_and_grooming`, "");
+    commitDoc(next, `Cleared cast model for Subject ${slot + 1}.`);
+  };
+
+  const handleClearOutfit = () => {
+    let next = setAt(doc, `subjects.${slot}.wardrobe_architecture.layering_system.base_layer`, "");
+    next = setAt(next, `subjects.${slot}.wardrobe_architecture.layering_system.mid_layer`, "");
+    next = setAt(next, `subjects.${slot}.wardrobe_architecture.layering_system.outerwear`, "");
+    next = setAt(next, `subjects.${slot}.wardrobe_architecture.textiles_and_weight`, "");
+    next = setAt(next, `subjects.${slot}.wardrobe_architecture.hardware_and_details`, "");
+    next = setAt(next, `subjects.${slot}.wardrobe_architecture.footwear`, "");
+    setAppliedOutfitId(null);
+    commitDoc(next, `Cleared wardrobe for Subject ${slot + 1}.`);
+  };
+
+  const handleClearPose = () => {
+    const next = setAt(doc, `subjects.${slot}.kinetic_posture`, "");
+    commitDoc(next, `Cleared posture for Subject ${slot + 1}.`);
+  };
+
+  const handleClearLighting = () => {
+    let next = setAt(doc, "aesthetic_dna.lighting_architecture.lighting_style", "");
+    next = setAt(next, "aesthetic_dna.lighting_architecture.key_source.fixture_or_origin", "");
+    next = setAt(next, "aesthetic_dna.lighting_architecture.key_source.angle_and_elevation", "");
+    next = setAt(next, "aesthetic_dna.lighting_architecture.fill_and_negative_space.shadow_depth", "");
+    commitDoc(next, "Cleared lighting architecture.");
+  };
+
+  const handleClearCamera = () => {
+    let next = setAt(doc, "scene_composition.framing_doctrine.named_principle", "");
+    next = setAt(next, "scene_composition.framing_doctrine.camera_elevation_and_axis", "");
+    next = setAt(next, "aesthetic_dna.optics.lens_type_and_focal_length", "");
+    next = setAt(next, "aesthetic_dna.optics.aperture_and_dof", "");
+    commitDoc(next, "Cleared camera framing and optics.");
+  };
+
+  const handleResetCanvas = () => {
+    setAppliedOutfitId(null);
+    commitDoc(emptyDoc(), "Cleared all pins from board.");
+  };
+
   const handleSelectPose = (pose: PoseItem) => {
     let next = setAt(doc, `subjects.${slot}.kinetic_posture`, pose.posture);
     if (pose.props && pose.props.length > 0) {
@@ -1065,9 +675,8 @@ export function PromptForge() {
       const merged = Array.from(new Set([...currentProps, ...pose.props]));
       next = setAt(next, "scene_composition.environmental_staging.grounded_props", merged);
     }
-    setDoc(next);
     setUntouched(false);
-    setStatus(`Applied ${pose.name} to ${doc.subjects[slot]?.subject_id.trim() || `Subject ${slot + 1}`} (posture).`);
+    commitDoc(next, `Pinned ${pose.name} to ${doc.subjects[slot]?.subject_id.trim() || `Subject ${slot + 1}`}.`);
   };
 
   const handleSelectLighting = (item: LightingItem) => {
@@ -1084,9 +693,8 @@ export function PromptForge() {
     if (item.practical) {
       next = setAt(next, "aesthetic_dna.lighting_architecture.accent_and_practicals.practical_sources", item.practical);
     }
-    setDoc(next);
     setUntouched(false);
-    setStatus(`Applied ${item.name} (${item.badge}).`);
+    commitDoc(next, `Pinned ${item.name} lighting.`);
   };
 
   const handleSelectCamera = (item: CameraItem) => {
@@ -1098,9 +706,8 @@ export function PromptForge() {
     if (item.dof) {
       next = setAt(next, "aesthetic_dna.optics.aperture_and_dof", item.dof);
     }
-    setDoc(next);
     setUntouched(false);
-    setStatus(`Applied ${item.name} (${item.badge}).`);
+    commitDoc(next, `Pinned ${item.name} camera.`);
   };
 
   useEffect(() => {
@@ -1204,13 +811,60 @@ export function PromptForge() {
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
+      const activeEl = document.activeElement;
+      const isInput =
+        activeEl instanceof HTMLInputElement ||
+        activeEl instanceof HTMLTextAreaElement ||
+        (activeEl && activeEl.getAttribute("contenteditable") === "true");
+
       if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
         event.preventDefault();
         runParse();
+        return;
       }
       if (event.key === "Escape") {
         setBookmarkOpen(false);
         setLibraryOpen(false);
+        setPoseGalleryOpen(false);
+        setCameraGalleryOpen(false);
+        setLightingGalleryOpen(false);
+        setStyleGalleryOpen(false);
+        setWardrobeGalleryOpen(false);
+        return;
+      }
+
+      // Fast navigation shortcuts when not typing in an input
+      if (!isInput && !event.metaKey && !event.ctrlKey && !event.altKey) {
+        if (event.key === "1") {
+          event.preventDefault();
+          setAssetTab("cast");
+          setPane("assets");
+        } else if (event.key === "2") {
+          event.preventDefault();
+          setAssetTab("wardrobe");
+          setPane("assets");
+        } else if (event.key === "3") {
+          event.preventDefault();
+          setAssetTab("poses");
+          setPane("assets");
+        } else if (event.key === "4") {
+          event.preventDefault();
+          setAssetTab("lighting");
+          setPane("assets");
+        } else if (event.key === "5") {
+          event.preventDefault();
+          setAssetTab("camera");
+          setPane("assets");
+        } else if (event.key === "6") {
+          event.preventDefault();
+          setAssetTab("styles");
+          setPane("assets");
+        }
+      }
+
+      if (!isInput && (event.metaKey || event.ctrlKey) && !event.shiftKey && event.key.toLowerCase() === "z") {
+        event.preventDefault();
+        handleUndo();
       }
     }
     window.addEventListener("keydown", onKey);
@@ -1696,6 +1350,43 @@ export function PromptForge() {
             className="min-w-0 flex-1 bg-transparent text-base text-fg outline-none placeholder:text-faint"
             placeholder="Untitled"
           />
+
+          {/* Visual Board Studio vs Segmented Pages Switcher */}
+          <div className="flex items-center rounded-xl bg-surface p-1 border border-border shadow-xs shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                setWorkbenchMode("board");
+                if (narrow()) setPane("forge");
+              }}
+              className={cn(
+                "flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1 text-xs font-bold transition-all",
+                workbenchMode === "board"
+                  ? "bg-primary text-primary-fg shadow-xs"
+                  : "text-muted hover:text-foreground",
+              )}
+            >
+              <Sparkles className="size-3.5" />
+              <span className="hidden xs:inline sm:inline">Board</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setWorkbenchMode("segmented");
+                if (narrow()) setPane("forge");
+              }}
+              className={cn(
+                "flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1 text-xs font-bold transition-all",
+                workbenchMode === "segmented"
+                  ? "bg-primary text-primary-fg shadow-xs"
+                  : "text-muted hover:text-foreground",
+              )}
+            >
+              <Layers className="size-3.5" />
+              <span className="hidden xs:inline sm:inline">Fields</span>
+            </button>
+          </div>
+
           <div className="ml-auto hidden items-center gap-2 lg:flex">
             <Actions
               confirmNew={confirmNew}
@@ -1721,7 +1412,7 @@ export function PromptForge() {
           {(
             [
               ["source", "Source"],
-              ["forge", "Structure"],
+              ["forge", workbenchMode === "board" ? "Board" : "Structure"],
               ["assets", "Assets"],
             ] as const
           ).map(([id, label]) => (
@@ -1744,8 +1435,12 @@ export function PromptForge() {
       <div className="flex min-h-0 flex-1">
         <section
           className={cn(
-            "min-h-0 min-w-0 flex-col border-border lg:flex lg:w-80 lg:shrink-0 lg:border-r",
-            pane === "source" ? "flex" : "hidden lg:flex",
+            "min-h-0 min-w-0 flex-col border-border lg:w-80 lg:shrink-0 lg:border-r",
+            pane === "source"
+              ? "flex flex-1 lg:flex-none"
+              : workbenchMode === "segmented" || sourceDrawerOpen
+                ? "hidden lg:flex"
+                : "hidden",
           )}
         >
           <div className="flex items-start justify-between gap-3 px-4 pt-4">
@@ -1794,13 +1489,48 @@ export function PromptForge() {
             pane === "forge" ? "flex" : "hidden lg:flex",
           )}
         >
-          <div className="flex min-h-0 flex-1">
-            <nav className="hidden w-44 shrink-0 overflow-y-auto border-r border-border lg:block" aria-label="Clusters">
-              <ClusterMenu doc={doc} slot={slot} active={cluster} onPick={openCluster} />
-            </nav>
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-              {jsonMode !== "full" ? (
-                <>
+          {workbenchMode === "board" ? (
+            <VisualBoardStudio
+              doc={doc}
+              slot={slot}
+              lockedSlots={lockedSlots}
+              activeAssetTab={assetTab}
+              canUndo={docHistory.length > 0}
+              sourceDrawerOpen={sourceDrawerOpen}
+              onToggleSourceDrawer={() => setSourceDrawerOpen((v) => !v)}
+              onSelectSubject={setSubjectIndex}
+              onAddSubject={addSubject}
+              onRemoveSubject={removeSubject}
+              onUndo={handleUndo}
+              onRemixUnlocked={handleRemixUnlocked}
+              onToggleLock={handleToggleLock}
+              onClearStyle={handleClearStyle}
+              onClearModel={handleClearModel}
+              onClearOutfit={handleClearOutfit}
+              onClearPose={handleClearPose}
+              onClearLighting={handleClearLighting}
+              onClearCamera={handleClearCamera}
+              onResetCanvas={handleResetCanvas}
+              onOpenAssetTab={(tab) => {
+                setAssetTab(tab);
+                if (narrow()) setPane("assets");
+              }}
+              onDrillDownToCluster={(clusterId) => {
+                openCluster(clusterId);
+                setWorkbenchMode("segmented");
+              }}
+              onSwitchToSegmented={() => setWorkbenchMode("segmented")}
+              onCopyPrompt={(format) => onCopy(format)}
+              copiedFormat={copied}
+            />
+          ) : (
+            <div className="flex min-h-0 flex-1">
+              <nav className="hidden w-44 shrink-0 overflow-y-auto border-r border-border lg:block" aria-label="Clusters">
+                <ClusterMenu doc={doc} slot={slot} active={cluster} onPick={openCluster} />
+              </nav>
+              <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+                {jsonMode !== "full" ? (
+                  <>
               <div className="shrink-0 border-b border-border lg:hidden">
                 <div className="flex gap-2 overflow-x-auto px-3 pt-3">
                   {CLUSTER_GROUPS.map((group) => {
@@ -1869,7 +1599,25 @@ export function PromptForge() {
                 </div>
               ) : null}
 
-              <div className="flex shrink-0 items-end justify-between gap-3 px-4 pt-4 pb-2">
+              <PromptSummaryPills
+                doc={doc}
+                slot={slot}
+                lockedSlots={lockedSlots}
+                onToggleLock={handleToggleLock}
+                onClearStyle={handleClearStyle}
+                onClearModel={handleClearModel}
+                onClearOutfit={handleClearOutfit}
+                onClearPose={handleClearPose}
+                onClearLighting={handleClearLighting}
+                onClearCamera={handleClearCamera}
+                onResetCanvas={handleResetCanvas}
+                onOpenAssetTab={(tab) => {
+                  setAssetTab(tab);
+                  setPane("assets");
+                }}
+              />
+
+                <div className="flex shrink-0 items-end justify-between gap-3 px-4 pt-4 pb-2">
                 <div>
                   <p className="text-xs font-medium tracking-wide text-faint">{active.group}</p>
                   <h2 className="text-base font-medium">{active.label}</h2>
@@ -2010,6 +1758,7 @@ export function PromptForge() {
               <JsonBlock json={json} copied={copied} mode={jsonMode} onCopy={onCopy} onMode={setJsonMode} />
             </div>
           </div>
+          )}
         </section>
 
         <aside
@@ -2019,7 +1768,9 @@ export function PromptForge() {
               ? "fixed inset-0 z-50 flex h-dvh w-dvw overflow-hidden bg-bg"
               : pane === "assets"
                 ? "flex flex-1"
-                : "hidden lg:flex lg:w-84 xl:w-96 lg:shrink-0 lg:border-l",
+                : workbenchMode === "board"
+                  ? "hidden lg:flex lg:w-[400px] xl:w-[460px] lg:shrink-0 lg:border-l"
+                  : "hidden lg:flex lg:w-84 xl:w-96 lg:shrink-0 lg:border-l",
           )}
         >
           {/* Header */}
@@ -2039,7 +1790,9 @@ export function PromptForge() {
                             ? `${LIGHTING_LIBRARY.length} Setups`
                             : assetTab === "camera"
                               ? `${CAMERA_LIBRARY.length} Angles`
-                              : "Saved"}
+                              : assetTab === "styles"
+                                ? `${STYLE_LIBRARY.length} Styles`
+                                : "Saved"}
                   </span>
                 </div>
                 <p className="truncate text-[10px] text-muted">
@@ -2091,6 +1844,7 @@ export function PromptForge() {
                 { id: "poses" as const, label: "Poses", icon: Sparkles, count: POSE_LIBRARY.length },
                 { id: "lighting" as const, label: "Light", icon: SunMedium, count: LIGHTING_LIBRARY.length },
                 { id: "camera" as const, label: "Camera", icon: Camera, count: CAMERA_LIBRARY.length },
+                { id: "styles" as const, label: "Styles", icon: Palette, count: STYLE_LIBRARY.length },
                 { id: "saved" as const, label: "Saved", icon: BookmarkIcon },
               ].map((tab) => {
                 const Icon = tab.icon;
@@ -2668,6 +2422,103 @@ export function PromptForge() {
             </>
           )}
 
+          {/* TAB 4B: STYLES & AESTHETIC DNA (10 Notion Style Guides) */}
+          {assetTab === "styles" && (
+            <>
+              <div className="shrink-0 border-b border-border bg-surface/30 px-3 py-2 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs text-muted">
+                    Aesthetic DNA (medium, palette, optics &amp; exclusions)
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setStyleGalleryOpen(true)}
+                    className="flex shrink-0 items-center gap-1 rounded-lg border border-fuchsia-500/40 bg-fuchsia-500/10 px-2.5 py-1 text-xs font-semibold text-fuchsia-400 hover:bg-fuchsia-500/20 transition-all shadow-xs"
+                  >
+                    <Palette className="size-3.5" />
+                    <span>Studio ({STYLE_LIBRARY.length})</span>
+                  </button>
+                </div>
+
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted" />
+                  <input
+                    type="text"
+                    value={styleSearch}
+                    onChange={(e) => setStyleSearch(e.target.value)}
+                    placeholder={`Search ${STYLE_LIBRARY.length} style guides (e.g. street, oil, night)...`}
+                    className="w-full rounded-md border border-border bg-bg py-1.5 pl-8 pr-7 text-xs text-foreground placeholder-muted focus:border-primary focus:outline-none"
+                  />
+                  {styleSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setStyleSearch("")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1 overflow-x-auto pb-0.5 no-scrollbar text-xs">
+                  {STYLE_CATEGORIES.map((cat) => {
+                    const active = styleCategoryFilter === cat.id;
+                    const count =
+                      cat.id === "all"
+                        ? STYLE_LIBRARY.length
+                        : STYLE_LIBRARY.filter((item) => item.category === cat.id).length;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setStyleCategoryFilter(cat.id)}
+                        className={cn(
+                          "h-7 shrink-0 rounded-full px-2.5 text-[11px] font-medium transition-all flex items-center gap-1",
+                          active
+                            ? "bg-primary text-primary-fg shadow-xs"
+                            : "border border-border bg-bg text-muted hover:text-foreground",
+                        )}
+                      >
+                        <span>{cat.label.replace(/\s*\(\d+\)/, "")}</span>
+                        <span className={cn("text-[9px] px-1 rounded-full", active ? "bg-black/30 text-white" : "text-muted")}>
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
+                {displayedStyles.length === 0 ? (
+                  <div className="py-12 text-center text-xs text-muted">
+                    <Palette className="mx-auto size-8 opacity-30 mb-2" />
+                    <p>No style guides match "{styleSearch}".</p>
+                  </div>
+                ) : (
+                  <div
+                    className={cn(
+                      "grid",
+                      assetDensity === "compact"
+                        ? "grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-1.5"
+                        : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2",
+                    )}
+                  >
+                    {displayedStyles.map((item) => (
+                      <StyleCard
+                        key={item.id}
+                        item={item}
+                        applied={isStyleGuideApplied(doc, item)}
+                        density={assetDensity}
+                        onSelect={() => handleSelectStyle(item)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
           {/* TAB 5: SAVED & BOOKMARKS */}
           {assetTab === "saved" && (
             <>
@@ -3163,414 +3014,41 @@ export function PromptForge() {
         activeBaseLayer={doc.subjects[slot]?.wardrobe_architecture?.layering_system?.base_layer}
         activeFootwear={doc.subjects[slot]?.wardrobe_architecture?.footwear}
       />
-    </div>
-  );
-}
+      <StyleCatalogModal
+        isOpen={styleGalleryOpen}
+        onClose={() => setStyleGalleryOpen(false)}
+        onSelectStyle={handleSelectStyle}
+        activeMediumFormat={doc.aesthetic_dna.medium_format}
+      />
 
-function ClusterMenu({
-  doc,
-  slot,
-  active,
-  onPick,
-}: {
-  doc: PromptDoc;
-  slot: number;
-  active: ClusterId;
-  onPick: (id: ClusterId) => void;
-}) {
-  return (
-    <div className="py-2">
-      {CLUSTER_GROUPS.map((group) => (
-        <div key={group} className="pb-2">
-          <p className="px-3 pt-3 pb-1 text-xs font-medium tracking-wide text-faint">{group}</p>
-          {CLUSTERS.filter((item) => item.group === group).map((item) => {
-            const on = item.id === active;
-            const filled = clusterHasContent(doc, item, slot);
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => onPick(item.id)}
-                className={cn(
-                  "flex h-11 w-full items-center gap-2 px-3 text-left text-sm",
-                  on ? "bg-surface font-medium text-primary" : "text-muted hover:bg-surface hover:text-fg",
-                )}
-                aria-current={on ? "true" : undefined}
-              >
-                <span className={cn("size-1.5 shrink-0 rounded-full", filled ? "bg-primary" : "bg-border")} />
-                {item.label}
-              </button>
-            );
-          })}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function FieldCard({
-  field,
-  doc,
-  slot,
-  onFocus,
-  onChange,
-  onSave,
-}: {
-  field: FieldDef;
-  doc: PromptDoc;
-  slot: number;
-  onFocus: (path: string) => void;
-  onChange: (value: string | string[]) => void;
-  onSave: () => void;
-}) {
-  const path = resolvePath(field.path, slot);
-  const value = getAt(doc, path);
-  return (
-    <div className="rounded-lg border border-border bg-surface p-3">
-      <div className="mb-2 flex items-center gap-2">
-        <label htmlFor={path} className="text-sm font-medium">
-          {field.label}
-        </label>
-        <button
-          type="button"
-          className="ml-auto flex size-11 items-center justify-center rounded-md text-muted hover:bg-surface-2 hover:text-fg"
-          aria-label={`Save ${field.label} to assets`}
-          onClick={onSave}
+      {toast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-20 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-full border border-neutral-700 bg-neutral-900/95 px-4 py-2 text-xs font-medium text-neutral-100 shadow-2xl backdrop-blur-md"
         >
-          <BookmarkIcon className="size-4" />
-        </button>
-      </div>
-      {field.kind === "palette" && Array.isArray(value) ? (
-        <PaletteField colors={value} onChange={onChange} />
-      ) : field.kind === "list" && Array.isArray(value) ? (
-        <textarea
-          id={path}
-          data-path={path}
-          rows={field.rows}
-          value={value.join("\n")}
-          placeholder={field.hint}
-          onFocus={() => onFocus(path)}
-          onChange={(event) => onChange(event.target.value.split("\n"))}
-          onBlur={(event) =>
-            onChange(
-              event.target.value
-                .split("\n")
-                .map((line) => line.trim())
-                .filter(Boolean),
-            )
-          }
-          className="field resize-y"
-        />
-      ) : (
-        <textarea
-          id={path}
-          data-path={path}
-          rows={field.rows}
-          value={typeof value === "string" ? value : ""}
-          placeholder={field.hint}
-          onFocus={() => onFocus(path)}
-          onChange={(event) => onChange(event.target.value)}
-          className="field resize-y"
-        />
-      )}
-    </div>
-  );
-}
-
-function PaletteField({
-  colors,
-  onChange,
-}: {
-  colors: string[];
-  onChange: (next: string[]) => void;
-}) {
-  return (
-    <div className="space-y-2">
-      {colors.length === 0 ? <p className="text-sm text-faint">No swatches yet.</p> : null}
-      {colors.map((hex, index) => (
-        <div key={`${hex}-${index}`} className="flex items-center gap-2">
-          <input
-            aria-label={`Palette color ${index + 1}`}
-            type="color"
-            value={safeHex(hex)}
-            onChange={(event) => {
-              const next = [...colors];
-              next[index] = event.target.value.toUpperCase();
-              onChange(next);
-            }}
-            className="size-11 shrink-0 rounded-md border border-border bg-bg"
-          />
-          <input
-            aria-label={`Hex ${index + 1}`}
-            value={hex}
-            onChange={(event) => {
-              const next = [...colors];
-              next[index] = event.target.value;
-              onChange(next);
-            }}
-            className="field font-mono"
-          />
+          <span className="max-w-[260px] truncate">{toast.message}</span>
+          {docHistory.length > 0 && (
+            <button
+              type="button"
+              onClick={handleUndo}
+              className="flex items-center gap-1 rounded-full bg-primary/20 px-2.5 py-0.5 text-[11px] font-bold text-primary hover:bg-primary/30 transition-colors"
+            >
+              <Undo2 className="size-3" />
+              <span>Undo</span>
+            </button>
+          )}
           <button
             type="button"
-            aria-label={`Remove color ${index + 1}`}
-            className="flex size-11 items-center justify-center text-muted hover:text-fg"
-            onClick={() => onChange(colors.filter((_, item) => item !== index))}
+            onClick={() => setToast(null)}
+            className="text-neutral-400 hover:text-white"
+            aria-label="Dismiss notification"
           >
-            <X className="size-4" />
+            <X className="size-3.5" />
           </button>
         </div>
-      ))}
-      <button type="button" className="btn btn-ghost" onClick={() => onChange([...colors, "#C46A3A"])}>
-        <Plus className="size-4" />
-        Add swatch
-      </button>
-    </div>
-  );
-}
-
-function AccountSlot({ compact = false }: { compact?: boolean }) {
-  const { isPending } = useCurrentUserState();
-  if (isPending) return compact ? null : <div className="h-11 w-24 animate-pulse rounded-md bg-surface" />;
-  if (compact) {
-    return (
-      <div className="border-t border-border px-3 py-2 lg:hidden">
-        <SignedOut>
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-sm text-muted">Sign in to keep this in your account.</p>
-            <Link to="/login" className="btn btn-primary shrink-0">
-              Sign in
-            </Link>
-          </div>
-        </SignedOut>
-        <SignedIn>
-          <UserButton />
-        </SignedIn>
-      </div>
-    );
-  }
-  return (
-    <>
-      <SignedOut>
-        <Link to="/login" className="btn btn-ghost">
-          Sign in
-        </Link>
-      </SignedOut>
-      <SignedIn>
-        <UserButton />
-      </SignedIn>
-    </>
-  );
-}
-
-function AssetCard({
-  eyebrow,
-  title,
-  body,
-  tags,
-  imageId,
-  remote = false,
-  picked,
-  onPick,
-  onDelete,
-}: {
-  eyebrow: string;
-  title: string;
-  body: string;
-  tags?: string[];
-  imageId?: string;
-  remote?: boolean;
-  picked: boolean;
-  onPick: () => void;
-  onDelete?: () => void;
-}) {
-  return (
-    <div className={cn("rounded-lg border bg-surface", picked ? "border-primary" : "border-border")}>
-      <button type="button" onClick={onPick} aria-pressed={picked} className="flex w-full items-start gap-3 px-3 py-3 text-left">
-        {imageId ? <BookmarkPhoto id={imageId} remote={remote} /> : null}
-        <span className="min-w-0 flex-1">
-          <p className="text-xs font-medium tracking-wide text-primary">{eyebrow}</p>
-          <p className="mt-1 text-sm font-medium">{title}</p>
-          <p className="mt-1 line-clamp-2 text-sm text-muted">{body}</p>
-          {tags && tags.length > 0 ? <p className="mt-1 text-xs text-faint">{tags.join(" · ")}</p> : null}
-        </span>
-        <PickMark on={picked} />
-      </button>
-      {onDelete ? (
-        <div className="flex justify-end border-t border-border">
-          <button
-            type="button"
-            className="flex size-11 items-center justify-center text-muted hover:text-fg"
-            aria-label={`Delete ${title}`}
-            onClick={onDelete}
-          >
-            <Trash2 className="size-4" />
-          </button>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function BookmarkPhoto({ id, remote }: { id: string; remote: boolean }) {
-  const [url, setUrl] = useState<string | null>(null);
-  useEffect(() => {
-    let alive = true;
-    let objectUrl = "";
-    const load = remote
-      ? loadBookmarkImage({ data: id }).then((data) => (data ? base64ToBlob(data) : loadImage(id)))
-      : loadImage(id);
-    load
-      .then((blob) => {
-        if (!alive || !blob) return;
-        objectUrl = URL.createObjectURL(blob);
-        setUrl(objectUrl);
-      })
-      .catch(() => undefined);
-    return () => {
-      alive = false;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
-  }, [id, remote]);
-  if (!url) return <span className="size-14 shrink-0 rounded-md bg-bg" />;
-  return <img src={url} alt="" className="size-14 shrink-0 rounded-md object-cover" />;
-}
-
-function PickMark({ on }: { on: boolean }) {
-  return (
-    <span
-      className={cn(
-        "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border",
-        on ? "border-primary bg-primary text-primary-fg" : "border-border bg-bg",
-      )}
-      aria-hidden="true"
-    >
-      {on ? <Check className="size-3" /> : null}
-    </span>
-  );
-}
-
-function Actions({
-  confirmNew,
-  onNew,
-  onSave,
-  onLibrary,
-  compact,
-}: {
-  confirmNew: boolean;
-  onNew: () => void;
-  onSave: () => void;
-  onLibrary: () => void;
-  compact: boolean;
-}) {
-  return (
-    <>
-      <button type="button" className={cn("btn btn-ghost", compact && "w-full px-2")} onClick={onNew} aria-label="New prompt">
-        <FilePlus className="size-4" />
-        {confirmNew ? "Discard?" : compact ? "New" : "New prompt"}
-      </button>
-      <button
-        type="button"
-        className={cn("btn btn-ghost", compact && "w-full px-2")}
-        onClick={onSave}
-        aria-label="Save to library"
-      >
-        <BookmarkIcon className="size-4" />
-        {compact ? "Save" : "Save to library"}
-      </button>
-      <button
-        type="button"
-        className={cn("btn btn-ghost", compact && "w-full px-2")}
-        onClick={onLibrary}
-        aria-label="Open library"
-      >
-        <Library className="size-4" />
-        Library
-      </button>
-    </>
-  );
-}
-
-function JsonBlock({
-  json,
-  copied,
-  mode,
-  onCopy,
-  onMode,
-}: {
-  json: string;
-  copied: Copied;
-  mode: JsonMode;
-  onCopy: (kind: "json" | "line") => void;
-  onMode: (mode: JsonMode) => void;
-}) {
-  return (
-    <div
-      className={cn(
-        "flex flex-col overflow-hidden border-t border-border bg-bg",
-        mode === "peek" && "h-52 shrink-0",
-        mode === "full" && "min-h-0 flex-1",
-        mode === "hidden" && "shrink-0",
-      )}
-    >
-      <div className="flex shrink-0 flex-wrap items-center gap-2 px-3 py-2">
-        <div className="mr-auto">
-          <p className="text-xs font-medium tracking-wide text-muted">JSON</p>
-          <p className="text-xs text-faint">
-            {mode === "full" ? "Full document" : mode === "hidden" ? "Hidden" : "Live — a fraction"}
-          </p>
-        </div>
-        <button
-          type="button"
-          className="btn btn-ghost w-11 px-0"
-          aria-label={mode === "hidden" ? "Show JSON" : "Hide JSON"}
-          onClick={() => onMode(mode === "hidden" ? "peek" : "hidden")}
-        >
-          {mode === "hidden" ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-        </button>
-        <button
-          type="button"
-          className="btn btn-ghost w-11 px-0"
-          aria-label={mode === "full" ? "Show a fraction of the JSON" : "Show the full JSON"}
-          onClick={() => onMode(mode === "full" ? "peek" : "full")}
-        >
-          {mode === "full" ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
-        </button>
-        {mode === "hidden" ? null : (
-          <>
-            <button type="button" className="btn btn-ghost" onClick={() => onCopy("line")}>
-              {copied === "line" ? <Check className="size-4" /> : <Copy className="size-4" />}
-              {copied === "line" ? "Copied" : "Copy line"}
-            </button>
-            <button type="button" className="btn btn-primary" onClick={() => onCopy("json")}>
-              {copied === "json" ? <Check className="size-4" /> : <Copy className="size-4" />}
-              {copied === "json" ? "Copied" : "Copy JSON"}
-            </button>
-          </>
-        )}
-      </div>
-      {mode === "hidden" ? null : (
-        <pre
-          id="json-output"
-          className="min-h-0 flex-1 overflow-auto px-4 pb-4 font-mono text-xs leading-relaxed break-words whitespace-pre-wrap"
-        >
-          {json.split("\n").map((line, index) => (
-            <div key={index}>{colorLine(line)}</div>
-          ))}
-        </pre>
       )}
     </div>
   );
 }
 
-function colorLine(line: string) {
-  const match = line.match(/^(\s*)("(?:\\.|[^"\\])*")(\s*:\s*)(.*)$/);
-  if (!match) return <span className="text-faint">{line}</span>;
-  return (
-    <>
-      {match[1]}
-      <span className="text-primary">{match[2]}</span>
-      <span className="text-faint">{match[3]}</span>
-      <span className="text-fg">{match[4]}</span>
-    </>
-  );
-}
