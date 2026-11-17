@@ -58,18 +58,18 @@ function pose(
 }
 
 const RAW_LEGACY: Draft[] = [
-  pose("hip-cock", "Hip cock", "Weight on the left leg, right knee soft, one hand on the hip, shoulders dropped, chin level.", false, "/poses/pose_anime_p001.jpg", undefined, "modeling", "standing"),
-  pose("pockets", "Hands in pockets", "Standing easy, both hands buried in pockets, weight even, shoulders relaxed.", false, "/poses/pose_model_05.jpg", undefined, "modeling", "standing"),
-  pose("crossed", "Arms crossed", "Standing square, arms folded across the chest, weight even, chin level.", false, "/poses/pose_model_08.jpg", undefined, "modeling", "standing"),
-  pose("stride", "Mid stride", "Walking toward the lens, one leg reaching, the other trailing, arms in an easy swing.", false, "/poses/pose_model_09.jpg", undefined, "modeling", "dynamic"),
+  pose("hip-cock", "Hip cock", "Weight on the left leg, right knee soft, one hand on the hip, shoulders dropped, chin level.", false, "/poses/pose_model_01.jpg", undefined, "editorial", "standing"),
+  pose("pockets", "Hands in pockets", "Standing easy, both hands buried in pockets, weight even, shoulders relaxed.", false, "/poses/pose_model_05.jpg", undefined, "editorial", "standing"),
+  pose("crossed", "Arms crossed", "Standing square, arms folded across the chest, weight even, chin level.", false, "/poses/pose_model_08.jpg", undefined, "editorial", "standing"),
+  pose("stride", "Mid stride", "Walking toward the lens, one leg reaching, the other trailing, arms in an easy swing.", false, "/poses/pose_model_09.jpg", undefined, "motion", "dynamic"),
   pose("crossed-sit", "Legs crossed", "Seated, one knee crossed over the other, one arm along the chair back, torso upright.", false, "/poses/pose_3d_03.jpg", ["white posing cube"], "sitting", "sitting"),
   pose("stool", "Forward lean", "Seated on a stool, elbows on the knees, torso hinged forward, eyes up toward the lens.", false, "/poses/pose_3d_05.jpg", ["studio stool"], "sitting", "sitting"),
-  pose("shoulder", "Over the shoulder", "Back mostly to the lens, head turned over one shoulder, arms relaxed at the sides.", false, "/poses/pose_model_07.jpg", undefined, "modeling", "standing"),
-  pose("hair", "Hands in hair", "Both arms lifted, hands in the hair, elbows wide, weight on one hip.", false, "/poses/pose_model_02.jpg", undefined, "modeling", "standing"),
-  pose("kneel", "Kneeling tall", "Upright on both knees, spine long, hands resting on the thighs.", false, "/poses/pose_knight_03.jpg", undefined, "sitting", "kneeling"),
+  pose("shoulder", "Over the shoulder", "Back mostly to the lens, head turned over one shoulder, arms relaxed at the sides.", false, "/poses/pose_model_07.jpg", undefined, "cinematic", "standing"),
+  pose("hair", "Hands in hair", "Both arms lifted, hands in the hair, elbows wide, weight on one hip.", false, "/poses/pose_model_02.jpg", undefined, "editorial", "standing"),
+  pose("kneel", "Kneeling tall", "Upright on both knees, spine long, hands resting on the thighs.", false, "/poses/pose_3d_04.jpg", undefined, "crouching", "kneeling"),
   pose("recline", "Side recline", "Lying on one side, head propped on a hand, the other arm along the body, legs softly bent.", false, "/poses/pose_3d_09.jpg", undefined, "reclining", "reclining"),
-  pose("wall", "Wall lean", "One shoulder against a wall, ankles crossed, arms folded low.", false, "/poses/pose_model_05.jpg", undefined, "casual", "standing"),
-  pose("crouch", "One knee down", "A low crouch, one knee on the ground, the other foot planted, one forearm across the raised knee.", false, "/poses/pose_action_02.jpg", undefined, "action", "crouching"),
+  pose("wall", "Wall lean", "One shoulder against a wall, ankles crossed, arms folded low.", false, "/poses/pose_model_05.jpg", undefined, "standing", "standing"),
+  pose("crouch", "One knee down", "A low crouch, one knee on the ground, the other foot planted, one forearm across the raised knee.", false, "/poses/pose_action_02.jpg", undefined, "crouching", "crouching"),
   pose(
     "arched",
     "Arched stand",
@@ -255,16 +255,16 @@ export const LOOK_FILTERS = [
   { id: "all", label: "All" },
   { id: "wardrobe", label: "Wardrobe" },
   { id: "angle", label: "Camera & Angles" },
-  { id: "knights", label: "Knights" },
-  { id: "modeling", label: "Photoshoot" },
-  { id: "paintings", label: "Fine Art" },
+  { id: "standing", label: "Standing & Upright" },
+  { id: "editorial", label: "Fashion & Editorial" },
+  { id: "sitting", label: "Sitting & Furniture" },
+  { id: "reclining", label: "Floor & Reclining" },
+  { id: "crouching", label: "Crouching & Kneeling" },
+  { id: "motion", label: "Walking & Motion" },
+  { id: "action", label: "Action & Combat" },
+  { id: "expressive", label: "Expressive & Dance" },
   { id: "cinematic", label: "Cinematic" },
   { id: "couples", label: "Couples & Duos" },
-  { id: "action", label: "Action" },
-  { id: "fantasy", label: "Fantasy" },
-  { id: "sitting", label: "Sitting" },
-  { id: "reclining", label: "Floor" },
-  { id: "casual", label: "Casual" },
   { id: "pose", label: "All Poses" },
   { id: "light", label: "Light" },
   { id: "setting", label: "Setting" },
@@ -276,16 +276,22 @@ export type LookFilter = (typeof LOOK_FILTERS)[number]["id"];
 export function looksFor(filter: LookFilter | string): Look[] {
   if (filter === "adult") return LOOKS.filter((look) => look.adult);
   if (filter === "pose") return LOOKS.filter((look) => look.kind === "pose" && !look.adult);
-  if (filter === "knights") return LOOKS.filter((look) => look.category === "knights");
-  if (filter === "modeling") return LOOKS.filter((look) => look.category === "modeling" && !look.adult);
-  if (filter === "paintings") return LOOKS.filter((look) => look.category === "paintings");
+  if (filter === "standing") return LOOKS.filter((look) => look.category === "standing");
+  if (filter === "editorial") return LOOKS.filter((look) => look.category === "editorial" && !look.adult);
+  if (filter === "crouching") return LOOKS.filter((look) => look.category === "crouching");
+  if (filter === "motion") return LOOKS.filter((look) => look.category === "motion");
+  if (filter === "expressive") return LOOKS.filter((look) => look.category === "expressive");
   if (filter === "cinematic") return LOOKS.filter((look) => look.category === "cinematic");
   if (filter === "couples") return LOOKS.filter((look) => look.category === "couples");
   if (filter === "action") return LOOKS.filter((look) => look.category === "action");
-  if (filter === "fantasy") return LOOKS.filter((look) => look.category === "fantasy");
   if (filter === "sitting") return LOOKS.filter((look) => look.category === "sitting" && !look.adult);
   if (filter === "reclining") return LOOKS.filter((look) => look.category === "reclining" && !look.adult);
-  if (filter === "casual") return LOOKS.filter((look) => look.category === "casual");
+  // Backwards-compatible aliases for legacy callers
+  if (filter === "knights") return LOOKS.filter((look) => look.category === "action" || look.tags?.includes("knight"));
+  if (filter === "modeling") return LOOKS.filter((look) => look.category === "editorial" && !look.adult);
+  if (filter === "paintings") return LOOKS.filter((look) => look.tags?.includes("fine art"));
+  if (filter === "casual") return LOOKS.filter((look) => look.category === "standing");
+  if (filter === "fantasy") return LOOKS.filter((look) => look.category === "expressive");
   if (filter === "wardrobe") return LOOKS.filter((look) => look.kind === "wardrobe");
   if (filter === "light") return LOOKS.filter((look) => look.kind === "light");
   if (filter === "angle") return LOOKS.filter((look) => look.kind === "angle");

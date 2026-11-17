@@ -373,6 +373,7 @@ export function PromptForge() {
   const [assetFullscreen, setAssetFullscreen] = useState(false);
   const [poseCategoryFilter, setPoseCategoryFilter] = useState<PoseCategory>("all");
   const [poseSearch, setPoseSearch] = useState("");
+  const [poseShelfLimit, setPoseShelfLimit] = useState(36);
   const [lightingCategoryFilter, setLightingCategoryFilter] = useState<LightingCategory>("all");
   const [lightingSearch, setLightingSearch] = useState("");
   const [cameraCategoryFilter, setCameraCategoryFilter] = useState<CameraCategory>("all");
@@ -581,6 +582,22 @@ export function PromptForge() {
       includeAdult: false,
     });
   }, [poseCategoryFilter, poseSearch]);
+
+  useEffect(() => {
+    setPoseShelfLimit(36);
+  }, [poseCategoryFilter, poseSearch]);
+
+  const poseCategoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: POSE_LIBRARY.length };
+    for (const p of POSE_LIBRARY) {
+      counts[p.category] = (counts[p.category] || 0) + 1;
+    }
+    return counts;
+  }, []);
+
+  const visibleShelfPoses = useMemo(() => {
+    return displayedPoses.slice(0, poseShelfLimit);
+  }, [displayedPoses, poseShelfLimit]);
 
   const displayedLighting = useMemo(() => {
     return filterLightingOptions(lightingSearch, lightingCategoryFilter);
@@ -2175,9 +2192,7 @@ export function PromptForge() {
                 <div className="flex items-center gap-1 overflow-x-auto pb-0.5 no-scrollbar text-xs">
                   {POSE_CATEGORIES.map((cat) => {
                     const active = poseCategoryFilter === cat.id;
-                    const count = cat.id === "all"
-                      ? POSE_LIBRARY.length
-                      : POSE_LIBRARY.filter((p) => p.category === cat.id).length;
+                    const count = poseCategoryCounts[cat.id] ?? 0;
                     return (
                       <button
                         key={cat.id}
@@ -2207,24 +2222,45 @@ export function PromptForge() {
                     <p>No poses match "{poseSearch}".</p>
                   </div>
                 ) : (
-                  <div
-                    className={cn(
-                      "grid",
-                      assetDensity === "compact"
-                        ? "grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-1.5"
-                        : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2",
+                  <>
+                    <div
+                      className={cn(
+                        "grid",
+                        assetDensity === "compact"
+                          ? "grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-1.5"
+                          : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2",
+                      )}
+                    >
+                      {visibleShelfPoses.map((pose) => (
+                        <PoseCard
+                          key={pose.id}
+                          pose={pose}
+                          applied={isPoseApplied(doc, pose, slot)}
+                          density={assetDensity}
+                          onSelect={() => handleSelectPose(pose)}
+                        />
+                      ))}
+                    </div>
+
+                    {displayedPoses.length > poseShelfLimit && (
+                      <div className="mt-4 flex flex-col items-center gap-2 pb-4">
+                        <button
+                          type="button"
+                          onClick={() => setPoseShelfLimit((c) => c + 36)}
+                          className="w-full rounded-lg border border-border bg-surface py-2 text-xs font-semibold text-foreground hover:bg-surface-hover hover:border-primary transition-all shadow-xs"
+                        >
+                          Load More Poses (+36)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPoseGalleryOpen(true)}
+                          className="text-[11px] text-amber-400 hover:underline"
+                        >
+                          Open Large Gallery ({displayedPoses.length} poses)
+                        </button>
+                      </div>
                     )}
-                  >
-                    {displayedPoses.map((pose) => (
-                      <PoseCard
-                        key={pose.id}
-                        pose={pose}
-                        applied={isPoseApplied(doc, pose, slot)}
-                        density={assetDensity}
-                        onSelect={() => handleSelectPose(pose)}
-                      />
-                    ))}
-                  </div>
+                  </>
                 )}
               </div>
             </>

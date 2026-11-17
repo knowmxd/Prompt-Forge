@@ -34,6 +34,12 @@ export function PoseCatalogModal({
   const [stance, setStance] = useState<PoseStance>("all");
   const [query, setQuery] = useState("");
   const [justAppliedId, setJustAppliedId] = useState<string | null>(null);
+  const [visibleLimit, setVisibleLimit] = useState(60);
+
+  // Reset pagination on filter changes
+  useEffect(() => {
+    setVisibleLimit(60);
+  }, [category, stance, query]);
 
   // Close on Escape
   useEffect(() => {
@@ -83,6 +89,10 @@ export function PoseCatalogModal({
       );
     });
   }, [category, stance, query]);
+
+  const visiblePoses = useMemo(() => {
+    return filteredPoses.slice(0, visibleLimit);
+  }, [filteredPoses, visibleLimit]);
 
   const handlePick = (pose: PoseItem) => {
     onSelectPose(pose);
@@ -202,7 +212,7 @@ export function PoseCatalogModal({
           </div>
 
           <div className="text-xs font-mono text-neutral-400 shrink-0">
-            Showing <span className="font-bold text-amber-400">{filteredPoses.length}</span> poses
+            Showing <span className="font-bold text-amber-400">{Math.min(visibleLimit, filteredPoses.length)}</span> of <span className="font-bold text-amber-400">{filteredPoses.length}</span> poses
           </div>
         </div>
       </div>
@@ -226,74 +236,91 @@ export function PoseCatalogModal({
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {filteredPoses.map((pose) => {
-              const isApplied = activePosture === pose.posture;
-              const justApplied = justAppliedId === pose.id;
+          <>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              {visiblePoses.map((pose) => {
+                const isApplied = activePosture === pose.posture;
+                const justApplied = justAppliedId === pose.id;
 
-              return (
-                <button
-                  key={pose.id}
-                  type="button"
-                  onClick={() => handlePick(pose)}
-                  className={`group relative flex flex-col overflow-hidden rounded-xl border text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
-                    isApplied
-                      ? "border-amber-500 ring-2 ring-amber-500/50 bg-neutral-900"
-                      : "border-neutral-800 bg-neutral-900/60 hover:border-neutral-700 hover:bg-neutral-900"
-                  }`}
-                >
-                  {/* Card Visual / Thumbnail */}
-                  <div className="aspect-[4/5] w-full bg-neutral-950">
-                    <PoseCardVisual
-                      image={pose.image}
-                      id={pose.id}
-                      name={pose.name}
-                      subtitle={pose.subtitle}
-                      category={pose.category}
-                      stance={pose.stance}
-                      active={isApplied}
-                    />
-                  </div>
+                return (
+                  <button
+                    key={pose.id}
+                    type="button"
+                    onClick={() => handlePick(pose)}
+                    className={`group relative flex flex-col overflow-hidden rounded-xl border text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
+                      isApplied
+                        ? "border-amber-500 ring-2 ring-amber-500/50 bg-neutral-900"
+                        : "border-neutral-800 bg-neutral-900/60 hover:border-neutral-700 hover:bg-neutral-900"
+                    }`}
+                  >
+                    {/* Card Visual / Thumbnail */}
+                    <div className="aspect-[4/5] w-full bg-neutral-950">
+                      <PoseCardVisual
+                        image={pose.image}
+                        id={pose.id}
+                        name={pose.name}
+                        subtitle={pose.subtitle}
+                        category={pose.category}
+                        stance={pose.stance}
+                        active={isApplied}
+                      />
+                    </div>
 
-                  {/* Card Footer Information */}
-                  <div className="flex flex-1 flex-col justify-between p-3 bg-neutral-900/90">
-                    <div>
-                      <div className="flex items-center justify-between gap-1">
-                        <h4 className="line-clamp-1 text-xs font-bold text-white group-hover:text-amber-400">
-                          {pose.name}
-                        </h4>
-                        {isApplied ? (
-                          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-500 text-black">
-                            <Check className="h-2.5 w-2.5 stroke-[3]" />
-                          </span>
-                        ) : null}
+                    {/* Card Footer Information */}
+                    <div className="flex flex-1 flex-col justify-between p-3 bg-neutral-900/90">
+                      <div>
+                        <div className="flex items-center justify-between gap-1">
+                          <h4 className="line-clamp-1 text-xs font-bold text-white group-hover:text-amber-400">
+                            {pose.name}
+                          </h4>
+                          {isApplied ? (
+                            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-500 text-black">
+                              <Check className="h-2.5 w-2.5 stroke-[3]" />
+                            </span>
+                          ) : null}
+                        </div>
+
+                        {pose.subtitle && (
+                          <p className="mt-0.5 line-clamp-1 text-[11px] text-neutral-400">
+                            {pose.subtitle}
+                          </p>
+                        )}
                       </div>
 
-                      {pose.subtitle && (
-                        <p className="mt-0.5 line-clamp-1 text-[11px] text-neutral-400">
-                          {pose.subtitle}
+                      {/* Simple prompt explanation snippet */}
+                      <div className="mt-2 border-t border-neutral-800/80 pt-2">
+                        <p className="line-clamp-2 text-[10px] text-neutral-400 leading-relaxed font-sans">
+                          {pose.posture}
                         </p>
+                      </div>
+
+                      {/* Just applied indicator */}
+                      {justApplied && (
+                        <div className="absolute inset-x-0 bottom-0 flex items-center justify-center bg-amber-500 py-1 text-[11px] font-bold text-black animate-in slide-in-from-bottom-2">
+                          Applied to Prompt!
+                        </div>
                       )}
                     </div>
+                  </button>
+                );
+              })}
+            </div>
 
-                    {/* Simple prompt explanation snippet */}
-                    <div className="mt-2 border-t border-neutral-800/80 pt-2">
-                      <p className="line-clamp-2 text-[10px] text-neutral-400 leading-relaxed font-sans">
-                        {pose.posture}
-                      </p>
-                    </div>
-
-                    {/* Just applied indicator */}
-                    {justApplied && (
-                      <div className="absolute inset-x-0 bottom-0 flex items-center justify-center bg-amber-500 py-1 text-[11px] font-bold text-black animate-in slide-in-from-bottom-2">
-                        Applied to Prompt!
-                      </div>
-                    )}
-                  </div>
+            {filteredPoses.length > visibleLimit && (
+              <div className="mt-8 flex flex-col items-center justify-center gap-2 pb-6">
+                <button
+                  type="button"
+                  onClick={() => setVisibleLimit((v) => v + 60)}
+                  className="rounded-full border border-neutral-700 bg-neutral-900 px-6 py-2.5 text-xs font-semibold text-white shadow-sm transition-colors hover:border-amber-500 hover:bg-neutral-800 hover:text-amber-400"
+                >
+                  Load More Poses (+60)
                 </button>
-              );
-            })}
-          </div>
+                <span className="text-[11px] text-neutral-500 font-mono">
+                  Showing {Math.min(visibleLimit, filteredPoses.length)} of {filteredPoses.length} poses
+                </span>
+              </div>
+            )}
+          </>
         )}
       </div>
 

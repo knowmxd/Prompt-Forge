@@ -1,5 +1,6 @@
 import { Check } from "lucide-react";
 import { CatalogItemImage, CatalogOutfitImage } from "@/components/wardrobe-catalog-modal";
+import { PoseCardVisual } from "@/components/pose-art";
 import type { WardrobeItem, WardrobeOutfit } from "@/lib/prompt/wardrobe-database";
 import type { PoseItem } from "@/lib/prompt/pose-database";
 import type { LightingItem } from "@/lib/prompt/lighting-database";
@@ -219,29 +220,20 @@ export function PoseCard({
         )}
       >
         <div className="relative aspect-square w-full bg-neutral-900/60 overflow-hidden">
-          {pose.image ? (
-            <img
-              src={pose.image}
-              alt={pose.name}
-              loading="lazy"
-              className="h-full w-full object-cover transition-transform group-hover:scale-105"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-muted font-mono text-[9px] uppercase">
-              {pose.category}
-            </div>
-          )}
-          <span className="absolute top-1 left-1 rounded bg-black/80 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-amber-400">
-            {pose.category.slice(0, 7)}
-          </span>
+          <PoseCardVisual
+            image={pose.image}
+            id={pose.id}
+            name={pose.name}
+            subtitle={pose.subtitle}
+            category={pose.category}
+            stance={pose.stance}
+            active={applied}
+          />
           {applied && (
-            <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-amber-500 text-black shadow font-bold">
+            <span className="absolute top-1 right-1 z-20 flex size-4 items-center justify-center rounded-full bg-amber-500 text-black shadow font-bold">
               <Check className="size-2.5 stroke-[3]" />
             </span>
           )}
-          <span className="absolute bottom-1 right-1 rounded bg-black/75 px-1 py-0.5 text-[7px] font-medium text-neutral-300 capitalize">
-            {pose.stance}
-          </span>
         </div>
         <div className="p-1.5">
           <p className="text-[11px] font-medium leading-tight text-foreground truncate group-hover:text-primary">
@@ -263,29 +255,20 @@ export function PoseCard({
       )}
     >
       <div className="relative aspect-[4/3] w-full bg-neutral-900/60 overflow-hidden">
-        {pose.image ? (
-          <img
-            src={pose.image}
-            alt={pose.name}
-            loading="lazy"
-            className="h-full w-full object-cover transition-transform group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-muted font-mono text-xs uppercase">
-            {pose.category}
-          </div>
-        )}
-        <span className="absolute top-1.5 left-1.5 rounded-md bg-black/80 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-400">
-          {pose.category}
-        </span>
+        <PoseCardVisual
+          image={pose.image}
+          id={pose.id}
+          name={pose.name}
+          subtitle={pose.subtitle}
+          category={pose.category}
+          stance={pose.stance}
+          active={applied}
+        />
         {applied && (
-          <span className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-amber-500 text-black shadow font-bold">
+          <span className="absolute top-1.5 right-1.5 z-20 flex size-5 items-center justify-center rounded-full bg-amber-500 text-black shadow font-bold">
             <Check className="size-3 stroke-[3]" />
           </span>
         )}
-        <span className="absolute bottom-1.5 right-1.5 rounded bg-black/80 px-1.5 py-0.5 text-[8px] font-medium text-neutral-300 capitalize">
-          {pose.stance}
-        </span>
       </div>
       <div className="p-2.5 flex-1 flex flex-col justify-between">
         <div>
