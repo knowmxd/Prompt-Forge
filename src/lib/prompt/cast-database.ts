@@ -812,64 +812,58 @@ export function applyCastModel(
     model.casting.hair_and_grooming,
   );
 
-  // 3. Wardrobe Architecture
+  // 3. Wardrobe Architecture (always overwrite/clear every slot so previous cast garments don't leak)
   const wardrobePath = `${subjectPath}.wardrobe_architecture`;
-  if (model.wardrobe.layering_system.base_layer) {
-    next = setAt(
-      next,
-      `${wardrobePath}.layering_system.base_layer`,
-      model.wardrobe.layering_system.base_layer,
-    );
-  }
-  if (model.wardrobe.layering_system.mid_layer) {
-    next = setAt(
-      next,
-      `${wardrobePath}.layering_system.mid_layer`,
-      model.wardrobe.layering_system.mid_layer,
-    );
-  }
-  if (model.wardrobe.layering_system.outerwear) {
-    next = setAt(
-      next,
-      `${wardrobePath}.layering_system.outerwear`,
-      model.wardrobe.layering_system.outerwear,
-    );
-  }
-  if (model.wardrobe.textiles_and_weight) {
-    next = setAt(
-      next,
-      `${wardrobePath}.textiles_and_weight`,
-      model.wardrobe.textiles_and_weight,
-    );
-  }
-  if (model.wardrobe.hardware_and_details) {
-    next = setAt(
-      next,
-      `${wardrobePath}.hardware_and_details`,
-      model.wardrobe.hardware_and_details,
-    );
-  }
-  if (model.wardrobe.wear_and_patina) {
-    next = setAt(
-      next,
-      `${wardrobePath}.wear_and_patina`,
-      model.wardrobe.wear_and_patina,
-    );
-  }
-  if (model.wardrobe.footwear) {
-    next = setAt(next, `${wardrobePath}.footwear`, model.wardrobe.footwear);
-  }
-  if (model.wardrobe.accessories && model.wardrobe.accessories.length > 0) {
-    next = setAt(
-      next,
-      `${wardrobePath}.accessories`,
-      model.wardrobe.accessories,
-    );
-  }
+  next = setAt(
+    next,
+    `${wardrobePath}.layering_system.base_layer`,
+    model.wardrobe.layering_system.base_layer ?? "",
+  );
+  next = setAt(
+    next,
+    `${wardrobePath}.layering_system.mid_layer`,
+    model.wardrobe.layering_system.mid_layer ?? "",
+  );
+  next = setAt(
+    next,
+    `${wardrobePath}.layering_system.outerwear`,
+    model.wardrobe.layering_system.outerwear ?? "",
+  );
+  next = setAt(
+    next,
+    `${wardrobePath}.textiles_and_weight`,
+    model.wardrobe.textiles_and_weight ?? "",
+  );
+  next = setAt(
+    next,
+    `${wardrobePath}.hardware_and_details`,
+    model.wardrobe.hardware_and_details ?? "",
+  );
+  next = setAt(
+    next,
+    `${wardrobePath}.wear_and_patina`,
+    model.wardrobe.wear_and_patina ?? "",
+  );
+  next = setAt(
+    next,
+    `${wardrobePath}.footwear`,
+    model.wardrobe.footwear ?? "",
+  );
+  next = setAt(
+    next,
+    `${wardrobePath}.accessories`,
+    model.wardrobe.accessories ? [...model.wardrobe.accessories] : [],
+  );
 
-  // 4. Kinetic Posture
-  if (model.kinetic_posture) {
-    next = setAt(next, `${subjectPath}.kinetic_posture`, model.kinetic_posture);
+  // 4. Kinetic Posture & clear stale pose_reference (cast model carries its own reference posture)
+  next = setAt(next, `${subjectPath}.kinetic_posture`, model.kinetic_posture ?? "");
+  if (next.subjects[slotIndex]?.pose_reference !== undefined) {
+    const subjects = next.subjects.map((subj, idx) => {
+      if (idx !== slotIndex) return subj;
+      const { pose_reference: _removed, ...rest } = subj;
+      return rest;
+    });
+    next = { ...next, subjects };
   }
 
   return next;

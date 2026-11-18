@@ -112,7 +112,7 @@ export function CameraCatalogModal({
               </span>
             </div>
             <p className="text-xs text-neutral-400">
-              Benchmark angles, elevations, and focal lengths illustrated on botanical monstera reference
+              Benchmark angles, elevations, and focal lengths illustrated on a scale reference — applies universal camera/optics doctrine to your prompt
             </p>
           </div>
         </div>

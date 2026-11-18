@@ -40,8 +40,10 @@ type WardrobeCatalogModalProps = {
   onSelectItem: (item: WardrobeItem) => void;
   appliedOutfitId?: string | null;
   activeOuterwear?: string;
+  activeMidLayer?: string;
   activeBaseLayer?: string;
   activeFootwear?: string;
+  activeAccessories?: string[];
 };
 
 export function CatalogItemImage({ item }: { item: WardrobeItem }) {
@@ -110,8 +112,10 @@ export function WardrobeCatalogModal({
   onSelectItem,
   appliedOutfitId,
   activeOuterwear,
+  activeMidLayer,
   activeBaseLayer,
   activeFootwear,
+  activeAccessories,
 }: WardrobeCatalogModalProps) {
   const [tab, setTab] = useState<"outfits" | "items">("outfits");
   const [slot, setSlot] = useState<WardrobeSlot | "all">("all");
@@ -571,10 +575,15 @@ export function WardrobeCatalogModal({
           ) : (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
               {filteredItems.map((item) => {
-                const isApplied =
-                  activeOuterwear === item.prompt ||
-                  activeBaseLayer === item.prompt ||
-                  activeFootwear === item.prompt;
+                const p = item.prompt.trim().toLowerCase();
+                const isApplied = Boolean(p) && (
+                  (item.slot === "outerwear" && (activeOuterwear || "").toLowerCase().includes(p)) ||
+                  (item.slot === "layer_top" && (activeMidLayer || "").toLowerCase().includes(p)) ||
+                  ((item.slot === "top" || item.slot === "bottom" || item.slot === "dress_onepiece") &&
+                    (activeBaseLayer || "").toLowerCase().includes(p)) ||
+                  (item.slot === "shoes" && (activeFootwear || "").toLowerCase().includes(p)) ||
+                  (activeAccessories ?? []).some((acc) => acc.toLowerCase().includes(p))
+                );
                 const justApplied = justAppliedId === item.id;
 
                 return (

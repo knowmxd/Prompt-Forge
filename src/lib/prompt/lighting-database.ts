@@ -10,6 +10,8 @@ export type LightingItem = {
   style: string;
   fixture: string;
   angle: string;
+  falloff: string;
+  fill: string;
   shadow: string;
   practical?: string;
   tags: string[];
@@ -33,7 +35,9 @@ export const LIGHTING_LIBRARY: LightingItem[] = [
     image: "/lighting/studio_01.jpg",
     style: "classic Rembrandt portrait lighting, distinct triangular highlight on the shadow cheek",
     fixture: "medium softbox key light at 45° off-camera, elevated 30°",
-    angle: "45° key, 30° elevation, subtle soft reflector fill",
+    angle: "45° key, 30° elevation",
+    falloff: "gradual directional falloff, 4:1 key-to-fill contrast ratio",
+    fill: "subtle passive reflector bounce on shadow side",
     shadow: "controlled rich shadows with soft penumbra, 4:1 contrast ratio",
     tags: ["studio", "portrait", "rembrandt", "triangle", "classic", "key", "shadow"],
   },
@@ -47,6 +51,8 @@ export const LIGHTING_LIBRARY: LightingItem[] = [
     style: "Paramount butterfly beauty lighting, symmetrical butterfly shadow directly beneath the nose",
     fixture: "overhead beauty dish with diffusion sock directly above camera axis",
     angle: "frontal elevated 45° directly centered on subject",
+    falloff: "smooth symmetrical facial falloff, 3:1 contrast ratio",
+    fill: "low frontal bounce card softening under-eye planes",
     shadow: "clean carved shadows beneath cheekbones and jawline, 3:1 contrast",
     tags: ["studio", "beauty", "paramount", "butterfly", "frontal", "glamour", "high"],
   },
@@ -60,6 +66,8 @@ export const LIGHTING_LIBRARY: LightingItem[] = [
     style: "hard split lighting, exact half of the face illuminated while the other half falls into deep shadow",
     fixture: "unfiltered fresnel key placed 90° lateral to subject at eye level",
     angle: "90° camera-side rake, level with eye horizon",
+    falloff: "abrupt bisecting shadow edge, 8:1 contrast ratio",
+    fill: "black negative fill flags opposite key side (zero fill)",
     shadow: "deep carved shadow bisecting facial planes, zero fill, 8:1 contrast ratio",
     tags: ["studio", "split", "hard", "lateral", "high contrast", "dramatic", "half"],
   },
@@ -73,6 +81,8 @@ export const LIGHTING_LIBRARY: LightingItem[] = [
     style: "flattering loop portrait lighting, small subtle shadow of the nose looping down toward the cheek corner",
     fixture: "large octabox positioned 30° off-axis, slightly higher than eye level",
     angle: "30° key off-camera, 20° elevation",
+    falloff: "gentle commercial wrap falloff, 2.5:1 contrast ratio",
+    fill: "white studio fill reflector preserving open shadow detail",
     shadow: "soft open shadows with gentle tonal roll-off, 2.5:1 ratio",
     tags: ["studio", "portrait", "loop", "flattering", "commercial", "soft"],
   },
@@ -86,6 +96,8 @@ export const LIGHTING_LIBRARY: LightingItem[] = [
     style: "broad portrait lighting, key light illuminating the side of the face turned toward the camera",
     fixture: "diffused studio softbox illuminating the visible broad facial plane",
     angle: "45° key toward turned cheek, widening facial presence",
+    falloff: "broad highlight sweep tapering gently toward far ear, 3:1 ratio",
+    fill: "ambient studio bounce lifting far side contour",
     shadow: "narrow shadow side turned away from lens, gentle falloff",
     tags: ["studio", "broad", "portrait", "turned", "wide", "softbox"],
   },
@@ -99,6 +111,8 @@ export const LIGHTING_LIBRARY: LightingItem[] = [
     style: "short portrait lighting, key light illuminating the side of the face turned away from the camera for slimming contour",
     fixture: "grid-focused strip softbox aimed at the narrow turned cheek",
     angle: "45° off-axis aimed at the far facial plane",
+    falloff: "sculpted dimensional falloff across camera-facing plane, 5:1 ratio",
+    fill: "subtle low-output fill retaining cheek plane depth",
     shadow: "sculpted broad side in graceful shadow facing camera, high definition",
     tags: ["studio", "short", "portrait", "slimming", "contour", "sculpted"],
   },
@@ -112,6 +126,8 @@ export const LIGHTING_LIBRARY: LightingItem[] = [
     style: "clean high-key commercial lighting, bright luminous white wash with soft pastel tones",
     fixture: "dual diffused softboxes with seamless white bounce reflectors",
     angle: "balanced twin frontal keys, wrap-around fill",
+    falloff: "virtually shadowless luminous even wash, 1.2:1 contrast ratio",
+    fill: "full white cyclorama and twin bounce fill wrapping 360°",
     shadow: "minimal shadow depth, translucent penumbra, 1.2:1 contrast ratio",
     tags: ["studio", "high-key", "commercial", "bright", "clean", "white", "luminous"],
   },
@@ -125,6 +141,8 @@ export const LIGHTING_LIBRARY: LightingItem[] = [
     style: "moody low-key chiaroscuro lighting, deep cavernous black negative space with punchy selective highlights",
     fixture: "single spotlight snoot focusing tight directional beam",
     angle: "60° steep oblique angle, isolated spotlight",
+    falloff: "steep rapid beam falloff into surrounding void, 12:1 contrast ratio",
+    fill: "total negative fill black flags absorbing spill light",
     shadow: "pure crushed blacks, total negative fill, 12:1 contrast ratio",
     tags: ["studio", "low-key", "dramatic", "moody", "dark", "snoot", "shadows"],
   },
@@ -138,6 +156,8 @@ export const LIGHTING_LIBRARY: LightingItem[] = [
     style: "glamour clamshell beauty lighting, luminous upper key balanced by soft lower bounce fill under the chin",
     fixture: "upper beauty dish combined with horizontal silver reflector below chest",
     angle: "stacked vertical axis, high frontal key with low upward bounce fill",
+    falloff: "wrapping porcelain beauty falloff, 2:1 contrast ratio",
+    fill: "silver-white curved reflector directly beneath jawline",
     shadow: "creamy delicate shadows, glowing skin luminescence, 2:1 ratio",
     tags: ["studio", "beauty", "clamshell", "glamour", "reflector", "fill", "soft"],
   },
@@ -153,6 +173,8 @@ export const LIGHTING_LIBRARY: LightingItem[] = [
     style: "Caravaggio-inspired chiaroscuro lighting, extreme contrast between golden radiant illumination and velvety pitch darkness",
     fixture: "directional oil-lantern / warm hard tungsten beam cutting through dark air",
     angle: "steep 50° high rake from frame left",
+    falloff: "steep dramatic Old Master falloff, 10:1 contrast ratio",
+    fill: "zero active fill; deep unlit shadow background",
     shadow: "impenetrable deep shadows sculpting anatomical contours",
     tags: ["cinematic", "chiaroscuro", "caravaggio", "oil painting", "dramatic", "renaissance"],
   },
@@ -166,6 +188,8 @@ export const LIGHTING_LIBRARY: LightingItem[] = [
     style: "vintage film noir expressionist lighting, crisp horizontal shadow slats cast by Venetian blinds across the face",
     fixture: "hard elliptical spotlight projected through slatted window blinds",
     angle: "lateral 60° side rake projecting distinct striped geometry",
+    falloff: "hard-edged gobo contrast bars, 9:1 contrast ratio",
+    fill: "minimal room bounce keeping dark slats crisp",
     shadow: "knife-edge razor shadows alternating with bright slivers of light",
     practical: "Venetian window blind shadow caster",
     tags: ["cinematic", "film noir", "venetian blinds", "slats", "detective", "mystery", "stripes"],
@@ -180,6 +204,8 @@ export const LIGHTING_LIBRARY: LightingItem[] = [
     style: "cinematic volumetric god rays, majestic beams of crepuscular light slicing through dusty air",
     fixture: "powerful directional sunbeam shining through high clerestory opening",
     angle: "steep 45° overhead diagonal rake illuminating air particles",
+    falloff: "luminous atmospheric haze decay across light shafts, 6:1 contrast ratio",
+    fill: "ambient atmospheric haze bounce softly lifting shadow planes",
     shadow: "diffuse atmospheric falloff with radiant Tyndall scattering",
     practical: "suspended airborne dust and misty particles catching light rays",
     tags: ["cinematic", "god rays", "volumetric", "sunbeams", "mist", "crepuscular", "haze"],
@@ -194,6 +220,8 @@ export const LIGHTING_LIBRARY: LightingItem[] = [
     style: "dramatic edge rim lighting, razor-sharp bright contour tracing the subject outline against a dark void",
     fixture: "high-power rim strip light positioned directly behind the subject",
     angle: "170° rear back-light grazing edges from behind",
+    falloff: "bright specular edge halo dropping instantly to dark frontal core, 10:1 ratio",
+    fill: "unlit front negative fill leaving facial planes in deep shadow",
     shadow: "subject face and frontal planes plunged into deep silhouette",
     tags: ["cinematic", "rim", "edge", "kicker", "silhouette", "separation", "backlight"],
   },
@@ -207,6 +235,8 @@ export const LIGHTING_LIBRARY: LightingItem[] = [
     style: "stark top-down overhead spotlight, theatrical zenith lighting casting dramatic downward shadows under brows and cheekbones",
     fixture: "narrow bare spotlight mounted directly above head at 90°",
     angle: "90° straight down zenith angle",
+    falloff: "steep vertical downward pool falloff, 8:1 contrast ratio",
+    fill: "negligible floor bounce keeping eye sockets hooded",
     shadow: "deep socket eye shadows and pronounced chin shadows",
     tags: ["cinematic", "top-down", "overhead", "spotlight", "zenith", "interrogation", "moody"],
   },
@@ -220,6 +250,8 @@ export const LIGHTING_LIBRARY: LightingItem[] = [
     style: "eerie theatrical underlighting, sinister upward illumination reversing natural shadow gravity",
     fixture: "low footlight spotlight positioned at floor level pointing up",
     angle: "steep -60° upward rake from ground plane",
+    falloff: "steep upward theatrical beam decay, 8:1 contrast ratio",
+    fill: "dark unlit ceiling with zero top fill",
     shadow: "unnatural inverted upward shadows cast across nose and forehead",
     tags: ["cinematic", "underlighting", "uplight", "horror", "campfire", "unnatural", "eerie"],
   },
@@ -233,6 +265,8 @@ export const LIGHTING_LIBRARY: LightingItem[] = [
     style: "painterly Vermeer-style window light, delicate organic gradation softly washing across the face",
     fixture: "tall casement window on overcast morning, diffuse sky light",
     angle: "70° side rake, gentle wrap around cheek",
+    falloff: "silky inverse-square window gradient, 4:1 contrast ratio",
+    fill: "gentle interior wall bounce preserving luminous skin mid-tones",
     shadow: "silky smooth falloff with luminous open mid-tones",
     practical: "large mullioned studio window",
     tags: ["cinematic", "window", "natural", "vermeer", "soft", "morning", "painterly"],
@@ -247,6 +281,8 @@ export const LIGHTING_LIBRARY: LightingItem[] = [
     style: "uncompromising hard direct midday sunlight, intense blinding illumination with razor-sharp black shadows",
     fixture: "unfiltered scorching direct sun in cloudless sky",
     angle: "65° high diagonal beam, blazing intensity",
+    falloff: "hard-edged specular highlights and sharp cast shadow boundaries, 8:1 ratio",
+    fill: "hard ambient sky fill with crisp shadow termination",
     shadow: "hard-edged razor shadows with zero feathering or diffusion",
     tags: ["cinematic", "hard sun", "midday", "direct", "harsh", "desert", "sharp"],
   },
@@ -260,6 +296,8 @@ export const LIGHTING_LIBRARY: LightingItem[] = [
     style: "graphic backlit silhouette, pure black subject form cleanly stamped against a bright luminous gradient background",
     fixture: "wide cyclorama wash light illuminating background wall",
     angle: "180° back illumination, zero light on camera-facing side",
+    falloff: "total foreground blackout against bright backdrop exposure, 16:1 ratio",
+    fill: "zero front fill; background wash creates crisp perimeter separation",
     shadow: "100% solid ink black form with sharp edge profile",
     tags: ["cinematic", "silhouette", "backlit", "graphic", "shadow", "black", "stencil"],
   },
@@ -275,6 +313,8 @@ export const LIGHTING_LIBRARY: LightingItem[] = [
     style: "romantic golden hour magic, rich honey-amber sunlight raking across features with long warm shadows",
     fixture: "low setting sun just above the horizon at magic hour",
     angle: "15° low-angle horizontal sweep, warm rim accents",
+    falloff: "warm honeyed atmospheric glow with long tapered falloff, 3.5:1 ratio",
+    fill: "warm open sky ambient bounce tinted amber-violet",
     shadow: "long stretching warm amber shadows with soft atmospheric glow",
     practical: "radiant setting sun at the horizon",
     tags: ["atmosphere", "golden hour", "sunset", "warm", "amber", "magic hour", "sun"],
@@ -289,6 +329,8 @@ export const LIGHTING_LIBRARY: LightingItem[] = [
     style: "ethereal blue hour twilight, cool monochromatic deep indigo sky light wrapping gently in stillness",
     fixture: "ambient evening twilight sky right after sunset",
     angle: "omni-directional soft overhead sky dome",
+    falloff: "calm twilight wrap with deep indigo shadow absorption, 2.5:1 ratio",
+    fill: "enveloping 8000K twilight sky fill",
     shadow: "deep navy blue shadows, velvety cool tonal saturation",
     practical: "fading twilight horizon",
     tags: ["atmosphere", "blue hour", "twilight", "dusk", "cool", "indigo", "evening"],
@@ -303,6 +345,8 @@ export const LIGHTING_LIBRARY: LightingItem[] = [
     style: "futuristic cyberpunk neon lighting, electric cyan blue key light colliding with vibrant magenta-pink rim accents",
     fixture: "paired colored neon light tubes and glowing advertising panels",
     angle: "cyan key at 45° left, magenta kicker at 135° right",
+    falloff: "saturated chromatic split across sculptural planes, 6:1 contrast ratio",
+    fill: "secondary neon color spill filling opposite shadow contour",
     shadow: "vivid dual-tone chromatic color contrast in shadows",
     practical: "glowing neon signs and holographic city light spills",
     tags: ["atmosphere", "cyberpunk", "neon", "cyan", "magenta", "dual-tone", "futuristic"],
@@ -317,6 +361,8 @@ export const LIGHTING_LIBRARY: LightingItem[] = [
     style: "intimate candlelight glow, flickering warm amber point source casting soft organic movement and deep mystery",
     fixture: "single beeswax candle flame placed nearby",
     angle: "low 30° close-proximity point source from frame-right",
+    falloff: "steep close-range inverse-square decay into darkness, 10:1 ratio",
+    fill: "minimal warm wood bounce immediately surrounding flame",
     shadow: "rapid inverse-square falloff, intimate darkness hugging the light",
     practical: "flickering beeswax candle flame with gentle smoke",
     tags: ["atmosphere", "candlelight", "candle", "flame", "intimate", "warm", "fire"],
@@ -331,6 +377,8 @@ export const LIGHTING_LIBRARY: LightingItem[] = [
     style: "nocturnal moonlight illumination, cool silvery blue beams piercing darkness with mysterious elegance",
     fixture: "full moon in clear night sky casting crisp cool illumination",
     angle: "55° elevated side rake from night sky",
+    falloff: "crisp silver-blue nocturnal beam falloff, 7:1 contrast ratio",
+    fill: "faint cool night-sky ambient trace keeping blacks deep",
     shadow: "deep nocturnal shadows with subtle cyan-silver highlights",
     practical: "glowing full moon in starry night sky",
     tags: ["atmosphere", "moonlight", "night", "silver", "lunar", "nocturnal", "mystic"],
@@ -345,6 +393,8 @@ export const LIGHTING_LIBRARY: LightingItem[] = [
     style: "melancholic overcast daylight, soft giant natural diffuser casting calm, muted, shadowless illumination",
     fixture: "heavy gray cloud deck acting as an enormous seamless softbox",
     angle: "uniform top-down atmospheric sky dome",
+    falloff: "ultra-soft omnidirectional wrap with minimal contrast, 1.5:1 ratio",
+    fill: "diffuse 360° overcast sky dome wrapping every contour",
     shadow: "gentle ambient occlusion in crevices, soft low contrast",
     practical: "thick overcast cloud canopy",
     tags: ["atmosphere", "overcast", "clouds", "diffuse", "soft", "gray", "muted"],
@@ -359,6 +409,8 @@ export const LIGHTING_LIBRARY: LightingItem[] = [
     style: "dreamy prism refraction caustics, shimmering rainbow spectral flares and chromatic aberrations projected across surfaces",
     fixture: "direct sunlight refracted through beveled crystal prism glass",
     angle: "angled dynamic sweep splashing rainbow caustic ribbons",
+    falloff: "luminous spectral highlights layered across soft ambient midtones, 4:1 ratio",
+    fill: "soft indirect daylight preserving vibrant rainbow dispersion",
     shadow: "soft shadows accented by vivid spectral color separation",
     practical: "faceted glass crystal and optical prism caustics",
     tags: ["atmosphere", "prism", "rainbow", "caustics", "refraction", "spectrum", "flare"],
@@ -373,6 +425,8 @@ export const LIGHTING_LIBRARY: LightingItem[] = [
     style: "surreal bioluminescent glow, luminous eerie emerald-green phosphor light emanating from an organic source",
     fixture: "glowing bioluminescent spores and algae clusters",
     angle: "soft upward and lateral green emission wrapping the form",
+    falloff: "ethereal emerald radiance decaying rapidly into abyssal black, 8:1 ratio",
+    fill: "faint secondary teal phosphor bounce from nearby flora",
     shadow: "deep shadowy voids contrasting with radiant neon green luminescence",
     practical: "glowing bioluminescent flora and fungal spores",
     tags: ["atmosphere", "bioluminescent", "emerald", "glow", "phosphor", "alien", "organic"],
@@ -387,6 +441,8 @@ export const LIGHTING_LIBRARY: LightingItem[] = [
     style: "gritty cinematic sodium vapor street lighting, stark monochromatic yellowish-orange industrial amber cast",
     fixture: "high-pressure sodium vapor municipal streetlamp overhead",
     angle: "70° overhead streetlamp cone, isolated amber puddle",
+    falloff: "isolated urban overhead cone fading sharply into night shadows, 8:1 ratio",
+    fill: "dim wet-pavement bounce tainted deep amber-orange",
     shadow: "harsh industrial shadows with distinct single-wavelength amber saturation",
     practical: "humming industrial streetlamp fixture overhead",
     tags: ["atmosphere", "sodium vapor", "streetlamp", "amber", "urban", "gritty", "night"],
@@ -413,7 +469,18 @@ export function filterLightingOptions(
   });
 }
 
-import type { PromptDoc } from "./model.ts";
+import { setAt, type PromptDoc } from "./model.ts";
+
+export function applyLightingItem(doc: PromptDoc, item: LightingItem): PromptDoc {
+  let next = setAt(doc, "aesthetic_dna.lighting_architecture.lighting_style", item.style);
+  next = setAt(next, "aesthetic_dna.lighting_architecture.key_source.fixture_or_origin", item.fixture ?? "");
+  next = setAt(next, "aesthetic_dna.lighting_architecture.key_source.angle_and_elevation", item.angle ?? "");
+  next = setAt(next, "aesthetic_dna.lighting_architecture.key_source.falloff_and_contrast_ratio", item.falloff ?? "");
+  next = setAt(next, "aesthetic_dna.lighting_architecture.fill_and_negative_space.fill_mechanism", item.fill ?? "");
+  next = setAt(next, "aesthetic_dna.lighting_architecture.fill_and_negative_space.shadow_depth", item.shadow ?? "");
+  next = setAt(next, "aesthetic_dna.lighting_architecture.accent_and_practicals.practical_sources", item.practical ?? "");
+  return next;
+}
 
 export function isLightingApplied(doc: PromptDoc, item: LightingItem): boolean {
   const current = doc.aesthetic_dna.lighting_architecture;

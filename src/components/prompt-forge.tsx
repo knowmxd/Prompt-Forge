@@ -97,6 +97,7 @@ import {
   CAMERA_LIBRARY,
   CAMERA_CATEGORIES,
   filterCameraOptions,
+  applyCameraItem,
   isCameraApplied,
   type CameraItem,
   type CameraCategory,
@@ -106,6 +107,7 @@ import {
   LIGHTING_LIBRARY,
   LIGHTING_CATEGORIES,
   filterLightingOptions,
+  applyLightingItem,
   isLightingApplied,
   type LightingItem,
   type LightingCategory,
@@ -533,30 +535,14 @@ export function PromptForge() {
     if (!lockedSlots.lighting) {
       const randomLighting = pick(LIGHTING_LIBRARY);
       if (randomLighting) {
-        next = setAt(next, "aesthetic_dna.lighting_architecture.lighting_style", randomLighting.style);
-        if (randomLighting.fixture) {
-          next = setAt(next, "aesthetic_dna.lighting_architecture.key_source.fixture_or_origin", randomLighting.fixture);
-        }
-        if (randomLighting.angle) {
-          next = setAt(next, "aesthetic_dna.lighting_architecture.key_source.angle_and_elevation", randomLighting.angle);
-        }
-        if (randomLighting.shadow) {
-          next = setAt(next, "aesthetic_dna.lighting_architecture.fill_and_negative_space.shadow_depth", randomLighting.shadow);
-        }
+        next = applyLightingItem(next, randomLighting);
       }
     }
 
     if (!lockedSlots.optics) {
       const randomCamera = pick(CAMERA_LIBRARY);
       if (randomCamera) {
-        next = setAt(next, "scene_composition.framing_doctrine.named_principle", randomCamera.principle);
-        next = setAt(next, "scene_composition.framing_doctrine.camera_elevation_and_axis", randomCamera.axis);
-        if (randomCamera.lens) {
-          next = setAt(next, "aesthetic_dna.optics.lens_type_and_focal_length", randomCamera.lens);
-        }
-        if (randomCamera.dof) {
-          next = setAt(next, "aesthetic_dna.optics.aperture_and_dof", randomCamera.dof);
-        }
+        next = applyCameraItem(next, randomCamera);
       }
     }
 
@@ -719,7 +705,8 @@ export function PromptForge() {
   };
 
   const handleClearModel = () => {
-    let next = setAt(doc, `subjects.${slot}.casting_and_physique.demographics_and_features`, "");
+    let next = setAt(doc, `subjects.${slot}.subject_id`, "");
+    next = setAt(next, `subjects.${slot}.casting_and_physique.demographics_and_features`, "");
     next = setAt(next, `subjects.${slot}.casting_and_physique.skin_and_surface_microdetails`, "");
     next = setAt(next, `subjects.${slot}.casting_and_physique.hair_and_grooming`, "");
     commitDoc(next, `Cleared cast model for Subject ${slot + 1}.`);
@@ -731,7 +718,9 @@ export function PromptForge() {
     next = setAt(next, `subjects.${slot}.wardrobe_architecture.layering_system.outerwear`, "");
     next = setAt(next, `subjects.${slot}.wardrobe_architecture.textiles_and_weight`, "");
     next = setAt(next, `subjects.${slot}.wardrobe_architecture.hardware_and_details`, "");
+    next = setAt(next, `subjects.${slot}.wardrobe_architecture.wear_and_patina`, "");
     next = setAt(next, `subjects.${slot}.wardrobe_architecture.footwear`, "");
+    next = setAt(next, `subjects.${slot}.wardrobe_architecture.accessories`, []);
     setAppliedOutfitId(null);
     commitDoc(next, `Cleared wardrobe for Subject ${slot + 1}.`);
   };
@@ -745,7 +734,10 @@ export function PromptForge() {
     let next = setAt(doc, "aesthetic_dna.lighting_architecture.lighting_style", "");
     next = setAt(next, "aesthetic_dna.lighting_architecture.key_source.fixture_or_origin", "");
     next = setAt(next, "aesthetic_dna.lighting_architecture.key_source.angle_and_elevation", "");
+    next = setAt(next, "aesthetic_dna.lighting_architecture.key_source.falloff_and_contrast_ratio", "");
+    next = setAt(next, "aesthetic_dna.lighting_architecture.fill_and_negative_space.fill_mechanism", "");
     next = setAt(next, "aesthetic_dna.lighting_architecture.fill_and_negative_space.shadow_depth", "");
+    next = setAt(next, "aesthetic_dna.lighting_architecture.accent_and_practicals.practical_sources", "");
     commitDoc(next, "Cleared lighting architecture.");
   };
 
@@ -792,32 +784,13 @@ export function PromptForge() {
   };
 
   const handleSelectLighting = (item: LightingItem) => {
-    let next = setAt(doc, "aesthetic_dna.lighting_architecture.lighting_style", item.style);
-    if (item.fixture) {
-      next = setAt(next, "aesthetic_dna.lighting_architecture.key_source.fixture_or_origin", item.fixture);
-    }
-    if (item.angle) {
-      next = setAt(next, "aesthetic_dna.lighting_architecture.key_source.angle_and_elevation", item.angle);
-    }
-    if (item.shadow) {
-      next = setAt(next, "aesthetic_dna.lighting_architecture.fill_and_negative_space.shadow_depth", item.shadow);
-    }
-    if (item.practical) {
-      next = setAt(next, "aesthetic_dna.lighting_architecture.accent_and_practicals.practical_sources", item.practical);
-    }
+    const next = applyLightingItem(doc, item);
     setUntouched(false);
     commitDoc(next, `Pinned ${item.name} lighting.`);
   };
 
   const handleSelectCamera = (item: CameraItem) => {
-    let next = setAt(doc, "scene_composition.framing_doctrine.named_principle", item.principle);
-    next = setAt(next, "scene_composition.framing_doctrine.camera_elevation_and_axis", item.axis);
-    if (item.lens) {
-      next = setAt(next, "aesthetic_dna.optics.lens_type_and_focal_length", item.lens);
-    }
-    if (item.dof) {
-      next = setAt(next, "aesthetic_dna.optics.aperture_and_dof", item.dof);
-    }
+    const next = applyCameraItem(doc, item);
     setUntouched(false);
     commitDoc(next, `Pinned ${item.name} camera.`);
   };
@@ -1415,26 +1388,25 @@ export function PromptForge() {
 
   function onApplyLook(look: Look) {
     const next = applyLook(doc, look, slot);
-    setDoc(next);
     setUntouched(false);
     const who = doc.subjects[slot]?.subject_id.trim() || `Subject ${slot + 1}`;
     if (look.kind === "pose") {
       setCluster("posture");
       setFocusPath(`subjects.${slot}.kinetic_posture`);
-      setStatus(`${look.name} applied to ${who}.`);
+      commitDoc(next, `${look.name} applied to ${who}.`);
     } else if (look.kind === "angle") {
       setCluster("framing");
-      setStatus(`${look.name} applied to the camera.`);
+      commitDoc(next, `${look.name} applied to the camera.`);
     } else if (look.kind === "light") {
       setCluster("key");
-      setStatus(`${look.name} applied to lighting.`);
+      commitDoc(next, `${look.name} applied to lighting.`);
     } else if (look.kind === "wardrobe") {
       setCluster("wardrobe");
       if (look.outfitId) setAppliedOutfitId(look.outfitId);
-      setStatus(`${look.name} applied to wardrobe.`);
+      commitDoc(next, `${look.name} applied to wardrobe.`);
     } else {
       setCluster("environment");
-      setStatus(`${look.name} applied to the setting.`);
+      commitDoc(next, `${look.name} applied to the setting.`);
     }
   }
 
@@ -3172,73 +3144,26 @@ export function PromptForge() {
       <CameraCatalogModal
         isOpen={cameraGalleryOpen}
         onClose={() => setCameraGalleryOpen(false)}
-        onSelectCamera={(item: CameraItem) => {
-          const matchedLook = LOOKS.find((l) => l.id === item.id);
-          if (matchedLook) {
-            onApplyLook(matchedLook);
-          } else {
-            const dynamicLook: Look = {
-              id: item.id,
-              name: item.name,
-              subtitle: item.subtitle,
-              kind: "angle",
-              principle: item.principle,
-              axis: item.axis,
-              lens: item.lens,
-              dof: item.dof,
-              badge: item.badge,
-            };
-            onApplyLook(dynamicLook);
-          }
-        }}
+        onSelectCamera={handleSelectCamera}
         activePrinciple={doc.scene_composition.framing_doctrine.named_principle}
       />
       <LightingCatalogModal
         isOpen={lightingGalleryOpen}
         onClose={() => setLightingGalleryOpen(false)}
-        onSelectLighting={(item: LightingItem) => {
-          const matchedLook = LOOKS.find((l) => l.id === item.id);
-          if (matchedLook) {
-            onApplyLook(matchedLook);
-          } else {
-            const dynamicLook: Look = {
-              id: item.id,
-              name: item.name,
-              subtitle: item.subtitle,
-              kind: "light",
-              style: item.style,
-              fixture: item.fixture,
-              lightAngle: item.angle,
-              shadow: item.shadow,
-              practical: item.practical,
-              badge: item.badge,
-            };
-            onApplyLook(dynamicLook);
-          }
-        }}
+        onSelectLighting={handleSelectLighting}
         activeStyle={doc.aesthetic_dna.lighting_architecture.lighting_style}
       />
       <WardrobeCatalogModal
         isOpen={wardrobeGalleryOpen}
         onClose={() => setWardrobeGalleryOpen(false)}
-        onSelectOutfit={(outfit: WardrobeOutfit) => {
-          const updated = applyWardrobeOutfit(doc, outfit, slot);
-          setDoc(updated);
-          setAppliedOutfitId(outfit.id);
-          setCluster("wardrobe");
-          setStatus(`${outfit.name} applied to all wardrobe fields.`);
-        }}
-        onSelectItem={(item: WardrobeItem) => {
-          const updated = applyWardrobeItem(doc, item, slot);
-          setDoc(updated);
-          setCluster("wardrobe");
-          const slotLabel = item.slot.replace("_", " ");
-          setStatus(`${item.name} applied to ${slotLabel}.`);
-        }}
+        onSelectOutfit={handleSelectWardrobeOutfit}
+        onSelectItem={handleSelectWardrobeItem}
         appliedOutfitId={appliedOutfitId}
         activeOuterwear={doc.subjects[slot]?.wardrobe_architecture?.layering_system?.outerwear}
+        activeMidLayer={doc.subjects[slot]?.wardrobe_architecture?.layering_system?.mid_layer}
         activeBaseLayer={doc.subjects[slot]?.wardrobe_architecture?.layering_system?.base_layer}
         activeFootwear={doc.subjects[slot]?.wardrobe_architecture?.footwear}
+        activeAccessories={doc.subjects[slot]?.wardrobe_architecture?.accessories}
       />
       <StyleCatalogModal
         isOpen={styleGalleryOpen}

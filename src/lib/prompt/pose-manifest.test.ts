@@ -134,6 +134,17 @@ describe("pose manifest filtering and PromptDoc wiring", () => {
       assert.ok(["full-body", "medium", "close-up"].includes(item.framing));
       assert.ok(["front", "side", "diagonal", "above", "below"].includes(item.angle));
       assert.ok(Array.isArray(item.tags));
+      assert.equal(/&(?:#\d+|amp|lt|gt|quot|apos);/i.test(item.naturalPrompt + item.title), false, `HTML entity in ${item.id}`);
+      if (item.subjectCount === 1) {
+        assert.equal(
+          /\b(male|female|woman|man|girl|boy|him|her|she|he|his|hers)\b/i.test(item.naturalPrompt),
+          false,
+          `Solo gender leak in ${item.id}: ${item.naturalPrompt}`,
+        );
+      }
+      if (item.tags.includes("hand-standing")) {
+        assert.equal(item.framing, "full-body", `Handstand must be full-body: ${item.id}`);
+      }
 
       const diskPath = resolve(process.cwd(), "public", item.imageUrl.replace(/^\/+/, ""));
       assert.ok(existsSync(diskPath), `Missing WebP asset on disk: ${diskPath}`);

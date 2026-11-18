@@ -111,4 +111,38 @@ describe("wardrobe database", () => {
     const sherpaOutfits = filterWardrobeOutfits(WARDROBE_OUTFITS, "sherpa");
     assert.ok(sherpaOutfits.length >= 1);
   });
+
+  it("keeps item prompts free of meta-negatives and swaps tops/bottoms cleanly across all bottom types", () => {
+    for (const item of WARDROBE_ITEMS) {
+      assert.equal(/\bno\s+(?:text|logos?|letters?)\b/i.test(item.prompt), false, `Found meta-negative in ${item.id}: ${item.prompt}`);
+    }
+
+    const empty = emptyDoc();
+    const outfitI5 = WARDROBE_OUTFITS.find((o) => o.id === "outfit_I5")!;
+    assert.equal(isWardrobeOutfitApplied(empty, outfitI5, 0), false);
+    const appliedI5 = applyWardrobeOutfit(empty, outfitI5, 0);
+    assert.equal(isWardrobeOutfitApplied(appliedI5, outfitI5, 0), true);
+
+    const joggers = WARDROBE_ITEMS.find((i) => i.id === "bottom_sweatpants_mustard_old_english_01")!;
+    const trousers = WARDROBE_ITEMS.find((i) => i.id === "bottom_trousers_waxed_bootcut_curved_seam_olive_01")!;
+    const top1 = WARDROBE_ITEMS.find((i) => i.slot === "top")!;
+    const top2 = WARDROBE_ITEMS.filter((i) => i.slot === "top")[1]!;
+
+    let d = applyWardrobeItem(empty, joggers, 0);
+    d = applyWardrobeItem(d, top1, 0);
+    assert.ok(d.subjects[0]!.wardrobe_architecture.layering_system.base_layer.includes(top1.prompt));
+    assert.ok(d.subjects[0]!.wardrobe_architecture.layering_system.base_layer.includes(joggers.prompt));
+
+    // Swapping top replaces old top while preserving joggers
+    d = applyWardrobeItem(d, top2, 0);
+    assert.equal(d.subjects[0]!.wardrobe_architecture.layering_system.base_layer.includes(top1.prompt), false);
+    assert.ok(d.subjects[0]!.wardrobe_architecture.layering_system.base_layer.includes(top2.prompt));
+    assert.ok(d.subjects[0]!.wardrobe_architecture.layering_system.base_layer.includes(joggers.prompt));
+
+    // Swapping bottom replaces joggers while preserving top2
+    d = applyWardrobeItem(d, trousers, 0);
+    assert.equal(d.subjects[0]!.wardrobe_architecture.layering_system.base_layer.includes(joggers.prompt), false);
+    assert.ok(d.subjects[0]!.wardrobe_architecture.layering_system.base_layer.includes(trousers.prompt));
+    assert.ok(d.subjects[0]!.wardrobe_architecture.layering_system.base_layer.includes(top2.prompt));
+  });
 });

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { emptyDoc, toJson } from "./model.ts";
+import { emptyDoc, toJson, toPromptLine } from "./model.ts";
 import { parsePrompt } from "./parse.ts";
 
 const SAMPLE =
@@ -132,5 +132,38 @@ Extra details / Negative: no modern objects, no text`);
     assert.equal(result.mode, "empty");
     assert.equal(result.doc.subjects[0]?.subject_id, "");
     assert.equal(result.doc.aesthetic_dna.medium_format, "");
+  });
+
+  it("serializes all active card fields in toPromptLine", () => {
+    const doc = emptyDoc();
+    doc.aesthetic_dna.medium_format = "35mm street film";
+    doc.aesthetic_dna.optics.physical_optical_imperfections = "subtle halation";
+    doc.aesthetic_dna.color_science.tonal_behavior = "warm highlights, deep shadows";
+    doc.subjects[0]!.wardrobe_architecture.layering_system.base_layer = "ribbed tank; waxed jeans";
+    doc.subjects[0]!.wardrobe_architecture.layering_system.mid_layer = "open flannel shirt";
+    doc.subjects[0]!.wardrobe_architecture.footwear = "scuffed derby boots";
+    doc.subjects[0]!.wardrobe_architecture.accessories = ["silver chain"];
+    doc.aesthetic_dna.lighting_architecture.lighting_style = "Rembrandt key";
+    doc.aesthetic_dna.lighting_architecture.key_source.fixture_or_origin = "overhead softbox";
+    doc.aesthetic_dna.lighting_architecture.key_source.falloff_and_contrast_ratio = "4:1 ratio";
+    doc.scene_composition.framing_doctrine.camera_elevation_and_axis = "low-angle 3/4 view";
+    doc.scene_composition.environmental_staging.atmosphere_and_air_density = "light evening mist";
+    const line = toPromptLine(doc);
+    for (const expected of [
+      "35mm street film",
+      "subtle halation",
+      "warm highlights, deep shadows",
+      "ribbed tank; waxed jeans",
+      "open flannel shirt",
+      "scuffed derby boots",
+      "silver chain",
+      "Rembrandt key",
+      "overhead softbox",
+      "4:1 ratio",
+      "low-angle 3/4 view",
+      "light evening mist",
+    ]) {
+      assert.ok(line.includes(expected), `Missing ${expected} in toPromptLine output`);
+    }
   });
 });

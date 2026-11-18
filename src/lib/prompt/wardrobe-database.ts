@@ -663,7 +663,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "plain, no patch"
     ],
     "styling_notes": "a pop of orange with black and denim",
-    "prompt": "a short burnt orange ribbed knit fisherman beanie with a folded cuff, plain with no patch or label, no text, no logos",
+    "prompt": "a short burnt orange ribbed knit fisherman beanie with a folded cuff, plain with no patch or label",
     "negative": [
       "pom pom",
       "logo patch",
@@ -703,11 +703,10 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "glossy black nylon crown"
     ],
     "styling_notes": "Y2K winter glam with puffers and leg warmers",
-    "prompt": "a black trapper hat with a glossy black nylon crown, shaggy black faux-fur trim and long faux-fur ear flaps with ties, no text, no logos",
+    "prompt": "a black trapper hat with a glossy black nylon crown, shaggy black faux-fur trim and long faux-fur ear flaps with ties",
     "negative": [
       "text",
       "logo",
-      "text",
       "logos",
       "lettering"
     ],
@@ -746,12 +745,11 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "blank front"
     ],
     "styling_notes": "Y2K/americana with a thermal, carpenter pants or a jersey",
-    "prompt": "a men's trucker cap with a blank white foam front panel, black mesh back panels, black curved brim and snapback closure, no text or patch, no text, no logos",
+    "prompt": "a men's trucker cap with a blank white foam front panel, black mesh back panels, black curved brim and snapback closure",
     "negative": [
       "text",
       "patch",
       "logo",
-      "text",
       "logos",
       "lettering"
     ],
@@ -787,11 +785,10 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "center seam"
     ],
     "styling_notes": "under or without a fitted cap with jerseys, tracksuits and chains",
-    "prompt": "a glossy burgundy silky satin durag laid flat with a center seam and long ties, no text, no logos",
+    "prompt": "a glossy burgundy silky satin durag laid flat with a center seam and long ties",
     "negative": [
       "text",
       "logo",
-      "text",
       "logos",
       "lettering"
     ],
@@ -928,7 +925,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "slim temples"
     ],
     "styling_notes": "the everyday 90s shade; works with tees, baggy denim and tracksuits",
-    "prompt": "slim narrow rectangular 90s sunglasses with a thin glossy black acetate frame and small dark smoke-tinted lenses, no text, no logos",
+    "prompt": "slim narrow rectangular 90s sunglasses with a thin glossy black acetate frame and small dark smoke-tinted lenses",
     "negative": [
       "oversized lenses",
       "aviator shape",
@@ -970,7 +967,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "rimless top edge"
     ],
     "styling_notes": "Y2K sporty futurism; pairs with track sets, puffers and silver sneakers",
-    "prompt": "sleek wraparound Y2K shield sunglasses with a single curved silver mirrored lens and thin silver metal temples, rimless sporty futuristic shape, no text, no logos",
+    "prompt": "sleek wraparound Y2K shield sunglasses with a single curved silver mirrored lens and thin silver metal temples, rimless sporty futuristic shape",
     "negative": [
       "round lenses",
       "thick black frame",
@@ -1012,7 +1009,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "glossy black frame"
     ],
     "styling_notes": "a little glam for black dresses, patent shoes and lace",
-    "prompt": "glossy black acetate cat-eye sunglasses with upswept corners, small clear rhinestones studded on the outer upper corners, dark gray lenses, no text, no logos",
+    "prompt": "glossy black acetate cat-eye sunglasses with upswept corners, small clear rhinestones studded on the outer upper corners, dark gray lenses",
     "negative": [
       "oversized square frame",
       "text",
@@ -1054,7 +1051,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "keyhole bridge"
     ],
     "styling_notes": "the bookish/vintage option for blouses, knits and loafers",
-    "prompt": "round vintage-style eyeglasses with brown and amber tortoiseshell acetate frames, keyhole bridge and clear lenses, no text, no logos",
+    "prompt": "round vintage-style eyeglasses with brown and amber tortoiseshell acetate frames, keyhole bridge and clear lenses",
     "negative": [
       "sunglass tint",
       "metal frame",
@@ -1533,10 +1530,9 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "small blank silver padlock pendant"
     ],
     "styling_notes": "over tees, tanks and the mesh top",
-    "prompt": "a chunky silver curb chain necklace with a small blank silver padlock pendant, no text, no logos",
+    "prompt": "a chunky silver curb chain necklace with a small blank silver padlock pendant",
     "negative": [
       "engraving",
-      "text",
       "text",
       "logos",
       "lettering"
@@ -1571,7 +1567,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "high polish"
     ],
     "styling_notes": "the silver version of your gold hoops",
-    "prompt": "a pair of large chunky polished silver tube hoop earrings, about two inches across, no text, no logos",
+    "prompt": "a pair of large chunky polished silver tube hoop earrings, about two inches across",
     "negative": [
       "thin wire",
       "text",
@@ -1608,9 +1604,8 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "fine ball chain"
     ],
     "styling_notes": "small Y2K detail for baby tees and camis",
-    "prompt": "a short fine silver ball-chain necklace with a puffy polished silver star pendant, no text, no logos",
+    "prompt": "a short fine silver ball-chain necklace with a puffy polished silver star pendant",
     "negative": [
-      "text",
       "text",
       "logos",
       "lettering"
@@ -1647,7 +1642,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "high polish"
     ],
     "styling_notes": "over a white tee or jersey; stack with the gold medallion",
-    "prompt": "a thick polished gold Cuban link chain necklace with tight flat interlocking links and a box clasp, no text, no logos",
+    "prompt": "a thick polished gold Cuban link chain necklace with tight flat interlocking links and a box clasp",
     "negative": [
       "thin chain",
       "pendant",
@@ -1686,7 +1681,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "plain polished cross pendant"
     ],
     "styling_notes": "over black tees and hoodies; layers with your silver chains",
-    "prompt": "a twisted silver rope chain necklace with a plain polished silver cross pendant, no text, no logos",
+    "prompt": "a twisted silver rope chain necklace with a plain polished silver cross pendant",
     "negative": [
       "rhinestones",
       "rosary beads",
@@ -1728,7 +1723,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "oxidized recesses"
     ],
     "styling_notes": "stacked on both hands with a filigree long sleeve",
-    "prompt": "a set of three chunky oxidized sterling silver men's rings with raised cross and filigree scroll engravings, abstract pattern, no text, no letters, no logos",
+    "prompt": "a set of three chunky oxidized sterling silver men's rings with raised cross and filigree scroll engravings",
     "negative": [
       "thin",
       "gold",
@@ -1976,7 +1971,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "narrow blade"
     ],
     "styling_notes": "loose over tanks/baby tees or with a white shirt and blazer",
-    "prompt": "a black skinny satin necktie with a narrow blade and subtle sheen, pre-knotted, shown loosely knotted, no text, no logos",
+    "prompt": "a black skinny satin necktie with a narrow blade and subtle sheen, pre-knotted, shown loosely knotted",
     "negative": [
       "wide tie",
       "pattern",
@@ -2017,7 +2012,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "buckle closure"
     ],
     "styling_notes": "matches your bullet and grommet belts",
-    "prompt": "a black leather choker band with a row of small silver pyramid studs, a silver O-ring at the center front and a small buckle closure, no text, no logos",
+    "prompt": "a black leather choker band with a row of small silver pyramid studs, a silver O-ring at the center front and a small buckle closure",
     "negative": [
       "spikes too large",
       "text",
@@ -2058,10 +2053,9 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "folded into a triangle"
     ],
     "styling_notes": "tied at the neck, on the head, or hanging from a back pocket",
-    "prompt": "a black cotton bandana with classic white paisley print, folded into a triangle neckerchief, no text, no logos",
+    "prompt": "a black cotton bandana with classic white paisley print, folded into a triangle neckerchief",
     "negative": [
       "red bandana",
-      "text",
       "text",
       "logos",
       "lettering"
@@ -3021,7 +3015,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
     "fit_silhouette": "regular crew neck tee",
     "details": [],
     "styling_notes": "base layer under jackets",
-    "prompt": "plain black cotton jersey crew-neck t-shirt, regular fit, smooth matte finish, no graphics",
+    "prompt": "plain black cotton jersey crew-neck t-shirt, regular fit, smooth matte finish",
     "negative": [],
     "source_images": [
       "E1",
@@ -3255,7 +3249,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
     "fit_silhouette": "boxy oversized short-sleeve",
     "details": [],
     "styling_notes": "",
-    "prompt": "boxy oversized black heavy cotton t-shirt with dropped shoulders and sleeves past the elbow, plain, no graphics",
+    "prompt": "boxy oversized black heavy cotton t-shirt with dropped shoulders and sleeves past the elbow, plain",
     "negative": [],
     "source_images": [
       "F6"
@@ -3395,13 +3389,11 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "contrast white ringer trim"
     ],
     "styling_notes": "drops purple into your Y2K looks",
-    "prompt": "a plain lavender fitted cropped baby tee with short cap sleeves and thin white ringer trim at the neckline and sleeves, no graphics, no text, no logos",
+    "prompt": "a plain lavender fitted cropped baby tee with short cap sleeves and thin white ringer trim at the neckline and sleeves",
     "negative": [
       "text",
       "logos",
       "oversized",
-      "text",
-      "logos",
       "lettering"
     ],
     "source_images": [
@@ -3436,7 +3428,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "lace trim at hem"
     ],
     "styling_notes": "soft yellow that works with denim, cream and brown",
-    "prompt": "a pale butter yellow satin camisole top with thin straps, a tiny satin bow at the center neckline and delicate cream lace trim at the hem, no text, no logos",
+    "prompt": "a pale butter yellow satin camisole top with thin straps, a tiny satin bow at the center neckline and delicate cream lace trim at the hem",
     "negative": [
       "neon yellow",
       "print",
@@ -3476,7 +3468,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "hook front"
     ],
     "styling_notes": "with baggy jeans for street, or the lace midi for coquette",
-    "prompt": "a cropped strapless black velvet corset top with boning, black lace trim along the neckline and a hook-and-eye front, no text, no logos",
+    "prompt": "a cropped strapless black velvet corset top with boning, black lace trim along the neckline and a hook-and-eye front",
     "negative": [
       "straps",
       "print",
@@ -3516,7 +3508,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "blank, no print"
     ],
     "styling_notes": "the base layer under chains, flannels and work jackets; tuck the front into baggy jeans",
-    "prompt": "a boxy oversized men's heavyweight white cotton tee with dropped shoulders, elbow-length sleeves and a thick ribbed crew neck, blank with no print, no text, no logos",
+    "prompt": "a boxy oversized men's heavyweight white cotton tee with dropped shoulders, elbow-length sleeves and a thick ribbed crew neck, blank with no print",
     "negative": [
       "fitted",
       "cropped",
@@ -3558,7 +3550,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "garment-washed faded color"
     ],
     "styling_notes": "under a work jacket with carpenter pants and skate shoes",
-    "prompt": "an oversized men's garment-washed faded brown heavyweight cotton pullover hoodie with a double-layer hood without drawcords, kangaroo pocket and ribbed cuffs, blank with no print, no text, no logos",
+    "prompt": "an oversized men's garment-washed faded brown heavyweight cotton pullover hoodie with a double-layer hood without drawcords, kangaroo pocket and ribbed cuffs, blank with no print",
     "negative": [
       "zip front",
       "cropped",
@@ -3599,7 +3591,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "henley-free crew neck"
     ],
     "styling_notes": "under a flannel or plain with straight jeans and work boots",
-    "prompt": "a relaxed men's cream cotton waffle-knit thermal long-sleeve top with a crew neck and ribbed cuffs, plain, no text, no logos",
+    "prompt": "a relaxed men's cream cotton waffle-knit thermal long-sleeve top with a crew neck and ribbed cuffs, plain",
     "negative": [
       "cropped",
       "fitted",
@@ -3643,7 +3635,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "wide block stripes"
     ],
     "styling_notes": "90s collegiate-street with baggy jeans and white sneakers",
-    "prompt": "a relaxed men's heavy cotton long-sleeve rugby shirt with wide navy and forest green horizontal stripes, white twill collar and a short white-button placket, no embroidery, no text, no logos",
+    "prompt": "a relaxed men's heavy cotton long-sleeve rugby shirt with wide navy and forest green horizontal stripes, white twill collar and a short white-button placket",
     "negative": [
       "logo embroidery",
       "numbers",
@@ -3686,7 +3678,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "long fitted sleeves"
     ],
     "styling_notes": "with black leather pants and silver cross rings",
-    "prompt": "a slim body-skimming men's heather gray stretch-jersey long-sleeve top covered in an all-over black ornate curling filigree scrollwork print, abstract pattern, no text, no letters, no logos",
+    "prompt": "a slim body-skimming men's heather gray stretch-jersey long-sleeve top covered in an all-over black ornate curling filigree scrollwork print",
     "negative": [
       "oversized",
       "boxy",
@@ -3730,7 +3722,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "deep armholes"
     ],
     "styling_notes": "under the leather jacket with chains and flared jeans",
-    "prompt": "a slim fitted men's black ribbed cotton tank top with small silver studs set in a curving tribal swirl across the chest, abstract pattern, no text, no letters, no logos",
+    "prompt": "a slim fitted men's black ribbed cotton tank top with small silver studs set in a curving tribal swirl across the chest",
     "negative": [
       "oversized",
       "plain",
@@ -3772,7 +3764,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "raw edges at the tee sleeve"
     ],
     "styling_notes": "the layered archive look in one piece, with waxed jeans and boots",
-    "prompt": "a slim fitted men's charcoal cotton short-sleeve tee with sheer black stretch-mesh long sleeves sewn underneath for a layered look, raw-edged tee sleeves, abstract pattern, no text, no letters, no logos",
+    "prompt": "a slim fitted men's charcoal cotton short-sleeve tee with sheer black stretch-mesh long sleeves sewn underneath for a layered look, raw-edged tee sleeves",
     "negative": [
       "oversized",
       "boxy",
@@ -3816,7 +3808,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "crew neck"
     ],
     "styling_notes": "with distressed bootcut jeans and a studded belt",
-    "prompt": "a slim fitted men's heather gray stretch rib-knit tee with an all-over print of curving black barbed-wire linework wrapping the body and short sleeves, abstract pattern, no text, no letters, no logos",
+    "prompt": "a slim fitted men's heather gray stretch rib-knit tee with an all-over print of curving black barbed-wire linework wrapping the body and short sleeves",
     "negative": [
       "oversized",
       "boxy",
@@ -3859,7 +3851,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "short fitted sleeves"
     ],
     "styling_notes": "under the brown work jacket with flared jeans",
-    "prompt": "a slim fitted men's forest green stretch cotton tee with an all-over black interlacing Celtic knotwork print wrapping the body and sleeves, abstract pattern, no text, no letters, no logos",
+    "prompt": "a slim fitted men's forest green stretch cotton tee with an all-over black interlacing Celtic knotwork print wrapping the body and sleeves",
     "negative": [
       "oversized",
       "boxy",
@@ -4034,7 +4026,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "raw-cut neckline"
     ],
     "styling_notes": "layer under tanks, tees, slip dresses and tube tops",
-    "prompt": "fitted black sheer stretch mesh long-sleeve top with a crew neck and thumbholes at the cuffs, fine see-through mesh, no text, no logos",
+    "prompt": "fitted black sheer stretch mesh long-sleeve top with a crew neck and thumbholes at the cuffs, fine see-through mesh",
     "negative": [
       "opaque fabric",
       "print",
@@ -4074,7 +4066,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "white buttons"
     ],
     "styling_notes": "wear open over tanks or buttoned under sweaters",
-    "prompt": "oversized light blue cotton oxford button-down shirt with dropped shoulders, button-down collar, one chest pocket, white buttons and a long curved shirttail hem, no text, no logos",
+    "prompt": "oversized light blue cotton oxford button-down shirt with dropped shoulders, button-down collar, one chest pocket, white buttons and a long curved shirttail hem",
     "negative": [
       "fitted slim shirt",
       "stripes",
@@ -4116,7 +4108,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "black buttons"
     ],
     "styling_notes": "open over band-style tees or tied round the waist of baggy jeans",
-    "prompt": "oversized soft brushed cotton flannel shirt in red and black plaid with two flap chest pockets and black buttons, no text, no logos",
+    "prompt": "oversized soft brushed cotton flannel shirt in red and black plaid with two flap chest pockets and black buttons",
     "negative": [
       "fitted cut",
       "bright neon",
@@ -4155,7 +4147,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "tiny ribbon bow at center front"
     ],
     "styling_notes": "layer under camis, pinafores and slip dresses",
-    "prompt": "fitted white ribbed cotton long-sleeve top with a scoop neck, scalloped white lace trim at the neckline and cuffs and a tiny white satin bow at the center front, no text, no logos",
+    "prompt": "fitted white ribbed cotton long-sleeve top with a scoop neck, scalloped white lace trim at the neckline and cuffs and a tiny white satin bow at the center front",
     "negative": [
       "oversized",
       "print",
@@ -4196,12 +4188,11 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "pen slot on left pocket"
     ],
     "styling_notes": "buttoned to the top with pleated trousers, or open over a tee as a light jacket",
-    "prompt": "an oversized men's black cotton twill long-sleeve work shirt with two flap chest pockets, a pointed collar and black buttons, no patches, no text, no logos",
+    "prompt": "an oversized men's black cotton twill long-sleeve work shirt with two flap chest pockets, a pointed collar and black buttons",
     "negative": [
       "patches",
       "logos",
       "text",
-      "logos",
       "lettering"
     ],
     "source_images": [
@@ -4239,7 +4230,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "mock neck"
     ],
     "styling_notes": "over a black tank with leather pants and a cross necklace",
-    "prompt": "a slim body-skimming men's burgundy stretch power-mesh long-sleeve mock-neck top with an all-over large black baroque scroll print, abstract pattern, no text, no letters, no logos",
+    "prompt": "a slim body-skimming men's burgundy stretch power-mesh long-sleeve mock-neck top with an all-over large black baroque scroll print",
     "negative": [
       "oversized",
       "boxy",
@@ -4283,7 +4274,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "fitted long sleeves"
     ],
     "styling_notes": "worn open over a tank with leather flares and silver rings",
-    "prompt": "a slim fitted men's black stretch cotton button-up shirt with a point collar and an all-over white print of ornate Gothic crosses linked by curling thorny vines, abstract pattern, no text, no letters, no logos",
+    "prompt": "a slim fitted men's black stretch cotton button-up shirt with a point collar and an all-over white print of ornate Gothic crosses linked by curling thorny vines",
     "negative": [
       "oversized",
       "boxy",
@@ -5031,7 +5022,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "utility sleeve pocket"
     ],
     "styling_notes": "goes over nearly every top and dress",
-    "prompt": "a cropped boxy black nylon bomber jacket with ribbed collar, cuffs and hem, silver front zipper and a small zip utility pocket on the sleeve, no text, no logos",
+    "prompt": "a cropped boxy black nylon bomber jacket with ribbed collar, cuffs and hem, silver front zipper and a small zip utility pocket on the sleeve",
     "negative": [
       "long length",
       "patches",
@@ -5072,7 +5063,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "toggle or snap front"
     ],
     "styling_notes": "early-2000s Penny Lane vibe; with low-rise denim and boots",
-    "prompt": "a cropped chocolate brown faux suede jacket with a fluffy cream faux-fur collar and cuffs and a snap front, early-2000s style, no text, no logos",
+    "prompt": "a cropped chocolate brown faux suede jacket with a fluffy cream faux-fur collar and cuffs and a snap front, early-2000s style",
     "negative": [
       "long coat",
       "leather shine",
@@ -5113,7 +5104,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "glossy finish"
     ],
     "styling_notes": "dramatic topper over all-black and avant-garde looks",
-    "prompt": "a long ankle-length black faux leather trench coat, double-breasted with wide lapels and a self-tie belt, soft glossy finish, no text, no logos",
+    "prompt": "a long ankle-length black faux leather trench coat, double-breasted with wide lapels and a self-tie belt, soft glossy finish",
     "negative": [
       "short length",
       "brown",
@@ -5153,12 +5144,11 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "ribbed hem and cuffs"
     ],
     "styling_notes": "the Y2K velour tracksuit top; with baby tees and low-rise jeans",
-    "prompt": "a fitted slightly cropped deep purple velour zip-up track jacket with a stand-up collar, plush sheen, silver zipper and ribbed hem and cuffs, early-2000s tracksuit style, plain with no text, no text, no logos",
+    "prompt": "a fitted slightly cropped deep purple velour zip-up track jacket with a stand-up collar, plush sheen, silver zipper and ribbed hem and cuffs, early-2000s tracksuit style",
     "negative": [
       "text on back",
       "logos",
       "text",
-      "logos",
       "lettering"
     ],
     "source_images": [
@@ -5193,7 +5183,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "small black satin bows down the front"
     ],
     "styling_notes": "over camis, slip dresses and tube tops",
-    "prompt": "a cropped fitted black fine-knit cardigan with a round neck, pearl buttons and tiny black satin bows down the front placket, no text, no logos",
+    "prompt": "a cropped fitted black fine-knit cardigan with a round neck, pearl buttons and tiny black satin bows down the front placket",
     "negative": [
       "oversized chunky knit",
       "text",
@@ -5231,10 +5221,9 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "asymmetric front zip"
     ],
     "styling_notes": "a deep color that still works with black and denim",
-    "prompt": "a slim cropped burgundy leather racer jacket with a snap-tab band collar and silver front zip, no patches or logos, no text, no logos",
+    "prompt": "a slim cropped burgundy leather racer jacket with a snap-tab band collar and silver front zip",
     "negative": [
       "patches",
-      "text",
       "text",
       "logos",
       "lettering"
@@ -5270,7 +5259,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "drawcord waist"
     ],
     "styling_notes": "over hoodies, tees and slip dresses",
-    "prompt": "a boxy olive green cotton field jacket with four flap pockets, snap front and drawcord waist, no patches, no text, no logos",
+    "prompt": "a boxy olive green cotton field jacket with four flap pockets, snap front and drawcord waist",
     "negative": [
       "patches",
       "camo",
@@ -5313,7 +5302,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "washed, broken-in canvas"
     ],
     "styling_notes": "the workwear anchor: over hoodies with carpenter pants and work boots",
-    "prompt": "a boxy hip-length men's washed brown cotton duck canvas work jacket with a dark brown corduroy collar, button front and two lower patch pockets, no logo patch, no text, no logos",
+    "prompt": "a boxy hip-length men's washed brown cotton duck canvas work jacket with a dark brown corduroy collar, button front and two lower patch pockets",
     "negative": [
       "logo patch",
       "hood",
@@ -5358,7 +5347,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "no logos"
     ],
     "styling_notes": "full set with your forest green track pants, or over a white tee with jeans",
-    "prompt": "a men's forest green polyester tricot retro track jacket with a stand collar, full zip, white stripes down the sleeves and ribbed cuffs and hem, no logos, no text, no logos",
+    "prompt": "a men's forest green polyester tricot retro track jacket with a stand collar, full zip, white stripes down the sleeves and ribbed cuffs and hem",
     "negative": [
       "three stripes",
       "logo",
@@ -5402,14 +5391,13 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "ribbed cuffs and hem"
     ],
     "styling_notes": "the 2000s club zip-up, with low-rise flared jeans and a trucker",
-    "prompt": "a slim fitted men's black cotton zip-up hoodie with curving tribal swirls in clear rhinestones across the body and down the sleeves, full zip and ribbed cuffs and hem, abstract pattern, no text, no letters, no logos",
+    "prompt": "a slim fitted men's black cotton zip-up hoodie with curving tribal swirls in clear rhinestones across the body and down the sleeves, full zip and ribbed cuffs and hem",
     "negative": [
       "oversized",
       "boxy",
       "lettering",
       "text",
-      "logos",
-      "lettering"
+      "logos"
     ],
     "source_images": [
       "generated:drafts_batch4#14"
@@ -5446,7 +5434,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "chest flap pockets"
     ],
     "styling_notes": "over a fitted tank with flared jeans",
-    "prompt": "a fitted slightly cropped men's washed black denim trucker jacket with flames bleached into the hem and cuffs, silver shank buttons and chest flap pockets, abstract pattern, no text, no letters, no logos",
+    "prompt": "a fitted slightly cropped men's washed black denim trucker jacket with flames bleached into the hem and cuffs, silver shank buttons and chest flap pockets",
     "negative": [
       "oversized",
       "boxy",
@@ -5487,7 +5475,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "full zip"
     ],
     "styling_notes": "with fitted printed long sleeves and sleek sneakers",
-    "prompt": "a slim fitted men's glossy black nylon track jacket with curved reflective silver piping sweeping from the chest around the sleeves, funnel collar and full zip, abstract pattern, no text, no letters, no logos",
+    "prompt": "a slim fitted men's glossy black nylon track jacket with curved reflective silver piping sweeping from the chest around the sleeves, funnel collar and full zip",
     "negative": [
       "oversized",
       "straight stripes",
@@ -5528,7 +5516,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "snap-tab waist"
     ],
     "styling_notes": "over a fitted printed tee with flared jeans",
-    "prompt": "a cropped fitted men's distressed dark brown leather jacket with worn rub-off at the seams, point collar, front zip and snap-tab waist, abstract pattern, no text, no letters, no logos",
+    "prompt": "a cropped fitted men's distressed dark brown leather jacket with worn rub-off at the seams, point collar, front zip and snap-tab waist",
     "negative": [
       "oversized",
       "long",
@@ -5756,7 +5744,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "black lace trim at V neckline and hem"
     ],
     "styling_notes": "90s slip: over a tee or mesh top, with boots or Mary Janes",
-    "prompt": "black bias-cut satin slip dress with thin spaghetti straps, black lace trim along the V neckline and the hem, knee length, soft liquid sheen, no text, no logos",
+    "prompt": "black bias-cut satin slip dress with thin spaghetti straps, black lace trim along the V neckline and the hem, knee length, soft liquid sheen",
     "negative": [
       "structured bodice",
       "print",
@@ -5795,7 +5783,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "faded wash"
     ],
     "styling_notes": "Y2K denim moment; with silver chains, sneakers or boots",
-    "prompt": "strapless light-wash denim corset mini dress with a fitted seamed bodice, silver front zipper and short flared mini skirt, faded vintage wash, no text, no logos",
+    "prompt": "strapless light-wash denim corset mini dress with a fitted seamed bodice, silver front zipper and short flared mini skirt, faded vintage wash",
     "negative": [
       "dark wash",
       "long length",
@@ -5834,7 +5822,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "ankle length"
     ],
     "styling_notes": "easy base under denim jackets, puffers and hoodies with sneakers",
-    "prompt": "heather gray ribbed cotton tank maxi dress with a scoop neck and racerback, slim body-skimming column silhouette to the ankle, no text, no logos",
+    "prompt": "heather gray ribbed cotton tank maxi dress with a scoop neck and racerback, slim body-skimming column silhouette to the ankle",
     "negative": [
       "tight bodycon gloss",
       "print",
@@ -5876,7 +5864,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "scalloped eyelet hem"
     ],
     "styling_notes": "romantic but easy: with loafers, white socks or a denim jacket",
-    "prompt": "ivory cotton eyelet babydoll mini dress with short puff sleeves, square neckline, empire waist with a thin ribbon tie and a scalloped eyelet hem, no text, no logos",
+    "prompt": "ivory cotton eyelet babydoll mini dress with short puff sleeves, square neckline, empire waist with a thin ribbon tie and a scalloped eyelet hem",
     "negative": [
       "bodycon",
       "long length",
@@ -5915,7 +5903,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "sweetheart neckline"
     ],
     "styling_notes": "with lace-top thigh-highs and Mary Janes or with boots",
-    "prompt": "a black velvet mini dress with a sweetheart neckline, satin ribbon bows tied on each shoulder strap and a short flared skirt, no text, no logos",
+    "prompt": "a black velvet mini dress with a sweetheart neckline, satin ribbon bows tied on each shoulder strap and a short flared skirt",
     "negative": [
       "long",
       "text",
@@ -5953,7 +5941,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "thigh-high side slit"
     ],
     "styling_notes": "sleek base for the trench, leather and platform boots",
-    "prompt": "a black ribbed knit long-sleeve maxi dress with a mock neck, slim column silhouette and a high side slit, no text, no logos",
+    "prompt": "a black ribbed knit long-sleeve maxi dress with a mock neck, slim column silhouette and a high side slit",
     "negative": [
       "print",
       "text",
@@ -5990,7 +5978,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "cowl neckline"
     ],
     "styling_notes": "same slip you kept, in green; with black tees and boots",
-    "prompt": "an olive green bias-cut satin slip dress with thin straps, a soft cowl neckline and midi length, no text, no logos",
+    "prompt": "an olive green bias-cut satin slip dress with thin straps, a soft cowl neckline and midi length",
     "negative": [
       "lace",
       "text",
@@ -7375,7 +7363,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "adjustable drawcord ankles"
     ],
     "styling_notes": "neutral green that goes with black, white and silver",
-    "prompt": "baggy olive green cotton twill cargo pants with bellows cargo pockets on the thighs and drawcord ankle hems, wide straight leg, no text, no logos",
+    "prompt": "baggy olive green cotton twill cargo pants with bellows cargo pockets on the thighs and drawcord ankle hems, wide straight leg",
     "negative": [
       "skinny fit",
       "camo",
@@ -7416,7 +7404,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "scalloped hem"
     ],
     "styling_notes": "with tees, cropped knits, boots or sneakers",
-    "prompt": "a black tiered lace midi skirt with three flounced lace tiers, elastic waistband and a scalloped hem, soft and flowy, no text, no logos",
+    "prompt": "a black tiered lace midi skirt with three flounced lace tiers, elastic waistband and a scalloped hem, soft and flowy",
     "negative": [
       "mini length",
       "tight pencil",
@@ -7458,7 +7446,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "side zip"
     ],
     "styling_notes": "with your flannel, mesh top and studded belts",
-    "prompt": "a red, black and white tartan knife-pleated mini skirt with a side zip, no text, no logos",
+    "prompt": "a red, black and white tartan knife-pleated mini skirt with a side zip",
     "negative": [
       "long",
       "text",
@@ -7500,7 +7488,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "belt loops"
     ],
     "styling_notes": "Y2K street with tube tops and chunky sneakers",
-    "prompt": "a low-rise green woodland camo cotton cargo mini skirt with flap cargo pockets and belt loops, no text, no logos",
+    "prompt": "a low-rise green woodland camo cotton cargo mini skirt with flap cargo pockets and belt loops",
     "negative": [
       "long",
       "text",
@@ -7537,7 +7525,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "topstitched seams"
     ],
     "styling_notes": "70s/Y2K warmth with black tops and boots; matches your orange beanie",
-    "prompt": "a burnt orange faux suede A-line mini skirt with a front snap placket and topstitched seams, no text, no logos",
+    "prompt": "a burnt orange faux suede A-line mini skirt with a front snap placket and topstitched seams",
     "negative": [
       "fringe",
       "text",
@@ -7577,7 +7565,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "no logos"
     ],
     "styling_notes": "long 2000s shorts with a jersey or white tee, tall socks and sneakers",
-    "prompt": "long baggy below-the-knee men's black polyester mesh basketball shorts with white side piping and an elastic drawcord waist, no logos, no text, no logos",
+    "prompt": "long baggy below-the-knee men's black polyester mesh basketball shorts with white side piping and an elastic drawcord waist",
     "negative": [
       "short length",
       "logo",
@@ -7621,7 +7609,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "five pockets"
     ],
     "styling_notes": "with a fitted printed thermal and pointy boots",
-    "prompt": "men's dark indigo low-rise flared jeans, slim through the thigh and flared from the knee, with black flames embroidered up from both hems and a whiskered fade, abstract pattern, no text, no letters, no logos",
+    "prompt": "men's dark indigo low-rise flared jeans, slim through the thigh and flared from the knee, with black flames embroidered up from both hems and a whiskered fade",
     "negative": [
       "baggy",
       "skinny",
@@ -7661,7 +7649,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "faded wash"
     ],
     "styling_notes": "stacked over boots with a fitted mesh top",
-    "prompt": "men's faded gray slim bootcut jeans with heavy rips and repair patches at the knees, frayed long stacking hems, abstract pattern, no text, no letters, no logos",
+    "prompt": "men's faded gray slim bootcut jeans with heavy rips and repair patches at the knees, frayed long stacking hems",
     "negative": [
       "baggy",
       "clean",
@@ -7703,7 +7691,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "five pockets"
     ],
     "styling_notes": "with a studded tank or tattoo-flash tee",
-    "prompt": "men's washed black slim bootcut jeans with silver studs running down both outer side seams, abstract pattern, no text, no letters, no logos",
+    "prompt": "men's washed black slim bootcut jeans with silver studs running down both outer side seams",
     "negative": [
       "baggy",
       "wide",
@@ -7743,7 +7731,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "zip-off-free clean front"
     ],
     "styling_notes": "with a fitted mesh top and sleek runners",
-    "prompt": "men's slim olive waxed-cotton bootcut trousers with curved articulated seams over the knees and a subtle waxed sheen, abstract pattern, no text, no letters, no logos",
+    "prompt": "men's slim olive waxed-cotton bootcut trousers with curved articulated seams over the knees and a subtle waxed sheen",
     "negative": [
       "baggy",
       "cargo pockets",
@@ -8166,7 +8154,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "silver eyelets"
     ],
     "styling_notes": "cinch over blouses, tees and dresses",
-    "prompt": "a wide black faux leather underbust corset belt with boning channels, silver eyelets and black satin ribbon lacing up the front, no text, no logos",
+    "prompt": "a wide black faux leather underbust corset belt with boning channels, silver eyelets and black satin ribbon lacing up the front",
     "negative": [
       "full corset top",
       "text",
@@ -8207,7 +8195,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "black leather strap"
     ],
     "styling_notes": "low on the hips over flared jeans",
-    "prompt": "a black leather belt lined with silver filigree cross conchos and an ornate scrollwork silver buckle, abstract pattern, no text, no letters, no logos",
+    "prompt": "a black leather belt lined with silver filigree cross conchos and an ornate scrollwork silver buckle",
     "negative": [
       "plain",
       "logo buckle",
@@ -8596,7 +8584,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "sheer lace edge"
     ],
     "styling_notes": "with Mary Janes, loafers and pumps",
-    "prompt": "a pair of white cotton ankle socks with a folded double lace ruffle cuff, no text, no logos",
+    "prompt": "a pair of white cotton ankle socks with a folded double lace ruffle cuff",
     "negative": [
       "knee length",
       "text",
@@ -8636,7 +8624,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "solid waistband"
     ],
     "styling_notes": "under minis, shorts and ripped jeans",
-    "prompt": "a pair of black medium-diamond fishnet tights, shown flat, no text, no logos",
+    "prompt": "a pair of black medium-diamond fishnet tights, shown flat",
     "negative": [
       "solid opaque",
       "text",
@@ -8676,9 +8664,8 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "ribbed top"
     ],
     "styling_notes": "with pleated minis and platform Mary Janes",
-    "prompt": "a pair of black and white horizontal striped over-the-knee socks with ribbed tops, no text, no logos",
+    "prompt": "a pair of black and white horizontal striped over-the-knee socks with ribbed tops",
     "negative": [
-      "text",
       "text",
       "logos",
       "lettering"
@@ -8718,12 +8705,11 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "two stripes at the cuff"
     ],
     "styling_notes": "pulled up with basketball shorts or shown with skate shoes",
-    "prompt": "a pair of tall white cotton ribbed tube socks with navy and forest green stripes at the top, no text, no logos",
+    "prompt": "a pair of tall white cotton ribbed tube socks with navy and forest green stripes at the top",
     "negative": [
       "logos",
       "ankle length",
       "text",
-      "logos",
       "lettering"
     ],
     "source_images": [
@@ -9976,13 +9962,12 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "no logos"
     ],
     "styling_notes": "green that still reads neutral; goes with all your denim",
-    "prompt": "slim retro low-top sneakers with white leather base and sage green suede overlays, gum rubber sole and white laces, no logos or stripes, no text, no logos",
+    "prompt": "slim retro low-top sneakers with white leather base and sage green suede overlays, gum rubber sole and white laces",
     "negative": [
       "chunky sole",
       "logos",
       "brand stripes",
       "text",
-      "logos",
       "lettering"
     ],
     "source_images": [
@@ -10015,7 +10000,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "thin elastic edge"
     ],
     "styling_notes": "with the frilly socks, slip dress and baggy jeans",
-    "prompt": "a pair of black soft leather round-toe ballet flats with a small grosgrain bow at the toe, no text, no logos",
+    "prompt": "a pair of black soft leather round-toe ballet flats with a small grosgrain bow at the toe",
     "negative": [
       "heel",
       "logo",
@@ -10056,7 +10041,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "no logos"
     ],
     "styling_notes": "Y2K skate pop with baggy denim and cargos",
-    "prompt": "a pair of chunky puffy purple suede skate sneakers with padded tongue and collar, white rubber cupsole and white laces, no logos, no text, no logos",
+    "prompt": "a pair of chunky puffy purple suede skate sneakers with padded tongue and collar, white rubber cupsole and white laces",
     "negative": [
       "logo",
       "stripes",
@@ -10098,7 +10083,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "stacked low Cuban heel"
     ],
     "styling_notes": "under flared or bootcut jeans",
-    "prompt": "men's black leather ankle boots with a long sharply pointed toe, side zip, a silver square buckle strap around the ankle and a stacked low Cuban heel, abstract pattern, no text, no letters, no logos",
+    "prompt": "men's black leather ankle boots with a long sharply pointed toe, side zip, a silver square buckle strap around the ankle and a stacked low Cuban heel",
     "negative": [
       "round toe",
       "chunky lug sole",
@@ -10144,7 +10129,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "lace-up"
     ],
     "styling_notes": "with studded bootcut jeans and a tank",
-    "prompt": "men's black leather lace-up creeper shoes with red leather flame appliqués along the sides, woven leather interlace across the vamp and a thick gum crepe platform sole, abstract pattern, no text, no letters, no logos",
+    "prompt": "men's black leather lace-up creeper shoes with red leather flame appliqués along the sides, woven leather interlace across the vamp and a thick gum crepe platform sole",
     "negative": [
       "sneaker sole",
       "pointed toe",
@@ -10186,7 +10171,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "thin sculpted sole"
     ],
     "styling_notes": "with the slim track jacket or a printed long sleeve",
-    "prompt": "sleek low-profile men's running sneakers with curved metallic silver overlays sweeping along the sides, a black mesh base and a thin sculpted sole, abstract pattern, no text, no letters, no logos",
+    "prompt": "sleek low-profile men's running sneakers with curved metallic silver overlays sweeping along the sides, a black mesh base and a thin sculpted sole",
     "negative": [
       "chunky",
       "high-top",
@@ -11021,7 +11006,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "cut-out knuckles"
     ],
     "styling_notes": "edge for moto, trench and all-black looks",
-    "prompt": "a pair of black leather fingerless gloves, wrist length, with a silver snap closure at the wrist, no text, no logos",
+    "prompt": "a pair of black leather fingerless gloves, wrist length, with a silver snap closure at the wrist",
     "negative": [
       "full fingers",
       "logo",
@@ -11061,7 +11046,7 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "snap closure"
     ],
     "styling_notes": "match with the studded choker and belts",
-    "prompt": "a wide black leather wrist cuff with two rows of silver pyramid studs and a snap closure, no text, no logos",
+    "prompt": "a wide black leather wrist cuff with two rows of silver pyramid studs and a snap closure",
     "negative": [
       "spikes",
       "text",
@@ -11099,11 +11084,10 @@ export const WARDROBE_ITEMS: WardrobeItem[] = [
       "split ring with a few plain keys"
     ],
     "styling_notes": "clipped to the belt loop of carpenter pants or cargos",
-    "prompt": "a large polished silver carabiner key clip with a split ring holding a few plain keys, no text, no logos",
+    "prompt": "a large polished silver carabiner key clip with a split ring holding a few plain keys",
     "negative": [
       "text",
       "logo",
-      "text",
       "logos",
       "lettering"
     ],
@@ -13658,6 +13642,25 @@ export const WARDROBE_OUTFITS_BY_ID = new Map<string, WardrobeOutfit>(
   WARDROBE_OUTFITS.map((outfit) => [outfit.id, outfit]),
 );
 
+const WARDROBE_SLOT_BY_PROMPT = new Map<string, WardrobeSlot>(
+  WARDROBE_ITEMS.map((item) => [item.prompt.trim().toLowerCase(), item.slot]),
+);
+
+const BOTTOM_CLAUSE_RE =
+  /\b(jeans|skirt|pants|shorts|trousers|jorts|sweatpants|joggers|cargo|leggings|chinos|slacks|culottes|bloomers|denim)\b/i;
+
+const DRESS_CLAUSE_RE = /\b(dress|pinafore|bodysuit|jumpsuit|romper)\b/i;
+
+function classifyBaseLayerClause(clause: string): "top" | "bottom" | "dress_onepiece" {
+  const knownSlot = WARDROBE_SLOT_BY_PROMPT.get(clause.trim().toLowerCase());
+  if (knownSlot === "bottom") return "bottom";
+  if (knownSlot === "top") return "top";
+  if (knownSlot === "dress_onepiece") return "dress_onepiece";
+  if (DRESS_CLAUSE_RE.test(clause) && !BOTTOM_CLAUSE_RE.test(clause)) return "dress_onepiece";
+  if (BOTTOM_CLAUSE_RE.test(clause)) return "bottom";
+  return "top";
+}
+
 export function applyWardrobeItem(doc: PromptDoc, item: WardrobeItem, slotIndex: number): PromptDoc {
   let next = doc;
   const basePath = `subjects.${slotIndex}.wardrobe_architecture`;
@@ -13670,20 +13673,31 @@ export function applyWardrobeItem(doc: PromptDoc, item: WardrobeItem, slotIndex:
   } else if (item.slot === "layer_top") {
     next = setAt(next, `${basePath}.layering_system.mid_layer`, item.prompt);
   } else if (item.slot === "top") {
-    const existingBase = arch.layering_system.base_layer.trim();
-    // If existing base has a bottom or top, set or append cleanly
-    if (existingBase.includes("jeans") || existingBase.includes("skirt") || existingBase.includes("pants") || existingBase.includes("shorts")) {
-      next = setAt(next, `${basePath}.layering_system.base_layer`, `${item.prompt}; ${existingBase}`);
-    } else {
-      next = setAt(next, `${basePath}.layering_system.base_layer`, item.prompt);
-    }
+    const existingClauses = arch.layering_system.base_layer
+      .split(";")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const preservedBottoms = existingClauses.filter(
+      (clause) => classifyBaseLayerClause(clause) === "bottom",
+    );
+    next = setAt(
+      next,
+      `${basePath}.layering_system.base_layer`,
+      [item.prompt, ...preservedBottoms].join("; "),
+    );
   } else if (item.slot === "bottom") {
-    const existingBase = arch.layering_system.base_layer.trim();
-    if (existingBase && !existingBase.includes(item.prompt)) {
-      next = setAt(next, `${basePath}.layering_system.base_layer`, `${existingBase}; ${item.prompt}`);
-    } else {
-      next = setAt(next, `${basePath}.layering_system.base_layer`, item.prompt);
-    }
+    const existingClauses = arch.layering_system.base_layer
+      .split(";")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const preservedTops = existingClauses.filter(
+      (clause) => classifyBaseLayerClause(clause) === "top",
+    );
+    next = setAt(
+      next,
+      `${basePath}.layering_system.base_layer`,
+      [...preservedTops, item.prompt].join("; "),
+    );
   } else if (item.slot === "dress_onepiece") {
     // Replaces top and bottom
     next = setAt(next, `${basePath}.layering_system.base_layer`, item.prompt);
@@ -13771,6 +13785,8 @@ export function applyWardrobeOutfit(doc: PromptDoc, outfit: WardrobeOutfit, slot
       next = setAt(next, `${basePath}.layering_system.base_layer`, baseJoined);
     } else if (outfit.is_custom && outfit.prompt && !outerwearItems.length && !midItems.length) {
       next = setAt(next, `${basePath}.layering_system.base_layer`, outfit.prompt);
+    } else {
+      next = setAt(next, `${basePath}.layering_system.base_layer`, "");
     }
   }
 
@@ -13803,19 +13819,18 @@ export function applyWardrobeOutfit(doc: PromptDoc, outfit: WardrobeOutfit, slot
   }
   next = setAt(next, `${basePath}.accessories`, accList);
 
-  // 6. Textiles & weight
+  // 6. Textiles & weight (explicitly overwrite or clear stale materials)
   const materials = Array.from(new Set(items.flatMap((i) => i.materials || [])));
-  if (materials.length > 0) {
-    next = setAt(next, `${basePath}.textiles_and_weight`, materials.join(", "));
-  }
+  next = setAt(next, `${basePath}.textiles_and_weight`, materials.join(", "));
 
-  // 7. Hardware & details
+  // 7. Hardware & details (explicitly overwrite or clear stale details)
   const details = Array.from(new Set(items.flatMap((i) => i.details || [])));
-  if (details.length > 0) {
-    next = setAt(next, `${basePath}.hardware_and_details`, details.join("; "));
-  }
+  next = setAt(next, `${basePath}.hardware_and_details`, details.join("; "));
 
-  // 8. Negatives
+  // 8. Clear stale wear_and_patina left over from Cast presets or manual edits
+  next = setAt(next, `${basePath}.wear_and_patina`, "");
+
+  // 9. Negatives
   if (outfit.negative && outfit.negative.length > 0) {
     const currentNegs = doc.anti_cliche_exclusions ?? [];
     const mergedNegs = Array.from(new Set([...currentNegs, ...outfit.negative]));
@@ -13833,40 +13848,58 @@ export function isWardrobeOutfitApplied(
   const arch = doc.subjects[slotIndex]?.wardrobe_architecture;
   if (!arch) return false;
 
-  // Check if outerwear matches if outfit has outerwear
-  const outfitOuter = (outfit.slots.outerwear || [])
-    .map((id) => WARDROBE_ITEMS_BY_ID.get(id)?.prompt)
-    .filter(Boolean)
-    .join("; ");
-  if (outfitOuter && arch.layering_system.outerwear !== outfitOuter) {
-    return false;
+  const resolvePrompt = (idOrPrompt: string) =>
+    WARDROBE_ITEMS_BY_ID.get(idOrPrompt)?.prompt || idOrPrompt;
+
+  let checkedSlots = 0;
+
+  // Check outerwear
+  const outfitOuter = (outfit.slots.outerwear || []).map(resolvePrompt).filter(Boolean).join("; ");
+  if (outfitOuter) {
+    checkedSlots += 1;
+    if (arch.layering_system.outerwear !== outfitOuter) return false;
   }
 
-  // Check footwear if outfit has footwear
-  const outfitShoes = (outfit.slots.shoes || [])
-    .map((id) => WARDROBE_ITEMS_BY_ID.get(id)?.prompt)
-    .filter(Boolean)
-    .join("; ");
-  if (outfitShoes && arch.footwear !== outfitShoes) {
-    return false;
+  // Check mid layer
+  const outfitMid = (outfit.slots.layer_top || []).map(resolvePrompt).filter(Boolean).join("; ");
+  if (outfitMid) {
+    checkedSlots += 1;
+    if (arch.layering_system.mid_layer !== outfitMid) return false;
   }
 
-  // Check base layer
-  const dressItems = (outfit.slots.dress_onepiece || [])
-    .map((id) => WARDROBE_ITEMS_BY_ID.get(id)?.prompt)
-    .filter(Boolean);
+  // Check footwear
+  const outfitShoes = (outfit.slots.shoes || []).map(resolvePrompt).filter(Boolean).join("; ");
+  if (outfitShoes) {
+    checkedSlots += 1;
+    if (arch.footwear !== outfitShoes) return false;
+  }
+
+  // Check base layer (dress, or top + bottom)
+  const dressItems = (outfit.slots.dress_onepiece || []).map(resolvePrompt).filter(Boolean);
   if (dressItems.length > 0) {
-    return arch.layering_system.base_layer === dressItems.join("; ");
+    checkedSlots += 1;
+    if (arch.layering_system.base_layer !== dressItems.join("; ")) return false;
+  } else {
+    const topItems = (outfit.slots.top || []).map(resolvePrompt).filter(Boolean);
+    const bottomItems = (outfit.slots.bottom || []).map(resolvePrompt).filter(Boolean);
+    for (const tp of topItems) {
+      checkedSlots += 1;
+      if (!arch.layering_system.base_layer.includes(tp)) return false;
+    }
+    for (const bp of bottomItems) {
+      checkedSlots += 1;
+      if (!arch.layering_system.base_layer.includes(bp)) return false;
+    }
   }
 
-  const topItems = (outfit.slots.top || [])
-    .map((id) => WARDROBE_ITEMS_BY_ID.get(id)?.prompt)
-    .filter(Boolean);
-  if (topItems.length > 0 && topItems[0] && !arch.layering_system.base_layer.includes(topItems[0])) {
-    return false;
+  if (checkedSlots === 0 && outfit.is_custom && outfit.prompt) {
+    return (
+      arch.layering_system.base_layer === outfit.prompt ||
+      arch.layering_system.outerwear === outfit.prompt
+    );
   }
 
-  return true;
+  return checkedSlots > 0;
 }
 
 export function isWardrobeItemApplied(

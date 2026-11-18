@@ -25,12 +25,12 @@ import {
   FileText,
 } from "lucide-react";
 import type { PromptDoc, ClusterId } from "@/lib/prompt/model";
-import { STYLE_LIBRARY } from "@/lib/prompt/style-database";
-import { CAST_MODELS } from "@/lib/prompt/cast-database";
-import { WARDROBE_OUTFITS } from "@/lib/prompt/wardrobe-database";
+import { STYLE_LIBRARY, isStyleGuideApplied } from "@/lib/prompt/style-database";
+import { CAST_MODELS, isCastModelApplied } from "@/lib/prompt/cast-database";
+import { WARDROBE_OUTFITS, isWardrobeOutfitApplied } from "@/lib/prompt/wardrobe-database";
 import { POSE_LIBRARY } from "@/lib/prompt/pose-database";
-import { LIGHTING_LIBRARY } from "@/lib/prompt/lighting-database";
-import { CAMERA_LIBRARY } from "@/lib/prompt/camera-database";
+import { LIGHTING_LIBRARY, isLightingApplied } from "@/lib/prompt/lighting-database";
+import { CAMERA_LIBRARY, isCameraApplied } from "@/lib/prompt/camera-database";
 import type { LockedSlots } from "./prompt-summary-pills";
 
 type AssetTabKey = "cast" | "wardrobe" | "poses" | "lighting" | "camera" | "styles";
@@ -96,23 +96,16 @@ export function VisualBoardStudio({
 
   // Matched Visual Entities
   const matchedStyle = useMemo(() => {
-    return STYLE_LIBRARY.find((s) => s.medium_format === doc.aesthetic_dna.medium_format);
-  }, [doc.aesthetic_dna.medium_format]);
+    return STYLE_LIBRARY.find((s) => isStyleGuideApplied(doc, s));
+  }, [doc]);
 
   const matchedModel = useMemo(() => {
-    const desc = activeSubject?.casting_and_physique?.demographics_and_features || "";
-    return CAST_MODELS.find((m) => m.casting.demographics_and_features === desc);
-  }, [activeSubject?.casting_and_physique?.demographics_and_features]);
+    return CAST_MODELS.find((m) => isCastModelApplied(doc, m, slot));
+  }, [doc, slot]);
 
   const matchedOutfit = useMemo(() => {
-    const outer = activeSubject?.wardrobe_architecture?.layering_system?.outerwear || "";
-    if (!outer) return undefined;
-    return WARDROBE_OUTFITS.find(
-      (o) =>
-        (o.slots.outerwear && o.slots.outerwear.some((piece) => outer.toLowerCase().includes(piece.toLowerCase().slice(0, 15)))) ||
-        o.prompt.toLowerCase().includes(outer.toLowerCase().slice(0, 20)),
-    );
-  }, [activeSubject?.wardrobe_architecture?.layering_system?.outerwear]);
+    return WARDROBE_OUTFITS.find((o) => isWardrobeOutfitApplied(doc, o, slot));
+  }, [doc, slot]);
 
   const matchedPose = useMemo(() => {
     const post = activeSubject?.kinetic_posture || "";
@@ -121,16 +114,12 @@ export function VisualBoardStudio({
   }, [activeSubject?.kinetic_posture]);
 
   const matchedLighting = useMemo(() => {
-    const style = doc.aesthetic_dna.lighting_architecture.lighting_style || "";
-    if (!style) return undefined;
-    return LIGHTING_LIBRARY.find((l) => style.toLowerCase().includes(l.name.toLowerCase()) || style.toLowerCase().includes(l.style.toLowerCase().slice(0, 20)));
-  }, [doc.aesthetic_dna.lighting_architecture.lighting_style]);
+    return LIGHTING_LIBRARY.find((l) => isLightingApplied(doc, l));
+  }, [doc]);
 
   const matchedCamera = useMemo(() => {
-    const shot = doc.scene_composition.framing_doctrine.named_principle || doc.scene_composition.framing_doctrine.camera_elevation_and_axis || "";
-    if (!shot) return undefined;
-    return CAMERA_LIBRARY.find((c) => shot.toLowerCase().includes(c.name.toLowerCase()) || shot.toLowerCase().includes(c.principle.toLowerCase().slice(0, 20)));
-  }, [doc.scene_composition.framing_doctrine.named_principle, doc.scene_composition.framing_doctrine.camera_elevation_and_axis]);
+    return CAMERA_LIBRARY.find((c) => isCameraApplied(doc, c));
+  }, [doc]);
 
   // Mix-and-match wardrobe pieces
   const wardrobeLayers = useMemo(() => {

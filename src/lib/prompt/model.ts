@@ -538,26 +538,57 @@ export function titleFromDoc(doc: PromptDoc): string {
 
 export function toPromptLine(doc: PromptDoc): string {
   const parts: string[] = [];
+  const seen = new Set<string>();
   const push = (value: string) => {
     const next = value.trim();
-    if (next) parts.push(next);
+    if (!next) return;
+    const key = next.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    parts.push(next);
   };
+
   push(doc.aesthetic_dna.medium_format);
+  push(doc.aesthetic_dna.optics.physical_optical_imperfections);
+
   for (const subject of doc.subjects) {
     push(subject.subject_id);
     push(subject.casting_and_physique.demographics_and_features);
     push(subject.casting_and_physique.hair_and_grooming);
     push(subject.casting_and_physique.skin_and_surface_microdetails);
     push(subject.wardrobe_architecture.layering_system.outerwear);
+    push(subject.wardrobe_architecture.layering_system.mid_layer);
+    push(subject.wardrobe_architecture.layering_system.base_layer);
+    push(subject.wardrobe_architecture.footwear);
+    for (const acc of subject.wardrobe_architecture.accessories ?? []) {
+      push(acc);
+    }
+    push(subject.wardrobe_architecture.textiles_and_weight);
+    push(subject.wardrobe_architecture.hardware_and_details);
+    push(subject.wardrobe_architecture.wear_and_patina);
     push(subject.kinetic_posture);
     push(subject.environmental_interaction);
   }
+
   push(doc.scene_composition.environmental_staging.location_context);
+  push(doc.scene_composition.environmental_staging.atmosphere_and_air_density);
+  for (const prop of doc.scene_composition.environmental_staging.grounded_props ?? []) {
+    push(prop);
+  }
   push(doc.scene_composition.framing_doctrine.spatial_planes.foreground_obstruction);
   push(doc.aesthetic_dna.lighting_architecture.lighting_style);
+  push(doc.aesthetic_dna.lighting_architecture.key_source.fixture_or_origin);
+  push(doc.aesthetic_dna.lighting_architecture.key_source.angle_and_elevation);
+  push(doc.aesthetic_dna.lighting_architecture.key_source.falloff_and_contrast_ratio);
+  push(doc.aesthetic_dna.lighting_architecture.fill_and_negative_space.fill_mechanism);
+  push(doc.aesthetic_dna.lighting_architecture.fill_and_negative_space.shadow_depth);
+  push(doc.aesthetic_dna.lighting_architecture.accent_and_practicals.practical_sources);
+  push(doc.aesthetic_dna.color_science.tonal_behavior);
   push(doc.aesthetic_dna.optics.lens_type_and_focal_length);
   push(doc.aesthetic_dna.optics.aperture_and_dof);
   push(doc.scene_composition.framing_doctrine.named_principle);
+  push(doc.scene_composition.framing_doctrine.camera_elevation_and_axis);
+
   const main = parts.join(", ");
   const exclusions = doc.anti_cliche_exclusions.map((item) => item.trim()).filter(Boolean);
   if (exclusions.length === 0) return main;

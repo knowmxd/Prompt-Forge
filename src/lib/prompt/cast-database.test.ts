@@ -64,4 +64,34 @@ describe("cast database", () => {
     assert.equal(searchPontiff.length, 1);
     assert.equal(searchPontiff[0]?.id, "cast-veiled-pontiff");
   });
+
+  it("overwrites stale wardrobe fields and clears pose_reference when switching models", () => {
+    const doc = emptyDoc();
+    doc.subjects[0]!.wardrobe_architecture.layering_system.outerwear = "heavy winter parka";
+    doc.subjects[0]!.wardrobe_architecture.wear_and_patina = "salt stains";
+    doc.subjects[0]!.pose_reference = {
+      reference_id: "pose_123",
+      source: "posemyart",
+      source_label: "PoseMy.Art",
+      image_url: "/poses/posemyart/posemyart_0001.webp",
+      subject_count: 1,
+      title: "Standing",
+      pose_description: "Standing upright",
+      framing: "full-body",
+      angle: "front",
+      tags: [],
+    };
+
+    const runner = CAST_MODELS.find((m) => m.id === "cast-flame-runner")!;
+    const switched = applyCastModel(doc, runner, 0);
+    assert.equal(switched.subjects[0]?.pose_reference, undefined);
+    assert.equal(
+      switched.subjects[0]?.wardrobe_architecture.layering_system.outerwear,
+      runner.wardrobe.layering_system.outerwear ?? "",
+    );
+    assert.equal(
+      switched.subjects[0]?.wardrobe_architecture.wear_and_patina,
+      runner.wardrobe.wear_and_patina ?? "",
+    );
+  });
 });

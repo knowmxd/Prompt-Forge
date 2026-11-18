@@ -33,6 +33,8 @@ export type Look = {
   style?: string;
   fixture?: string;
   lightAngle?: string;
+  falloff?: string;
+  fill?: string;
   shadow?: string;
   practical?: string;
   outfitId?: string;
@@ -75,7 +77,7 @@ const RAW_LEGACY: Draft[] = [
     "Arched stand",
     "Standing with the back deeply arched, hips pressed forward, both arms raised and hands behind the head, chest lifted.",
     true,
-    "/poses/pose_3d_02.jpg",
+    undefined,
     undefined,
     "modeling",
     "standing",
@@ -85,7 +87,7 @@ const RAW_LEGACY: Draft[] = [
     "Seated open",
     "Seated on the floor, knees fallen open, hands planted behind the hips, torso leaned back.",
     true,
-    "/poses/pose_3d_09.jpg",
+    undefined,
     undefined,
     "sitting",
     "sitting",
@@ -221,6 +223,8 @@ const LIGHTING_DATABASE_LOOKS: Draft[] = LIGHTING_LIBRARY.map((item) => ({
   style: item.style,
   fixture: item.fixture,
   lightAngle: item.angle,
+  falloff: item.falloff,
+  fill: item.fill,
   shadow: item.shadow,
   practical: item.practical,
   tags: item.tags,
@@ -337,28 +341,18 @@ export function applyLook(doc: PromptDoc, look: Look, subjectIndex: number): Pro
   if (look.kind === "angle") {
     let next = setAt(doc, "scene_composition.framing_doctrine.named_principle", look.principle ?? "");
     next = setAt(next, "scene_composition.framing_doctrine.camera_elevation_and_axis", look.axis ?? "");
-    if (look.lens) {
-      next = setAt(next, "aesthetic_dna.optics.lens_type_and_focal_length", look.lens);
-    }
-    if (look.dof) {
-      next = setAt(next, "aesthetic_dna.optics.aperture_and_dof", look.dof);
-    }
+    next = setAt(next, "aesthetic_dna.optics.lens_type_and_focal_length", look.lens ?? "");
+    next = setAt(next, "aesthetic_dna.optics.aperture_and_dof", look.dof ?? "");
     return next;
   }
   if (look.kind === "light") {
     let next = setAt(doc, "aesthetic_dna.lighting_architecture.lighting_style", look.style ?? "");
-    if (look.fixture) {
-      next = setAt(next, "aesthetic_dna.lighting_architecture.key_source.fixture_or_origin", look.fixture);
-    }
-    if (look.lightAngle) {
-      next = setAt(next, "aesthetic_dna.lighting_architecture.key_source.angle_and_elevation", look.lightAngle);
-    }
-    if (look.shadow) {
-      next = setAt(next, "aesthetic_dna.lighting_architecture.fill_and_negative_space.shadow_depth", look.shadow);
-    }
-    if (look.practical) {
-      next = setAt(next, "aesthetic_dna.lighting_architecture.accent_and_practicals.practical_sources", look.practical);
-    }
+    next = setAt(next, "aesthetic_dna.lighting_architecture.key_source.fixture_or_origin", look.fixture ?? "");
+    next = setAt(next, "aesthetic_dna.lighting_architecture.key_source.angle_and_elevation", look.lightAngle ?? "");
+    next = setAt(next, "aesthetic_dna.lighting_architecture.key_source.falloff_and_contrast_ratio", look.falloff ?? "");
+    next = setAt(next, "aesthetic_dna.lighting_architecture.fill_and_negative_space.fill_mechanism", look.fill ?? "");
+    next = setAt(next, "aesthetic_dna.lighting_architecture.fill_and_negative_space.shadow_depth", look.shadow ?? "");
+    next = setAt(next, "aesthetic_dna.lighting_architecture.accent_and_practicals.practical_sources", look.practical ?? "");
     return next;
   }
   let next = setAt(doc, "scene_composition.environmental_staging.location_context", look.location ?? "");
