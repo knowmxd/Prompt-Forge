@@ -6,13 +6,13 @@ import { Readable } from "node:stream";
 
 const ROOT = process.cwd();
 const RELEASE_BASE =
-  "https://github.com/knowmxd/Prompt-Forge/releases/download/v2.0-poses-5k";
+  "https://github.com/knowmxd/Prompt-Forge/releases/download/v3.0-poses-3src";
 
 const BUNDLES = [
   {
-    name: "poses-5k",
-    archive: "poses-5k.tar.gz",
-    sentinel: resolve(ROOT, "public/poses/pose_5000.webp"),
+    name: "poses-4940",
+    archive: "poses-4940.tar.gz",
+    sentinel: resolve(ROOT, "public/poses/opensegra/opensegra_0001.webp"),
   },
 ];
 

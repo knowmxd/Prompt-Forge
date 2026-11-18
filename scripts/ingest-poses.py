@@ -1,108 +1,139 @@
 #!/usr/bin/env python3
 """
-Curate 5,000 high-taste, dark-mode-ready human pose reference cards:
-  - 4,000 Solo (80%) from prosperolo/PoseDreamer (with SMPL-X framing/angle/filler filtering)
-  - 1,000 Duo (20%) from opendiffusionai/pexels-janpf-sharp (+ CaptionEmporium/pexels-568k-internvl2 fallback)
-  - Framing Split (50 / 30 / 20): 2,500 full-body, 1,500 medium, 1,000 close-up
-  - Zero AI generation or LLM vision API calls (naturalPrompt left as "")
-  - Perceptual dHash + caption/id deduplication, black-bar trimming, 380px WebP output
+Unified 3-Source 3D Mannequin Pose Library Ingestion Pipeline
+=============================================================
+Outputs clean optimized .webp renders under public/poses/{source}/ and a unified
+manifest at public/data/poses.json:
+  1. PoseMy.Art (posemyart): 2,000 curated camera-ready poses (dHash + title dedup)
+  2. OpenSegra (opensegra): All 1,439 angle cards across 288 poses (Front/Side/Diagonal/Above/Below)
+  3. Posemaniacs (posemaniacs): Clean paired unique poseIds (Male + Female unified into 1 card via variants)
 """
 
-import gzip
-import hashlib
-import io
 import json
-import math
-import os
 import re
-import sys
 import time
-import urllib.error
-import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from io import BytesIO
 from pathlib import Path
 
 import numpy as np
+import requests
+from bs4 import BeautifulSoup
 from PIL import Image, ImageOps
 
 ROOT = Path(__file__).resolve().parent.parent
 POSES_DIR = ROOT / "public" / "poses"
 MANIFEST_PATH = ROOT / "public" / "data" / "poses.json"
 
-# Exact target matrix: 5,000 total
-# Solo = 4,000 (2,000 full-body, 1,200 medium, 800 close-up)
-# Duo  = 1,000 (500 full-body, 300 medium, 200 close-up)
-TARGETS = {
-    ("solo", "full-body"): 2000,
-    ("solo", "medium"): 1200,
-    ("solo", "close-up"): 800,
-    ("duo", "full-body"): 500,
-    ("duo", "medium"): 300,
-    ("duo", "close-up"): 200,
-}
+POSEMYART_TARGET = 2000
+MAX_IMG_WIDTH = 360
+WEBP_QUALITY = 82
 
-STYLE_CATEGORIES = [
-    "Streetwear",
-    "Editorial Lookbook",
-    "Cinematic Poster",
-    "Expressive Signature",
+# Filters for PoseMy.Art curation
+POSEMYART_EXCLUDE_RE = re.compile(
+    r"\b("
+    r"zombie|monster|demon|demonic|werewolf|goblin|orc|troll|ogre|skeleton|skull|"
+    r"mermaid|centaur|dragon|alien|ghost|corpse|dead|creature|chibi|horror|gore|"
+    r"blood|decapitat|contort|glitch|spider|crawler|wolf|cat-drawing|deer-drawing|"
+    r"castle|house-drawing|car-drawing|tree-drawing|room-drawing|animals-drawing|"
+    r"wheelchair-drawing|horse|dog|dragon|wings|tail|horns|christmas-drawing|birthday"
+    r")\b",
+    re.I,
+)
+
+POSEMYART_PRIORITY_PATTERNS = [
+    (6, re.compile(r"\b(fashion|lookbook|editorial|model|runway|coat|dress|sunglasses|street|casual|cool|confident|chic|style)\b", re.I)),
+    (5, re.compile(r"\b(standing|leaning|lean|pocket|hip|crossed arms|arms crossed|walking|stride|turn|over shoulder|looking back)\b", re.I)),
+    (4, re.compile(r"\b(sitting|seated|chair|couch|stool|bench|crouching|kneeling|floor sitting|cross-legged|relax|relaxed)\b", re.I)),
+    (4, re.compile(r"\b(hand|gesture|chin|pointing|touching hair|close-up|portrait|upper body|holding coffee|holding cup|holding phone|holding camera)\b", re.I)),
+    (4, re.compile(r"\b(couple|duo|two figures|two people|friends|hugging|holding hands|back to back|conversation|talking)\b", re.I)),
+    (-5, re.compile(r"\b(weird|fool|silly|goofy|absurd|falling down|hit|damage|crawling|sprawl|upside down)\b", re.I)),
 ]
 
-DUO_POSITIVE_RE = re.compile(
-    r"\b(2girls|2boys|1boy,\s*1girl|two people|two women|two men|two models|a man and a woman|a woman and a man|couple posing|fashion duo)\b",
-    re.I,
-)
-DUO_NEGATIVE_RE = re.compile(
-    r"\b(3girls|3boys|4girls|4boys|5girls|6\+boys|6\+girls|multiple boys|multiple girls|three people|four people|group|crowd|audience|family|wedding|party|meeting|team|classroom|concert|stadium|pedestrians|children|toddler|baby|infant|blurry|out of focus|no humans)\b",
+POSEMYART_DUO_RE = re.compile(
+    r"\b(couple|duo|two figures|two people|two girls|two boys|two men|two women|two models|friends|handshake|hugging|kiss|embracing|sword fight|carrying|best-friends|couples)\b",
     re.I,
 )
 
-FULL_BODY_RE = re.compile(
-    r"\b(full body|full-body|head to toe|standing|walking|stride|shoes|boots|sneakers|feet|full length)\b",
-    re.I,
-)
-CLOSE_UP_RE = re.compile(
-    r"\b(close-up|closeup|portrait|upper body|headshot|face|chin|shoulders|hand near|looking over shoulder|side profile)\b",
-    re.I,
-)
-
-STYLE_PATTERNS = {
-    "Streetwear": re.compile(
-        r"\b(street|hoodie|sneaker|denim|jacket|cap|urban|crouch|pocket|relaxed|casual|lean)\b",
-        re.I,
-    ),
-    "Editorial Lookbook": re.compile(
-        r"\b(editorial|fashion|coat|blazer|suit|runway|studio|lookbook|tailored|minimal|dress)\b",
-        re.I,
-    ),
-    "Cinematic Poster": re.compile(
-        r"\b(dramatic|shadow|noir|silhouette|heroic|low angle|backlit|moody|intense|cinematic)\b",
-        re.I,
-    ),
-    "Expressive Signature": re.compile(
-        r"\b(hand|gesture|tilt|laugh|smile|gaze|expressive|dance|dynamic|turn|profile)\b",
-        re.I,
-    ),
+# Posemaniacs filtering
+POSEMANIACS_EXCLUDE_TAGS = {"fool", "sumo", "damage", "on-stomach"}
+POSEMANIACS_PRIORITY_TAGS = {
+    "fashion": 6,
+    "standing": 5,
+    "cool": 5,
+    "relax": 5,
+    "walking": 5,
+    "leaning": 5,
+    "hand-on-hip": 5,
+    "sitting-on-chair": 5,
+    "sitting": 4,
+    "daily-life": 4,
+    "crossing-arms": 4,
+    "crossing-legs": 4,
+    "raising-arm": 3,
+    "twisting-neck": 3,
+    "twisting-body": 3,
+    "pointing": 3,
+    "couple": 4,
+    "idol": 3,
+    "dancing": 2,
+    "kneeling": 2,
+    "squatting": 2,
 }
 
-ANGLE_PATTERNS = [
-    ("low-angle", re.compile(r"\b(low angle|from below|looking up)\b", re.I)),
-    ("profile", re.compile(r"\b(profile|side view|from side)\b", re.I)),
-    ("three-quarter", re.compile(r"\b(three-quarter|3/4|looking back|over shoulder|turned)\b", re.I)),
-]
+OPENSEGRA_ANGLE_MAP = {
+    "正面": "front",
+    "横": "side",
+    "斜め": "diagonal",
+    "上から": "above",
+    "下から": "below",
+}
+
+TAG_DESCRIPTIONS = {
+    "standing": "standing upright",
+    "fashion": "editorial fashion stance",
+    "walking": "mid-stride walking motion",
+    "running": "dynamic running stride",
+    "sitting": "seated posture",
+    "sitting-on-chair": "seated on a chair",
+    "leaning": "relaxed leaning posture",
+    "hand-on-hip": "one hand resting on the hip",
+    "raising-arm": "arm raised expressively",
+    "raising-leg": "one leg lifted",
+    "crossing-arms": "arms folded across the torso",
+    "crossing-legs": "legs crossed smoothly",
+    "twisting-body": "subtle torso twist",
+    "twisting-neck": "head turned subtly",
+    "pointing": "hand extended pointing forward",
+    "cool": "confident poised attitude",
+    "relax": "relaxed natural weight shift",
+    "daily-life": "everyday candid gesture",
+    "couple": "two-subject paired interaction",
+    "kneeling": "kneeling stance",
+    "squatting": "low crouched stance",
+    "dancing": "fluid expressive movement",
+    "ballet": "graceful balanced extension",
+    "idol": "stage-ready expressive pose",
+    "sexy": "sculpted S-curve silhouette",
+    "lying": "reclined floor posture",
+    "on-back": "reclining on back",
+    "on-side": "resting on one side",
+    "fighting": "tense action stance",
+    "kicking": "extended kick motion",
+    "punching": "forward strike motion",
+    "jumping": "airborne dynamic leap",
+    "yoga": "controlled balance posture",
+    "fitness": "athletic form",
+    "sad": "inward contemplative posture",
+    "leaning-back": "tilted back slightly",
+    "looking-back": "glancing back over shoulder",
+}
 
 
-def fetch_json_with_retry(url: str, retries: int = 5, timeout: int = 30) -> dict:
-    for attempt in range(retries):
-        try:
-            req = urllib.request.Request(url, headers={"User-Agent": "PromptForge-Curator/2.0"})
-            with urllib.request.urlopen(req, timeout=timeout) as resp:
-                return json.loads(resp.read().decode("utf-8"))
-        except Exception:
-            if attempt == retries - 1:
-                raise
-            time.sleep(0.8 * (attempt + 1))
-    return {}
+def get_session() -> requests.Session:
+    s = requests.Session()
+    s.headers.update({"User-Agent": "PromptForge-PoseLibrary/3.0"})
+    return s
 
 
 def compute_dhash(img: Image.Image) -> int:
@@ -115,472 +146,687 @@ def compute_dhash(img: Image.Image) -> int:
     return bits
 
 
-def hamming_distance(a: int, b: int) -> int:
+def hamming_dist(a: int, b: int) -> int:
     return (a ^ b).bit_count()
 
 
-def trim_letterbox(img: Image.Image) -> Image.Image:
-    """Remove solid dark/black letterbox bars common in studio renders."""
-    arr = np.asarray(img.convert("RGB"))
-    gray = arr.mean(axis=2)
-    h, w = gray.shape
-    col_means = gray.mean(axis=0)
-    row_means = gray.mean(axis=1)
-    x_idx = np.where(col_means > 10)[0]
-    y_idx = np.where(row_means > 10)[0]
-    if len(x_idx) > 0 and len(y_idx) > 0:
-        x0, x1 = int(x_idx[0]), int(x_idx[-1]) + 1
-        y0, y1 = int(y_idx[0]), int(y_idx[-1]) + 1
-        if (x1 - x0) >= w * 0.45 and (y1 - y0) >= h * 0.45:
-            return img.crop((x0, y0, x1, y1))
-    return img
-
-
-def analyze_posedreamer_row(row: dict) -> dict | None:
-    """Inspect SMPL-X 2D joints & orientation to classify framing, angle, style, and reject filler."""
-    sp = row.get("smplx_params") or {}
-    j2d = sp.get("joints_2d") or []
-    bbox = sp.get("bbox") or []
-    orient = sp.get("global_orient") or [0.0, 0.0, 0.0]
-
-    if len(j2d) < 46 or len(bbox) < 4:
-        return None
-    bw, bh = float(bbox[2]), float(bbox[3])
-    if bw < 110 or bh < 180:
-        return None
-
-    def pt(idx: int):
-        return float(j2d[idx * 2]), float(j2d[idx * 2 + 1])
-
-    pelvis = pt(0)
-    l_hip, r_hip = pt(1), pt(2)
-    l_knee, r_knee = pt(4), pt(5)
-    l_ankle, r_ankle = pt(7), pt(8)
-    neck = pt(12)
-    head = pt(15)
-    l_sh, r_sh = pt(16), pt(17)
-    l_elb, r_elb = pt(18), pt(19)
-    l_wri, r_wri = pt(20), pt(21)
-
-    # Reject upside-down / extreme acrobatic contortions
-    if head[1] > pelvis[1] + 20:
-        return None
-
-    # Reject stiff neutral T-pose / A-pose calibration stances
-    sh_y = (l_sh[1] + r_sh[1]) * 0.5
-    sh_w = abs(l_sh[0] - r_sh[0])
-    arm_span = abs(l_wri[0] - r_wri[0])
-    wri_sym_y = abs(l_wri[1] - r_wri[1])
-    if sh_w > 40 and arm_span > sh_w * 2.6 and abs(l_wri[1] - sh_y) < 45 and abs(r_wri[1] - sh_y) < 45 and wri_sym_y < 25:
-        return None
-
-    # Determine framing from 1024x1024 SMPL-X joint visibility
-    ankles_in = (20 <= l_ankle[1] <= 1010) or (20 <= r_ankle[1] <= 1010)
-    knees_in = (20 <= l_knee[1] <= 1010) or (20 <= r_knee[1] <= 1010)
-    pelvis_in = 20 <= pelvis[1] <= 1010
-    head_in = 10 <= head[1] <= 900
-
-    if not head_in:
-        return None
-
-    crop_box = None
-    if ankles_in and bh >= 340:
-        framing = "full-body"
-    elif pelvis_in or knees_in:
-        framing = "medium"
-    else:
-        framing = "close-up"
-
-    # Also allow high-res upper-body/hand close-up crops from crisp medium/full renders when needed
-    # Compute camera angle (~85% eye-level/3-4/profile, ~15% low-angle)
-    yaw_ratio = sh_w / max(1.0, abs(pelvis[1] - neck[1]))
-    pitch = float(orient[0]) if len(orient) >= 1 else 0.0
-    if yaw_ratio < 0.28:
-        angle = "profile"
-    elif yaw_ratio < 0.50:
-        angle = "three-quarter"
-    elif pitch > 2.75 or (head[1] < 180 and bh > 780):
-        angle = "low-angle"
-    else:
-        angle = "eye-level"
-
-    # Classify creative style from posture geometry
-    wrist_near_face = (
-        math.hypot(l_wri[0] - head[0], l_wri[1] - head[1]) < 150
-        or math.hypot(r_wri[0] - head[0], r_wri[1] - head[1]) < 150
-    )
-    crouched = abs(pelvis[1] - (l_knee[1] + r_knee[1]) * 0.5) < 110
-    asymmetric_arms = abs(l_wri[1] - r_wri[1]) > 95
-    hands_low_relaxed = (l_wri[1] > pelvis[1] - 30) and (r_wri[1] > pelvis[1] - 30)
-
-    if wrist_near_face or asymmetric_arms:
-        style = "Expressive Signature"
-    elif crouched or (hands_low_relaxed and angle == "three-quarter"):
-        style = "Streetwear"
-    elif angle == "low-angle" or angle == "profile":
-        style = "Cinematic Poster"
-    else:
-        style = "Editorial Lookbook"
-
-    tags = ["solo", framing, style.lower().split()[0], angle]
-    if wrist_near_face:
-        tags.append("hand gesture")
-    if crouched:
-        tags.append("crouched stance")
-    elif ankles_in:
-        tags.append("full stance")
-
-    return {
-        "framing": framing,
-        "subjectType": "solo",
-        "styleCategory": style,
-        "angle": angle,
-        "tags": tags[:4],
-        "head": head,
-        "neck": neck,
-        "l_sh": l_sh,
-        "r_sh": r_sh,
-        "l_wri": l_wri,
-        "r_wri": r_wri,
-        "pelvis": pelvis,
-        "pose_source": row.get("pose_source") or "posedreamer",
-    }
-
-
-def make_closeup_crop(img: Image.Image, meta: dict) -> Image.Image:
-    """Create a tight, expressive head/shoulders/hands close-up crop from a 1024x1024 PoseDreamer render."""
-    w, h = img.size
-    hx, hy = meta["head"]
-    nx, ny = meta["neck"]
-    sx = (meta["l_sh"][0] + meta["r_sh"][0]) * 0.5
-    cx = (hx + sx) * 0.5
-    cy = (hy + ny) * 0.5 + h * 0.04
-    box_h = max(340, min(h * 0.58, abs(meta["pelvis"][1] - hy) * 1.15))
-    box_w = box_h * 0.80
-    x0 = max(0, int(cx - box_w * 0.5))
-    y0 = max(0, int(hy - box_h * 0.22))
-    x1 = min(w, int(x0 + box_w))
-    y1 = min(h, int(y0 + box_h))
-    if (x1 - x0) < 220 or (y1 - y0) < 260:
-        return img
-    return img.crop((x0, y0, x1, y1))
-
-
-def save_webp(img: Image.Image, out_path: Path, max_dim: int = 400) -> None:
-    img = ImageOps.exif_transpose(img).convert("RGB")
-    img.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    img.save(out_path, format="WEBP", quality=82, method=4)
-
-
-def collect_solo_posedreamer(seen_hashes: list[int], seen_ids: set[str], next_idx_ref: list[int]) -> list[dict]:
-    """Read prosperolo/PoseDreamer Parquet chunks directly from HF CDN to collect 4,000 solo poses."""
-    import pyarrow.parquet as pq
-
-    need = {
-        "full-body": TARGETS[("solo", "full-body")],
-        "medium": TARGETS[("solo", "medium")],
-        "close-up": TARGETS[("solo", "close-up")],
-    }
-    counts = {"full-body": 0, "medium": 0, "close-up": 0}
-    manifest_rows: list[dict] = []
-
-    print("[solo] Reading prosperolo/PoseDreamer Parquet chunks for 4,000 solo poses (2000 full-body, 1200 medium, 800 close-up)...", flush=True)
-    t0 = time.time()
-
-    for chunk_idx in range(10):
-        if all(counts[k] >= need[k] for k in need):
-            break
-        local_pq = Path(f"/tmp/pd_{chunk_idx:04d}.parquet")
-        if not local_pq.exists():
-            url = f"https://huggingface.co/datasets/prosperolo/PoseDreamer/resolve/refs%2Fconvert%2Fparquet/default/train/{chunk_idx:04d}.parquet"
-            print(f"[solo] Downloading chunk {chunk_idx:04d}.parquet...", flush=True)
-            req = urllib.request.Request(url, headers={"User-Agent": "PromptForge-Curator/2.0"})
-            with urllib.request.urlopen(req, timeout=180) as resp, open(local_pq, "wb") as f:
-                while True:
-                    buf = resp.read(1024 * 1024)
-                    if not buf:
-                        break
-                    f.write(buf)
-
-        pf = pq.ParquetFile(local_pq)
-        for batch in pf.iter_batches(batch_size=128, columns=["image", "image_id", "pose_source", "smplx_params"]):
-            if all(counts[k] >= need[k] for k in need):
-                break
-            cols = batch.to_pydict()
-            for img_val, img_id, pose_src, smplx in zip(
-                cols["image"], cols["image_id"], cols["pose_source"], cols["smplx_params"]
-            ):
-                if all(counts[k] >= need[k] for k in need):
-                    break
-                img_id_s = str(img_id or "")
-                if not img_id_s or img_id_s in seen_ids:
-                    continue
-                row_stub = {"smplx_params": smplx, "pose_source": pose_src}
-                meta = analyze_posedreamer_row(row_stub)
-                if not meta:
-                    continue
-                f = meta["framing"]
-                use_closeup_crop = False
-                if counts[f] >= need[f]:
-                    if counts["close-up"] < need["close-up"]:
-                        f = "close-up"
-                        use_closeup_crop = True
-                    else:
-                        continue
-                img_bytes = img_val.get("bytes") if isinstance(img_val, dict) else None
-                if not img_bytes:
-                    continue
-                try:
-                    img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
-                except Exception:
-                    continue
-                img = trim_letterbox(img)
-                if use_closeup_crop:
-                    img = make_closeup_crop(img, meta)
-                    meta["framing"] = "close-up"
-                    meta["tags"] = ["solo", "close-up", meta["styleCategory"].lower().split()[0], meta["angle"]]
-                dh = compute_dhash(img)
-                if any(hamming_distance(dh, h) <= 4 for h in seen_hashes[-1500:]):
-                    continue
-                seen_ids.add(img_id_s)
-                seen_hashes.append(dh)
-                counts[f] += 1
-                next_idx_ref[0] += 1
-                pose_id = f"pose_{next_idx_ref[0]:04d}"
-                save_webp(img, POSES_DIR / f"{pose_id}.webp")
-                manifest_rows.append({
-                    "id": pose_id,
-                    "imageUrl": f"/poses/{pose_id}.webp",
-                    "framing": f,
-                    "subjectType": "solo",
-                    "styleCategory": meta["styleCategory"],
-                    "angle": meta["angle"],
-                    "tags": meta["tags"],
-                    "rawCaption": f"PoseDreamer ({meta['pose_source']}) {f} solo {meta['angle']} pose [{img_id_s[:8]}]",
-                    "naturalPrompt": "",
-                })
-        del pf
-        if local_pq.exists():
-            local_pq.unlink()
-        total_so_far = sum(counts.values())
-        print(
-            f"[solo] Chunk {chunk_idx:04d} done ({time.time()-t0:.1f}s) -> total {total_so_far}/4000 "
-            f"(full-body:{counts['full-body']}, medium:{counts['medium']}, close-up:{counts['close-up']})",
-            flush=True,
-        )
-
-    return manifest_rows
-
-
-def classify_duo_caption(text: str, width: int = 0, height: int = 0) -> dict | None:
-    if not text or DUO_NEGATIVE_RE.search(text):
-        return None
-    if not DUO_POSITIVE_RE.search(text):
-        return None
-
-    # Framing
-    if FULL_BODY_RE.search(text):
-        framing = "full-body"
-    elif CLOSE_UP_RE.search(text):
-        framing = "close-up"
-    else:
-        framing = "medium"
-
-    # Style
-    style = "Editorial Lookbook"
-    for s_name, pat in STYLE_PATTERNS.items():
-        if pat.search(text):
-            style = s_name
-            break
-
-    # Angle
-    angle = "eye-level"
-    for a_name, pat in ANGLE_PATTERNS:
-        if pat.search(text):
-            angle = a_name
-            break
-
-    tags = ["duo", framing, style.lower().split()[0], angle]
-    return {
-        "framing": framing,
-        "subjectType": "duo",
-        "styleCategory": style,
-        "angle": angle,
-        "tags": tags,
-    }
-
-
-def collect_duo_fallback(seen_hashes: list[int], seen_urls: set[str], next_idx_ref: list[int]) -> list[dict]:
-    """Collect 1,000 duo poses (500 full-body, 300 medium, 200 close-up) from pexels-janpf-sharp & pexels-568k-internvl2."""
-    import pyarrow.parquet as pq
-
-    need = {
-        "full-body": TARGETS[("duo", "full-body")],
-        "medium": TARGETS[("duo", "medium")],
-        "close-up": TARGETS[("duo", "close-up")],
-    }
-    counts = {"full-body": 0, "medium": 0, "close-up": 0}
-    manifest_rows: list[dict] = []
-    candidates = []
-
-    print("[duo] Reading opendiffusionai/pexels-janpf-sharp Parquet from HF CDN...", flush=True)
-    janpf_pq = Path("/tmp/janpf_0000.parquet")
+def composite_and_save_webp(
+    raw_bytes: bytes,
+    out_path: Path,
+    bg_rgb: tuple[int, int, int],
+    trim_alpha: bool = False,
+    target_aspect_3_4: bool = False,
+) -> tuple[bool, int, str]:
+    """
+    Decode PNG/JPG/WebP bytes, composite alpha onto clean background,
+    optionally trim excessive transparent padding, optimize to <=360px WebP,
+    and return (ok, dhash, inferred_framing).
+    """
     try:
-        if not janpf_pq.exists():
-            url = "https://huggingface.co/datasets/opendiffusionai/pexels-janpf-sharp/resolve/refs%2Fconvert%2Fparquet/default/train/0000.parquet"
-            req = urllib.request.Request(url, headers={"User-Agent": "PromptForge-Curator/2.0"})
-            with urllib.request.urlopen(req, timeout=120) as resp, open(janpf_pq, "wb") as f:
-                while True:
-                    buf = resp.read(1024 * 1024)
-                    if not buf:
+        im = Image.open(BytesIO(raw_bytes))
+        im.load()
+    except Exception:
+        return False, 0, "full-body"
+
+    # Measure figure framing from alpha or non-background pixels before resize
+    framing = "full-body"
+    if im.mode in ("RGBA", "LA") or (im.mode == "P" and "transparency" in im.info):
+        rgba = im.convert("RGBA")
+        alpha = rgba.getchannel("A")
+        bbox = alpha.getbbox()
+        if not bbox:
+            return False, 0, "full-body"
+        bw = bbox[2] - bbox[0]
+        bh = bbox[3] - bbox[1]
+        if bw < 16 or bh < 16:
+            return False, 0, "full-body"
+
+        aspect = bh / max(1, bw)
+        if aspect < 1.15 and bh < rgba.height * 0.48:
+            framing = "close-up"
+        elif aspect < 1.65:
+            framing = "medium"
+        else:
+            framing = "full-body"
+
+        if trim_alpha:
+            pad_x = max(12, int(bw * 0.10))
+            pad_y = max(12, int(bh * 0.08))
+            x0 = max(0, bbox[0] - pad_x)
+            y0 = max(0, bbox[1] - pad_y)
+            x1 = min(rgba.width, bbox[2] + pad_x)
+            y1 = min(rgba.height, bbox[3] + pad_y)
+            rgba = rgba.crop((x0, y0, x1, y1))
+
+        canvas = Image.new("RGB", rgba.size, bg_rgb)
+        canvas.paste(rgba, mask=rgba.split()[3])
+        rgb = canvas
+    else:
+        rgb = im.convert("RGB")
+        # Check non-empty variance
+        arr = np.asarray(rgb, dtype=np.int16)
+        if arr.std() < 3.0:
+            return False, 0, "full-body"
+        # Check bounding box against background color
+        diff = np.abs(arr - np.asarray(bg_rgb, dtype=np.int16)).max(axis=2)
+        ys, xs = np.where(diff > 18)
+        if len(xs) > 40:
+            bw = int(xs.max() - xs.min())
+            bh = int(ys.max() - ys.min())
+            aspect = bh / max(1, bw)
+            if aspect < 1.25:
+                framing = "close-up"
+            elif aspect < 1.75:
+                framing = "medium"
+
+    if target_aspect_3_4:
+        w, h = rgb.size
+        desired_h = int(w * 4 / 3)
+        if h < desired_h:
+            padded = Image.new("RGB", (w, desired_h), bg_rgb)
+            padded.paste(rgb, (0, (desired_h - h) // 2))
+            rgb = padded
+        elif h > desired_h * 1.15:
+            desired_w = int(h * 3 / 4)
+            if desired_w > w:
+                padded = Image.new("RGB", (desired_w, h), bg_rgb)
+                padded.paste(rgb, ((desired_w - w) // 2, 0))
+                rgb = padded
+
+    if rgb.width > MAX_IMG_WIDTH:
+        new_h = max(1, int(rgb.height * (MAX_IMG_WIDTH / rgb.width)))
+        rgb = rgb.resize((MAX_IMG_WIDTH, new_h), Image.Resampling.LANCZOS)
+
+    dhash = compute_dhash(rgb)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    rgb.save(out_path, format="WEBP", quality=WEBP_QUALITY, method=4)
+    return True, dhash, framing
+
+
+def normalize_title_key(title: str) -> str:
+    words = re.findall(r"[a-z0-9]+", title.lower())
+    stop = {"a", "an", "the", "pose", "reference", "drawing", "ref", "3d", "figure", "model"}
+    filtered = [w for w in words if w not in stop]
+    return " ".join(filtered[:6])
+
+
+def infer_posemyart_framing(text: str, visual_framing: str) -> str:
+    t = text.lower()
+    if any(k in t for k in ("close-up", "closeup", "headshot", "face", "portrait", "shoulder", "chin", "hand-reference", "finger", "sunglasses")):
+        return "close-up"
+    if any(k in t for k in ("upper body", "torso", "waist up", "chest", "arms crossed", "holding coffee", "holding phone", "holding cup")):
+        return "medium"
+    if any(k in t for k in ("full body", "full-body", "standing", "walking", "running", "sitting", "crouching", "kneeling", "jumping", "stride")):
+        return "full-body"
+    return visual_framing
+
+
+def infer_angle_from_text(text: str) -> str:
+    t = text.lower()
+    if any(k in t for k in ("low angle", "low-angle", "from below", "worm")):
+        return "below"
+    if any(k in t for k in ("high angle", "high-angle", "from above", "bird")):
+        return "above"
+    if any(k in t for k in ("profile", "sideways", "side view", "from side")):
+        return "side"
+    if any(k in t for k in ("three-quarter", "3/4", "looking back", "over shoulder", "diagonal")):
+        return "diagonal"
+    return "front"
+
+
+# ==============================================================================
+# 1. POSEMY.ART CURATION (2,000 Poses)
+# ==============================================================================
+def ingest_posemyart(manifest_entries: list[dict]):
+    print("\n=== [1/3] Curating PoseMy.Art (target: 2,000) ===", flush=True)
+    sess = get_session()
+
+    # Load search.json (5,642 structured entries)
+    r_search = sess.get(
+        "https://posemyart3.nyc3.cdn.digitaloceanspaces.com/search_data/search.json",
+        timeout=30,
+    )
+    search_items = r_search.json()
+    print(f"Loaded PoseMy.Art search.json: {len(search_items)} entries", flush=True)
+
+    by_img = {}
+    for it in search_items:
+        img_rel = it.get("image", "")
+        if not img_rel:
+            continue
+        by_img[img_rel] = {
+            "title": (it.get("title") or "").strip(),
+            "description": (it.get("description") or "").strip(),
+            "image": img_rel,
+            "pack": (it.get("pack") or "").strip(),
+            "cats": set(),
+            "url": (it.get("url") or "").strip(),
+        }
+
+    # Merge /all-poses-reference/ (~6,206 cards)
+    r_html = sess.get("https://posemy.art/all-poses-reference/", timeout=40)
+    soup = BeautifulSoup(r_html.text, "lxml")
+    html_cards = soup.select(".image_card")
+    print(f"Parsed PoseMy.Art /all-poses-reference/: {len(html_cards)} image cards", flush=True)
+    for card in html_cards:
+        a = card.find("a")
+        img = card.find("img")
+        sub = card.select_one(".image_card_subtitle")
+        if not img:
+            continue
+        src = (img.get("src") or "").strip()
+        if not src.startswith("/assets/poses_imgs/"):
+            continue
+        title = sub.get_text(strip=True) if sub else ""
+        alt = (img.get("alt") or "").strip()
+        href = (a.get("href") or "").strip() if a else ""
+        cat_slug = href.strip("/").split("/")[0] if href else ""
+
+        if src not in by_img:
+            desc = alt.split(" - ", 2)[-1].strip() if " - " in alt else title
+            by_img[src] = {
+                "title": title,
+                "description": desc,
+                "image": src,
+                "pack": "",
+                "cats": set(),
+                "url": href,
+            }
+        if cat_slug:
+            by_img[src]["cats"].add(cat_slug.replace("-", " "))
+        if not by_img[src]["title"] and title:
+            by_img[src]["title"] = title
+
+    print(f"Total unique PoseMy.Art source candidates: {len(by_img)}", flush=True)
+
+    # Score & filter
+    scored = []
+    seen_title_keys = set()
+    for img_rel, item in by_img.items():
+        title = item["title"] or "Studio Mannequin Pose"
+        desc = item["description"] or title
+        cat_text = " ".join(sorted(item["cats"]))
+        combined = f"{title} {desc} {item['pack']} {cat_text} {item['url']}"
+
+        if POSEMYART_EXCLUDE_RE.search(combined):
+            continue
+
+        # Score usefulness & camera readiness
+        score = 0
+        for pts, pat in POSEMYART_PRIORITY_PATTERNS:
+            if pat.search(combined):
+                score += pts
+        if desc and len(desc) > 25:
+            score += 2
+        if item["pack"]:
+            score += 1
+
+        t_key = normalize_title_key(title)
+        scored.append((score, t_key, img_rel, item))
+
+    # Sort descending by curation score, tiebreak deterministically
+    scored.sort(key=lambda x: (-x[0], x[2]))
+    print(f"Filtered PoseMy.Art candidates: {len(scored)} (downloading top candidates to curate 2,000)", flush=True)
+
+    # Download & dHash deduplicate in batches until we reach POSEMYART_TARGET
+    out_dir = POSES_DIR / "posemyart"
+    accepted = []
+    seen_hashes = []
+    deferred = []
+
+    pool = scored[:3600]
+
+    def fetch_raw(entry):
+        score, t_key, img_rel, item = entry
+        url = f"https://posemy.art{img_rel}"
+        for attempt in range(3):
+            try:
+                res = requests.get(url, timeout=15)
+                if res.status_code == 200 and len(res.content) > 500:
+                    return entry, res.content
+            except Exception:
+                time.sleep(0.3 * (attempt + 1))
+        return entry, None
+
+    raw_results = []
+    with ThreadPoolExecutor(max_workers=16) as ex:
+        for res in ex.map(fetch_raw, pool):
+            if res[1] is not None:
+                raw_results.append(res)
+            if len(raw_results) % 400 == 0 and len(raw_results) > 0:
+                print(f"  Fetched {len(raw_results)} PoseMy.Art raw thumbnails...", flush=True)
+
+    print(f"Downloaded {len(raw_results)} PoseMy.Art candidates, running dHash deduplication...", flush=True)
+
+    def try_accept(entry, raw_bytes, allow_title_dup: bool):
+        score, t_key, img_rel, item = entry
+        if not allow_title_dup and t_key and t_key in seen_title_keys:
+            deferred.append((entry, raw_bytes))
+            return
+
+        next_num = len(accepted) + 1
+        pid = f"posemyart_{next_num:04d}"
+        out_path = out_dir / f"{pid}.webp"
+        # Composite onto soft neutral light slate #eaecf0 so dark 3D outlines pop cleanly
+        ok, dhash, vis_framing = composite_and_save_webp(
+            raw_bytes,
+            out_path,
+            bg_rgb=(234, 236, 240),
+            trim_alpha=False,
+            target_aspect_3_4=True,
+        )
+        if not ok:
+            return
+
+        # Perceptual dHash dedup (hamming distance <= 4)
+        for h in seen_hashes:
+            if hamming_dist(dhash, h) <= 4:
+                out_path.unlink(missing_ok=True)
+                return
+
+        seen_hashes.append(dhash)
+        if t_key:
+            seen_title_keys.add(t_key)
+
+        title = item["title"] or "Studio Mannequin Pose"
+        desc = item["description"] or title
+        combined = f"{title} {desc} {' '.join(item['cats'])}"
+        framing = infer_posemyart_framing(combined, vis_framing)
+        angle = infer_angle_from_text(combined)
+        is_duo = bool(POSEMYART_DUO_RE.search(combined))
+
+        tags = []
+        for cat in sorted(item["cats"]):
+            w = cat.replace("pose references", "").replace("drawing references", "").replace("references", "").replace("poses", "").strip()
+            if w and w not in tags:
+                tags.append(w)
+        for kw in ("standing", "sitting", "walking", "leaning", "fashion", "editorial", "streetwear", "casual", "couple", "hand", "crouching", "kneeling"):
+            if kw in combined.lower() and kw not in tags:
+                tags.append(kw)
+        if not tags:
+            tags = [framing, "3d-mannequin"]
+        tags = tags[:6]
+
+        accepted.append({
+            "id": pid,
+            "source": "posemyart",
+            "sourceLabel": "PoseMy.Art",
+            "imageUrl": f"/poses/posemyart/{pid}.webp",
+            "subjectCount": 2 if is_duo else 1,
+            "title": title,
+            "naturalPrompt": desc,
+            "framing": framing,
+            "angle": angle,
+            "tags": tags,
+        })
+
+    for entry, raw_bytes in raw_results:
+        if len(accepted) >= POSEMYART_TARGET:
+            break
+        try_accept(entry, raw_bytes, allow_title_dup=False)
+
+    if len(accepted) < POSEMYART_TARGET and deferred:
+        for entry, raw_bytes in deferred:
+            if len(accepted) >= POSEMYART_TARGET:
+                break
+            try_accept(entry, raw_bytes, allow_title_dup=True)
+
+    manifest_entries.extend(accepted)
+    print(f"✓ PoseMy.Art complete: {len(accepted)} unique poses saved.", flush=True)
+
+
+# ==============================================================================
+# 2. OPENSEGRA (100% of catalogue.json — ~1,439 angle cards)
+# ==============================================================================
+def ingest_opensegra(manifest_entries: list[dict]):
+    print("\n=== [2/3] Ingesting OpenSegra (all poses x 5 angles) ===", flush=True)
+    r = requests.get(
+        "https://raw.githubusercontent.com/opensegra/ai-library/main/data/catalogue.json",
+        timeout=30,
+    )
+    cat = r.json()
+    poses = cat.get("poses", [])
+    out_dir = POSES_DIR / "opensegra"
+
+    tasks = []
+    seq = 0
+    for p in poses:
+        line_name = (p.get("lineName") or "Everyday").strip()
+        cls = (p.get("cls") or "Standing").strip()
+        name = (p.get("name") or f"Pose {p.get('code', '')}").strip()
+        is_duo = line_name.lower() == "duo" or "2人" in (p.get("line") or "")
+        imgs = p.get("images") or {}
+        for jp_angle, paths in imgs.items():
+            angle = OPENSEGRA_ANGLE_MAP.get(jp_angle, "front")
+            full_rel = paths.get("full") or ""
+            thumb_rel = paths.get("thumb") or ""
+            url = (
+                f"https://ailibrary.opensegra.com{full_rel}"
+                if full_rel
+                else f"https://raw.githubusercontent.com/opensegra/ai-library/main/public{thumb_rel}"
+            )
+            fallback_url = (
+                f"https://raw.githubusercontent.com/opensegra/ai-library/main/public{thumb_rel}"
+                if thumb_rel
+                else ""
+            )
+            seq += 1
+            tasks.append((seq, p, line_name, cls, name, is_duo, angle, url, fallback_url))
+
+    def process_opensegra_item(item):
+        idx, p, line_name, cls, name, is_duo, angle, url, fallback_url = item
+        pid = f"opensegra_{idx:04d}"
+        out_path = out_dir / f"{pid}.webp"
+
+        raw = None
+        for u in [url, fallback_url]:
+            if not u:
+                continue
+            for attempt in range(3):
+                try:
+                    res = requests.get(u, timeout=20)
+                    if res.status_code == 200 and len(res.content) > 500:
+                        raw = res.content
                         break
-                    f.write(buf)
-        pf_j = pq.ParquetFile(janpf_pq)
-        for batch in pf_j.iter_batches(batch_size=500, columns=["url", "wd14", "interlm7b"]):
-            df = batch.to_pydict()
-            for img_url, wd14, interlm in zip(df["url"], df["wd14"], df["interlm7b"]):
-                u = (img_url or "").strip()
-                if not u or u in seen_urls:
-                    continue
-                cap = f"{wd14 or ''} | {interlm or ''}"
-                meta = classify_duo_caption(cap)
-                if not meta:
-                    continue
-                seen_urls.add(u)
-                candidates.append((u + "?auto=compress&cs=tinysrgb&w=420", cap[:220], meta))
-        del pf_j
-    except Exception as e:
-        print(f"[duo] pexels-janpf-sharp warning: {e}", flush=True)
-    finally:
-        if janpf_pq.exists():
-            janpf_pq.unlink()
+                except Exception:
+                    time.sleep(0.3 * (attempt + 1))
+            if raw:
+                break
 
-    print(f"[duo] Found {len(candidates)} candidates from pexels-janpf-sharp; topping up from pexels-568k-internvl2...", flush=True)
-    if len(candidates) < 2500:
-        stream_url = "https://huggingface.co/datasets/CaptionEmporium/pexels-568k-internvl2/resolve/main/train.jsonl.gz"
-        req = urllib.request.Request(stream_url, headers={"User-Agent": "PromptForge-Curator/2.0"})
-        with urllib.request.urlopen(req, timeout=60) as resp:
-            with gzip.GzipFile(fileobj=resp) as gz:
-                for idx, raw_line in enumerate(gz):
-                    if idx > 220000 or len(candidates) >= 2800:
-                        break
-                    try:
-                        row = json.loads(raw_line.decode("utf-8"))
-                    except Exception:
-                        continue
-                    img_url = (row.get("url") or row.get("image_url") or "").strip()
-                    if not img_url or img_url in seen_urls:
-                        continue
-                    w = int(row.get("width") or 0)
-                    h = int(row.get("height") or 0)
-                    if w > 0 and h > 0 and h < w * 0.75:
-                        continue
-                    cap = row.get("internvl2_caption") or row.get("cogvlm_caption") or ""
-                    meta = classify_duo_caption(cap, w, h)
-                    if not meta:
-                        continue
-                    seen_urls.add(img_url)
-                    if "?" not in img_url:
-                        img_url += "?auto=compress&cs=tinysrgb&w=420"
-                    candidates.append((img_url, cap[:220], meta))
-
-    print(f"[duo] Downloading & dHash-deduplicating from {len(candidates)} duo candidates...", flush=True)
-
-    def dl_duo(item):
-        img_url, raw_cap, meta = item
-        try:
-            req = urllib.request.Request(img_url, headers={"User-Agent": "PromptForge-Curator/2.0"})
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                raw = resp.read()
-            img = Image.open(io.BytesIO(raw)).convert("RGB")
-            dh = compute_dhash(img)
-            return (img, dh, raw_cap, meta)
-        except Exception:
+        if not raw:
             return None
 
-    for c_start in range(0, len(candidates), 24):
-        if all(counts[k] >= need[k] for k in need):
-            break
-        chunk = candidates[c_start : c_start + 24]
-        with ThreadPoolExecutor(max_workers=6) as ex:
-            for res in ex.map(dl_duo, chunk):
-                if res is None:
-                    continue
-                img, dh, raw_cap, meta = res
-                f = meta["framing"]
-                if counts[f] >= need[f]:
-                    open_buckets = [k for k in need if counts[k] < need[k]]
-                    if not open_buckets:
-                        break
-                    f = open_buckets[0]
-                if any(hamming_distance(dh, h) <= 4 for h in seen_hashes[-1500:]):
-                    continue
-                seen_hashes.append(dh)
-                counts[f] += 1
-                next_idx_ref[0] += 1
-                pose_id = f"pose_{next_idx_ref[0]:04d}"
-                save_webp(img, POSES_DIR / f"{pose_id}.webp")
-                manifest_rows.append({
-                    "id": pose_id,
-                    "imageUrl": f"/poses/{pose_id}.webp",
-                    "framing": f,
-                    "subjectType": "duo",
-                    "styleCategory": meta["styleCategory"],
-                    "angle": meta["angle"],
-                    "tags": [meta["subjectType"], f, meta["styleCategory"].lower().split()[0], meta["angle"]],
-                    "rawCaption": raw_cap,
-                    "naturalPrompt": "",
-                })
-                if all(counts[k] >= need[k] for k in need):
-                    break
+        ok, _, _ = composite_and_save_webp(
+            raw,
+            out_path,
+            bg_rgb=(245, 246, 248),
+            trim_alpha=False,
+            target_aspect_3_4=False,
+        )
+        if not ok:
+            return None
 
-    print(
-        f"[duo] Collected {sum(counts.values())}/1000 duo poses "
-        f"(full-body:{counts['full-body']}, medium:{counts['medium']}, close-up:{counts['close-up']})",
-        flush=True,
-    )
-    return manifest_rows
+        # Determine framing accurately from OpenSegra line + cls
+        ln_low = line_name.lower()
+        name_low = name.lower()
+        if ln_low == "portrait":
+            if any(k in name_low for k in ("face", "head", "chin", "cheek", "ear", "glasses", "hair", "eyes", "lips")):
+                framing = "close-up"
+            else:
+                framing = "medium"
+        else:
+            framing = "full-body"
+
+        short_name = name.split(",")[0].strip()
+        if len(short_name) > 42:
+            short_name = short_name[:39].rsplit(" ", 1)[0].strip()
+        title = f"{short_name} ({angle.capitalize()})"
+        natural_prompt = f"{name}, {line_name.lower()} reference, {cls.lower()} posture, {angle} angle."
+        tags = list(
+            dict.fromkeys(
+                [
+                    line_name.lower(),
+                    cls.lower(),
+                    angle,
+                    framing,
+                    *([p.get("code", "").lower()] if p.get("code") else []),
+                ]
+            )
+        )
+
+        return (
+            idx,
+            {
+                "id": pid,
+                "source": "opensegra",
+                "sourceLabel": "OpenSegra",
+                "imageUrl": f"/poses/opensegra/{pid}.webp",
+                "subjectCount": 2 if is_duo else 1,
+                "title": title,
+                "naturalPrompt": natural_prompt,
+                "framing": framing,
+                "angle": angle,
+                "tags": [t for t in tags if t],
+            },
+        )
+
+    results = []
+    with ThreadPoolExecutor(max_workers=16) as ex:
+        for res in ex.map(process_opensegra_item, tasks):
+            if res is not None:
+                results.append(res)
+            if len(results) % 250 == 0 and len(results) > 0:
+                print(f"  Processed {len(results)}/{len(tasks)} OpenSegra angle cards...", flush=True)
+
+    results.sort(key=lambda x: x[0])
+    manifest_entries.extend([r[1] for r in results])
+    print(f"✓ OpenSegra complete: {len(results)} angle cards saved.", flush=True)
+
+
+# ==============================================================================
+# 3. POSEMANIACS (Clean Unique Paired Poses — Male + Female combined into 1 card)
+# ==============================================================================
+def synthesize_posemaniacs_copy(tags: list[str], framing: str, angle: str, subject_count: int) -> tuple[str, str]:
+    clean = [t for t in tags if t in TAG_DESCRIPTIONS]
+    if not clean:
+        clean = tags[:]
+
+    # Build concise 3-6 word title
+    label_words = []
+    priority_order = [
+        "fashion", "couple", "sitting-on-chair", "sitting", "leaning", "walking",
+        "standing", "squatting", "kneeling", "hand-on-hip", "crossing-arms",
+        "crossing-legs", "raising-arm", "pointing", "cool", "relax", "daily-life",
+        "twisting-body", "twisting-neck", "dancing", "ballet", "idol", "lying",
+    ]
+    ordered = [t for t in priority_order if t in clean] + [t for t in clean if t not in priority_order]
+    for t in ordered[:3]:
+        label_words.append(t.replace("-", " ").title())
+    if not label_words:
+        label_words = ["Anatomical", "Studio"]
+    title = " ".join(label_words[:3])
+    if len(title.split()) < 3:
+        title = f"{title} Pose"
+
+    # Build fluent naturalPrompt grounded in Posemaniacs tags & framing
+    phrases = [TAG_DESCRIPTIONS.get(t, t.replace("-", " ")) for t in ordered[:4]]
+    subject_phrase = "Two figures in a paired interaction" if subject_count == 2 else "Single figure"
+    frame_phrase = {
+        "full-body": "full-body composition",
+        "medium": "medium waist-up composition",
+        "close-up": "close-up upper-body study",
+    }.get(framing, "full-body composition")
+    desc_core = ", ".join(phrases) if phrases else "balanced natural studio posture"
+    natural_prompt = f"{subject_phrase} in a {desc_core}, {frame_phrase}, seen from a {angle} angle."
+    return title, natural_prompt
+
+
+def ingest_posemaniacs(manifest_entries: list[dict]):
+    print("\n=== [3/3] Ingesting Posemaniacs (Paired Male/Female -> 1 Record Each) ===", flush=True)
+    sess = get_session()
+
+    # Step 1: Collect all unique poseIds + paired model thumbnails across paginated /poses
+    poses_by_id: dict[str, dict] = {}
+    first_tags = []
+    for p in range(1, 30):
+        res = sess.get(f"https://www.posemaniacs.com/poses?page={p}", timeout=20)
+        m = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>', res.text)
+        if not m:
+            break
+        pp = json.loads(m.group(1))["props"]["pageProps"]
+        if not first_tags:
+            first_tags = [t["value"] for t in pp["options"]["tags"] if t["value"]]
+        for it in pp.get("poseList", []):
+            pid = it["poseId"]
+            rec = poses_by_id.setdefault(pid, {"models": {}, "tags": []})
+            rec["models"][it["modelId"]] = it["thumbnail"]
+        if not pp.get("urls", {}).get("next"):
+            break
+
+    print(f"Found {len(poses_by_id)} unique poseIds on Posemaniacs.", flush=True)
+
+    # Step 2: Populate verified tags per poseId via /poses/{tag}?page=N
+    def scan_tag(tag):
+        found = set()
+        p = 1
+        while p <= 50:
+            try:
+                res = requests.get(f"https://www.posemaniacs.com/poses/{tag}?page={p}", timeout=15)
+                mm = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>', res.text)
+                if not mm:
+                    break
+                data = json.loads(mm.group(1))["props"]["pageProps"]
+                for it in data.get("poseList", []):
+                    found.add(it["poseId"])
+                if not data.get("urls", {}).get("next"):
+                    break
+            except Exception:
+                break
+            p += 1
+        return tag, found
+
+    with ThreadPoolExecutor(max_workers=12) as ex:
+        for tag, found_ids in ex.map(scan_tag, first_tags):
+            for pid in found_ids:
+                if pid in poses_by_id and tag not in poses_by_id[pid]["tags"]:
+                    poses_by_id[pid]["tags"].append(tag)
+
+    # Step 3: Curate & prioritize practical, stylish, expressive poses
+    candidates = []
+    for pid, rec in poses_by_id.items():
+        tag_set = set(rec["tags"])
+        if tag_set & POSEMANIACS_EXCLUDE_TAGS:
+            continue
+        score = sum(POSEMANIACS_PRIORITY_TAGS.get(t, 1) for t in rec["tags"])
+        if "couple" in tag_set:
+            score += 4
+        candidates.append((score, pid, rec))
+
+    candidates.sort(key=lambda x: (-x[0], x[1]))
+    print(f"Curated clean Posemaniacs paired poses: {len(candidates)} (filtered filler/weird tags).", flush=True)
+
+    out_dir = POSES_DIR / "posemaniacs"
+
+    def process_pair(args):
+        seq_idx, (score, pid, rec) = args
+        card_id = f"posemaniacs_{seq_idx:04d}"
+        models = rec["models"]
+        # Deterministic primary (female 00002/00004 preferred or first available) and secondary (opposite gender)
+        ordered_mids = sorted(
+            models.keys(),
+            key=lambda m: {"00002": 0, "00004": 1, "00001": 2, "00003": 3}.get(m, 9),
+        )
+        primary_mid = ordered_mids[0]
+        secondary_mid = ordered_mids[1] if len(ordered_mids) > 1 else None
+
+        primary_path = out_dir / f"{card_id}_primary.webp"
+        secondary_path = out_dir / f"{card_id}_secondary.webp" if secondary_mid else None
+
+        def download_thumb(rel_url: str):
+            url = f"https://cdn.posemaniacs.com{rel_url}"
+            for attempt in range(3):
+                try:
+                    res = requests.get(url, timeout=20)
+                    if res.status_code == 200 and len(res.content) > 500:
+                        return res.content
+                except Exception:
+                    time.sleep(0.3 * (attempt + 1))
+            return None
+
+        raw_p = download_thumb(models[primary_mid])
+        if not raw_p:
+            return None
+        ok_p, _, vis_framing = composite_and_save_webp(
+            raw_p,
+            primary_path,
+            bg_rgb=(20, 20, 26),
+            trim_alpha=True,
+            target_aspect_3_4=True,
+        )
+        if not ok_p:
+            return None
+
+        variants = {"primary": f"/poses/posemaniacs/{card_id}_primary.webp"}
+        if secondary_mid and secondary_path:
+            raw_s = download_thumb(models[secondary_mid])
+            if raw_s:
+                ok_s, _, _ = composite_and_save_webp(
+                    raw_s,
+                    secondary_path,
+                    bg_rgb=(20, 20, 26),
+                    trim_alpha=True,
+                    target_aspect_3_4=True,
+                )
+                if ok_s:
+                    variants["secondary"] = f"/poses/posemaniacs/{card_id}_secondary.webp"
+
+        tags = rec["tags"][:]
+        tag_set = set(tags)
+        subject_count = 2 if "couple" in tag_set else 1
+
+        # Determine accurate framing
+        if "sitting-on-chair" in tag_set or "sitting" in tag_set or "squatting" in tag_set:
+            framing = vis_framing if vis_framing == "medium" else "full-body"
+        else:
+            framing = vis_framing
+
+        angle = "diagonal" if ("twisting-body" in tag_set or "twisting-neck" in tag_set) else "front"
+        title, natural_prompt = synthesize_posemaniacs_copy(tags, framing, angle, subject_count)
+
+        # Enrich searchable studio tags cleanly
+        enriched_tags = list(dict.fromkeys(tags + [framing, "paired-models" if "secondary" in variants else "solo-model"]))[:7]
+
+        return (
+            seq_idx,
+            {
+                "id": card_id,
+                "source": "posemaniacs",
+                "sourceLabel": "Posemaniacs",
+                "imageUrl": variants["primary"],
+                "variants": variants,
+                "subjectCount": subject_count,
+                "title": title,
+                "naturalPrompt": natural_prompt,
+                "framing": framing,
+                "angle": angle,
+                "tags": enriched_tags,
+            },
+        )
+
+    results = []
+    numbered = list(enumerate(candidates, start=1))
+    with ThreadPoolExecutor(max_workers=14) as ex:
+        for res in ex.map(process_pair, numbered):
+            if res is not None:
+                results.append(res)
+            if len(results) % 150 == 0 and len(results) > 0:
+                print(f"  Processed {len(results)}/{len(numbered)} Posemaniacs paired poses...", flush=True)
+
+    results.sort(key=lambda x: x[0])
+    manifest_entries.extend([r[1] for r in results])
+    print(f"✓ Posemaniacs complete: {len(results)} paired unique poses saved.", flush=True)
 
 
 def main():
-    t_start = time.time()
-    POSES_DIR.mkdir(parents=True, exist_ok=True)
-    ckpt_path = Path("/tmp/solo_pose_checkpoint.json")
+    t0 = time.time()
+    manifest_entries: list[dict] = []
 
-    seen_hashes: list[int] = []
-    seen_ids: set[str] = set()
-    seen_urls: set[str] = set()
-
-    if ckpt_path.exists():
-        solo_rows = json.loads(ckpt_path.read_text(encoding="utf-8"))
-        if len(solo_rows) == 4000 and (POSES_DIR / "pose_4000.webp").exists():
-            print(f"[solo] Resuming from checkpoint ({len(solo_rows)} solo poses already on disk)!", flush=True)
-        else:
-            solo_rows = []
-    else:
-        solo_rows = []
-
-    if not solo_rows:
-        for old_f in POSES_DIR.glob("pose_*.webp"):
-            old_f.unlink()
-        next_idx_ref = [0]
-        solo_rows = collect_solo_posedreamer(seen_hashes, seen_ids, next_idx_ref)
-        ckpt_path.write_text(json.dumps(solo_rows), encoding="utf-8")
-    else:
-        next_idx_ref = [len(solo_rows)]
-
-    duo_rows = collect_duo_fallback(seen_hashes, seen_urls, next_idx_ref)
-    manifest = solo_rows + duo_rows
+    ingest_posemyart(manifest_entries)
+    ingest_opensegra(manifest_entries)
+    ingest_posemaniacs(manifest_entries)
 
     MANIFEST_PATH.parent.mkdir(parents=True, exist_ok=True)
-    MANIFEST_PATH.write_text(json.dumps(manifest, separators=(",", ":")), encoding="utf-8")
-    if ckpt_path.exists():
-        ckpt_path.unlink()
-    size_mb = MANIFEST_PATH.stat().st_size / (1024 * 1024)
-    print(f"DONE! Saved {len(manifest)} poses & {MANIFEST_PATH} ({size_mb:.2f} MB) in {time.time()-t_start:.1f}s", flush=True)
-    sys.stdout.flush()
-    os._exit(0)
+    with open(MANIFEST_PATH, "w", encoding="utf-8") as f:
+        json.dump(manifest_entries, f, ensure_ascii=False, indent=2)
+
+    elapsed = time.time() - t0
+    by_src = {}
+    for e in manifest_entries:
+        by_src[e["source"]] = by_src.get(e["source"], 0) + 1
+
+    print(f"\n=== ALL COMPLETE in {elapsed:.1f}s ===", flush=True)
+    print(f"Manifest saved: {MANIFEST_PATH} ({len(manifest_entries)} total records)", flush=True)
+    print("Source breakdown:", by_src, flush=True)
 
 
 if __name__ == "__main__":

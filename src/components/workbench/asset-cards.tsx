@@ -3,7 +3,7 @@ import { CatalogItemImage, CatalogOutfitImage } from "@/components/wardrobe-cata
 import { PoseCardVisual } from "@/components/pose-art";
 import type { WardrobeItem, WardrobeOutfit } from "@/lib/prompt/wardrobe-database";
 import type { PoseItem } from "@/lib/prompt/pose-database";
-import type { PoseManifestItem } from "@/lib/prompt/pose-manifest";
+import { resolvePoseDisplayImage, type PoseManifestItem } from "@/lib/prompt/pose-manifest";
 import type { LightingItem } from "@/lib/prompt/lighting-database";
 import type { CameraItem } from "@/lib/prompt/camera-database";
 import type { CastModelItem } from "@/lib/prompt/cast-database";
@@ -299,19 +299,24 @@ export function PoseManifestCard({
   pose,
   applied,
   density,
+  useSecondaryVariant = false,
   onSelect,
 }: {
   pose: PoseManifestItem;
   applied: boolean;
   density: "comfortable" | "compact";
+  useSecondaryVariant?: boolean;
   onSelect: () => void;
 }) {
+  const displayUrl = resolvePoseDisplayImage(pose, useSecondaryVariant);
+  const showingAlt = Boolean(useSecondaryVariant && pose.variants?.secondary);
+
   if (density === "compact") {
     return (
       <button
         type="button"
         onClick={onSelect}
-        title={`${pose.styleCategory} · ${pose.subjectType} · ${pose.framing} (${pose.angle}) - Click to apply`}
+        title={`${pose.title} (${pose.sourceLabel} · ${pose.framing} · ${pose.angle}) - Click to apply`}
         aria-pressed={applied}
         className={cn(
           "group relative flex flex-col overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-amber-500/60 hover:shadow-xs",
@@ -320,15 +325,25 @@ export function PoseManifestCard({
       >
         <div className="relative aspect-[3/4] w-full bg-neutral-950 overflow-hidden">
           <img
-            src={pose.imageUrl}
-            alt={`${pose.styleCategory} ${pose.subjectType} ${pose.framing}`}
+            src={displayUrl}
+            alt={pose.title}
             loading="lazy"
             decoding="async"
             className="h-full w-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
           />
           <span className="absolute top-1 left-1 rounded bg-black/80 px-1 py-0.5 text-[8px] font-mono font-semibold text-amber-300 backdrop-blur-xs">
-            {pose.subjectType.toUpperCase()}
+            {pose.sourceLabel}
           </span>
+          {pose.subjectCount >= 2 && (
+            <span className="absolute bottom-1 left-1 rounded bg-cyan-500/90 px-1 py-0.5 text-[8px] font-bold text-black">
+              2 Subj
+            </span>
+          )}
+          {showingAlt && (
+            <span className="absolute bottom-1 left-1 rounded bg-purple-500/90 px-1 py-0.5 text-[8px] font-bold text-white">
+              Alt Model
+            </span>
+          )}
           {applied && (
             <span className="absolute top-1 right-1 z-20 flex size-4 items-center justify-center rounded-full bg-amber-500 text-black shadow font-bold">
               <Check className="size-2.5 stroke-[3]" />
@@ -337,7 +352,7 @@ export function PoseManifestCard({
         </div>
         <div className="p-1.5">
           <p className="text-[11px] font-medium leading-tight text-foreground truncate group-hover:text-amber-400">
-            {pose.styleCategory}
+            {pose.title}
           </p>
           <p className="mt-0.5 text-[9px] text-muted truncate">
             {pose.framing} · {pose.angle}
@@ -359,15 +374,25 @@ export function PoseManifestCard({
     >
       <div className="relative aspect-[3/4] w-full bg-neutral-950 overflow-hidden">
         <img
-          src={pose.imageUrl}
-          alt={`${pose.styleCategory} ${pose.subjectType} ${pose.framing}`}
+          src={displayUrl}
+          alt={pose.title}
           loading="lazy"
           decoding="async"
           className="h-full w-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
         />
-        <span className="absolute top-1.5 left-1.5 rounded bg-black/80 px-1.5 py-0.5 text-[9px] font-mono font-bold text-amber-300 backdrop-blur-xs uppercase">
-          {pose.subjectType}
+        <span className="absolute top-1.5 left-1.5 rounded bg-black/80 px-1.5 py-0.5 text-[9px] font-mono font-bold text-amber-300 backdrop-blur-xs">
+          {pose.sourceLabel}
         </span>
+        {pose.subjectCount >= 2 && (
+          <span className="absolute bottom-1.5 right-1.5 rounded bg-cyan-500/90 px-1.5 py-0.5 text-[9px] font-bold text-black">
+            2 Subjects
+          </span>
+        )}
+        {showingAlt && (
+          <span className="absolute bottom-1.5 right-1.5 rounded bg-purple-500/90 px-1.5 py-0.5 text-[9px] font-bold text-white">
+            Paired Alt
+          </span>
+        )}
         <span className="absolute bottom-1.5 left-1.5 rounded bg-black/75 px-1.5 py-0.5 text-[9px] text-neutral-200 backdrop-blur-xs">
           {pose.framing} · {pose.angle}
         </span>
@@ -380,7 +405,7 @@ export function PoseManifestCard({
       <div className="p-2.5 flex-1 flex flex-col justify-between">
         <div>
           <h4 className="text-xs font-semibold leading-snug text-foreground line-clamp-1 group-hover:text-amber-400">
-            {pose.styleCategory}
+            {pose.title}
           </h4>
         </div>
         <div className="mt-2 flex items-center justify-between pt-1 border-t border-border/50">

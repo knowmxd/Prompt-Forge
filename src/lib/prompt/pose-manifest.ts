@@ -1,39 +1,38 @@
 import { setAt, type PoseReference, type PromptDoc } from "./model.ts";
 
-export type PoseStyleCategoryId =
-  | "all"
-  | "Streetwear"
-  | "Editorial Lookbook"
-  | "Cinematic Poster"
-  | "Expressive Signature";
+export type PoseSourceId = "all" | "posemyart" | "opensegra" | "posemaniacs";
 
 export type PoseFramingId = "all" | "full-body" | "medium" | "close-up";
 
-export type PoseSubjectTypeId = "all" | "solo" | "duo";
+export type PoseAngleId = "front" | "side" | "diagonal" | "above" | "below";
 
-export type PoseAngleId = "eye-level" | "three-quarter" | "profile" | "low-angle";
+export type PoseMultiSubjectFilter = "all" | "paired" | "duo";
 
 export type PoseManifestItem = {
   id: string;
+  source: Exclude<PoseSourceId, "all">;
+  sourceLabel: string;
   imageUrl: string;
+  variants?: {
+    primary: string;
+    secondary?: string;
+  };
+  subjectCount: number;
+  title: string;
+  naturalPrompt: string;
   framing: Exclude<PoseFramingId, "all">;
-  subjectType: Exclude<PoseSubjectTypeId, "all">;
-  styleCategory: Exclude<PoseStyleCategoryId, "all">;
   angle: PoseAngleId;
   tags: string[];
-  rawCaption: string;
-  naturalPrompt: string;
 };
 
-export const POSE_STYLE_OPTIONS: Array<{
-  id: PoseStyleCategoryId;
+export const POSE_SOURCE_OPTIONS: Array<{
+  id: PoseSourceId;
   label: string;
 }> = [
-  { id: "all", label: "All Styles" },
-  { id: "Streetwear", label: "Streetwear" },
-  { id: "Editorial Lookbook", label: "Editorial Lookbook" },
-  { id: "Cinematic Poster", label: "Cinematic Poster" },
-  { id: "Expressive Signature", label: "Expressive Signature" },
+  { id: "all", label: "All Libraries" },
+  { id: "posemyart", label: "PoseMy.Art" },
+  { id: "opensegra", label: "OpenSegra" },
+  { id: "posemaniacs", label: "Posemaniacs" },
 ];
 
 export const POSE_FRAMING_OPTIONS: Array<{
@@ -44,15 +43,6 @@ export const POSE_FRAMING_OPTIONS: Array<{
   { id: "full-body", label: "Full-Body" },
   { id: "medium", label: "Medium" },
   { id: "close-up", label: "Close-Up" },
-];
-
-export const POSE_SUBJECT_OPTIONS: Array<{
-  id: PoseSubjectTypeId;
-  label: string;
-}> = [
-  { id: "all", label: "All" },
-  { id: "solo", label: "Solo" },
-  { id: "duo", label: "Duo" },
 ];
 
 let cachedManifest: PoseManifestItem[] | null = null;
@@ -85,37 +75,48 @@ export function getCachedPoseManifest(): PoseManifestItem[] | null {
   return cachedManifest;
 }
 
+export function resolvePoseDisplayImage(
+  item: PoseManifestItem,
+  useSecondaryVariant = false,
+): string {
+  if (useSecondaryVariant && item.variants?.secondary) {
+    return item.variants.secondary;
+  }
+  return item.variants?.primary || item.imageUrl;
+}
+
 export function filterPoseManifest(
   items: PoseManifestItem[],
   options: {
-    styleCategory?: PoseStyleCategoryId;
+    source?: PoseSourceId;
     framing?: PoseFramingId;
-    subjectType?: PoseSubjectTypeId;
+    multiMode?: PoseMultiSubjectFilter;
     query?: string;
   },
 ): PoseManifestItem[] {
   const {
-    styleCategory = "all",
+    source = "all",
     framing = "all",
-    subjectType = "all",
+    multiMode = "all",
     query = "",
   } = options;
   const q = query.trim().toLowerCase();
 
   return items.filter((item) => {
-    if (styleCategory !== "all" && item.styleCategory !== styleCategory) return false;
+    if (source !== "all" && item.source !== source) return false;
     if (framing !== "all" && item.framing !== framing) return false;
-    if (subjectType !== "all" && item.subjectType !== subjectType) return false;
+    if (multiMode === "paired" && !item.variants?.secondary) return false;
+    if (multiMode === "duo" && item.subjectCount < 2) return false;
     if (!q) return true;
 
     return (
-      item.styleCategory.toLowerCase().includes(q) ||
+      item.title.toLowerCase().includes(q) ||
+      item.naturalPrompt.toLowerCase().includes(q) ||
+      item.sourceLabel.toLowerCase().includes(q) ||
+      item.source.toLowerCase().includes(q) ||
       item.framing.toLowerCase().includes(q) ||
-      item.subjectType.toLowerCase().includes(q) ||
       item.angle.toLowerCase().includes(q) ||
       item.id.toLowerCase().includes(q) ||
-      item.rawCaption.toLowerCase().includes(q) ||
-      item.naturalPrompt.toLowerCase().includes(q) ||
       item.tags.some((t) => t.toLowerCase().includes(q))
     );
   });
@@ -125,22 +126,27 @@ export function applyPoseManifestItem(
   doc: PromptDoc,
   item: PoseManifestItem,
   subjectIndex: number,
+  options: { useSecondaryVariant?: boolean } = {},
 ): PromptDoc {
+  const useSecondary = Boolean(options.useSecondaryVariant && item.variants?.secondary);
+  const chosenImage = resolvePoseDisplayImage(item, useSecondary);
   const poseRef: PoseReference = {
     reference_id: item.id,
-    image_url: item.imageUrl,
-    style_category: item.styleCategory,
+    source: item.source,
+    source_label: item.sourceLabel,
+    image_url: chosenImage,
+    ...(item.variants ? { variants: item.variants } : {}),
+    subject_count: item.subjectCount,
+    title: item.title,
+    pose_description: item.naturalPrompt,
     framing: item.framing,
-    subject_type: item.subjectType,
     angle: item.angle,
     tags: item.tags,
-    ...(item.rawCaption ? { raw_caption: item.rawCaption } : {}),
-    ...(item.naturalPrompt ? { pose_description: item.naturalPrompt } : {}),
   };
-  const postureFallback =
+  const postureText =
     item.naturalPrompt.trim() ||
-    `${item.subjectType} ${item.framing} ${item.styleCategory.toLowerCase()} (${item.angle})`;
-  const next = setAt(doc, `subjects.${subjectIndex}.kinetic_posture`, postureFallback);
+    `${item.title} (${item.framing}, ${item.angle} angle)`;
+  const next = setAt(doc, `subjects.${subjectIndex}.kinetic_posture`, postureText);
   const subjects = next.subjects.map((subj, idx) =>
     idx === subjectIndex ? { ...subj, pose_reference: poseRef } : subj,
   );
@@ -173,9 +179,9 @@ export function isPoseManifestApplied(
 export function pickRandomPoseManifestItem(
   items: PoseManifestItem[],
   filters: {
-    styleCategory?: PoseStyleCategoryId;
+    source?: PoseSourceId;
     framing?: PoseFramingId;
-    subjectType?: PoseSubjectTypeId;
+    multiMode?: PoseMultiSubjectFilter;
   } = {},
   excludeId?: string,
 ): PoseManifestItem | undefined {

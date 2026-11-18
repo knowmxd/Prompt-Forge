@@ -198,25 +198,38 @@ function mergeSubject(value: unknown): Subject {
   if (poseRef && typeof poseRef === "object" && !Array.isArray(poseRef)) {
     const pr = poseRef as Record<string, unknown>;
     const reference_id = asString(pr.reference_id);
+    const source = asString(pr.source);
+    const source_label = asString(pr.source_label);
     const image_url = asString(pr.image_url);
-    const style_category = asString(pr.style_category);
-    const framing = asString(pr.framing);
-    const subject_type = asString(pr.subject_type);
-    const angle = asString(pr.angle);
-    const raw_caption = asString(pr.raw_caption);
+    const title = asString(pr.title);
     const pose_description = asString(pr.pose_description);
+    const framing = asString(pr.framing);
+    const angle = asString(pr.angle);
+    const subject_count = typeof pr.subject_count === "number" && pr.subject_count >= 1 ? pr.subject_count : 1;
     const tags = asList(pr.tags);
-    if (reference_id || image_url || pose_description) {
+    const rawVariants = pr.variants;
+    let variants: { primary: string; secondary?: string } | undefined;
+    if (rawVariants && typeof rawVariants === "object" && !Array.isArray(rawVariants)) {
+      const rv = rawVariants as Record<string, unknown>;
+      const primary = asString(rv.primary);
+      const secondary = asString(rv.secondary);
+      if (primary) {
+        variants = secondary ? { primary, secondary } : { primary };
+      }
+    }
+    if (reference_id || image_url || pose_description || title) {
       base.pose_reference = {
         reference_id,
+        source,
+        source_label,
         image_url,
-        style_category,
+        ...(variants ? { variants } : {}),
+        subject_count,
+        title,
+        pose_description,
         framing,
-        subject_type,
         angle,
         tags,
-        ...(raw_caption ? { raw_caption } : {}),
-        ...(pose_description ? { pose_description } : {}),
       };
     }
   }

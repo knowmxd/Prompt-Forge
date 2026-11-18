@@ -80,8 +80,7 @@ import {
 } from "@/lib/prompt/pose-database";
 import {
   POSE_FRAMING_OPTIONS,
-  POSE_STYLE_OPTIONS,
-  POSE_SUBJECT_OPTIONS,
+  POSE_SOURCE_OPTIONS,
   applyPoseManifestItem,
   clearSubjectPose,
   filterPoseManifest,
@@ -89,8 +88,8 @@ import {
   pickRandomPoseManifestItem,
   type PoseFramingId,
   type PoseManifestItem,
-  type PoseStyleCategoryId,
-  type PoseSubjectTypeId,
+  type PoseMultiSubjectFilter,
+  type PoseSourceId,
 } from "@/lib/prompt/pose-manifest";
 import { usePoseManifest } from "@/lib/prompt/use-pose-manifest";
 import { CameraCatalogModal } from "@/components/camera-catalog-modal";
@@ -382,9 +381,9 @@ export function PromptForge() {
   const [customItems, setCustomItems] = useState<WardrobeItem[]>([]);
   const [assetDensity, setAssetDensity] = useState<"comfortable" | "compact">("compact");
   const [assetFullscreen, setAssetFullscreen] = useState(false);
-  const [poseStyleFilter, setPoseStyleFilter] = useState<PoseStyleCategoryId>("all");
+  const [poseSourceFilter, setPoseSourceFilter] = useState<PoseSourceId>("all");
   const [poseFramingFilter, setPoseFramingFilter] = useState<PoseFramingId>("all");
-  const [poseSubjectFilter, setPoseSubjectFilter] = useState<PoseSubjectTypeId>("all");
+  const [poseMultiMode, setPoseMultiMode] = useState<PoseMultiSubjectFilter>("all");
   const [poseSearch, setPoseSearch] = useState("");
   const [poseShelfLimit, setPoseShelfLimit] = useState(36);
   const [lightingCategoryFilter, setLightingCategoryFilter] = useState<LightingCategory>("all");
@@ -515,12 +514,14 @@ export function PromptForge() {
 
     if (poseManifest.length > 0) {
       const randomManifestPose = pickRandomPoseManifestItem(poseManifest, {
-        styleCategory: poseStyleFilter,
+        source: poseSourceFilter,
         framing: poseFramingFilter,
-        subjectType: poseSubjectFilter,
+        multiMode: doc.subjects.length >= 2 ? poseMultiMode : "all",
       });
       if (randomManifestPose) {
-        next = applyPoseManifestItem(next, randomManifestPose, slot);
+        next = applyPoseManifestItem(next, randomManifestPose, slot, {
+          useSecondaryVariant: (doc.subjects.length >= 2 && slot >= 1) || poseMultiMode === "paired",
+        });
       }
     } else {
       const randomPose = pick(POSE_LIBRARY);
@@ -602,42 +603,41 @@ export function PromptForge() {
     assetTab === "poses" || poseGalleryOpen,
   );
 
-  const poseStyleCounts = useMemo(() => {
+  const hasSecondSubject = doc.subjects.length >= 2;
+  const isTargetingSecondarySubject = hasSecondSubject && slot >= 1;
+  const activePoseMultiMode: PoseMultiSubjectFilter = hasSecondSubject ? poseMultiMode : "all";
+
+  useEffect(() => {
+    if (!hasSecondSubject && poseMultiMode !== "all") {
+      setPoseMultiMode("all");
+    }
+  }, [hasSecondSubject, poseMultiMode]);
+
+  const poseSourceCounts = useMemo(() => {
     const counts: Record<string, number> = {
-      all: poseManifest.length || 5000,
-      Streetwear: 0,
-      "Editorial Lookbook": 0,
-      "Cinematic Poster": 0,
-      "Expressive Signature": 0,
+      all: poseManifest.length,
+      posemyart: 0,
+      opensegra: 0,
+      posemaniacs: 0,
     };
     for (const p of poseManifest) {
-      counts[p.styleCategory] = (counts[p.styleCategory] || 0) + 1;
+      counts[p.source] = (counts[p.source] || 0) + 1;
     }
     return counts;
   }, [poseManifest]);
 
   const displayedPoses = useMemo(() => {
     return filterPoseManifest(poseManifest, {
-      styleCategory: poseStyleFilter,
+      source: poseSourceFilter,
       framing: poseFramingFilter,
-      subjectType: poseSubjectFilter,
+      multiMode: activePoseMultiMode,
       query: poseSearch,
     });
-  }, [poseManifest, poseStyleFilter, poseFramingFilter, poseSubjectFilter, poseSearch]);
+  }, [poseManifest, poseSourceFilter, poseFramingFilter, activePoseMultiMode, poseSearch]);
 
   useEffect(() => {
     setPoseShelfLimit(36);
-  }, [poseStyleFilter, poseFramingFilter, poseSubjectFilter, poseSearch]);
-
-  const poseSubjectCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: 0, solo: 0, duo: 0 };
-    for (const p of poseManifest) {
-      if (poseStyleFilter !== "all" && p.styleCategory !== poseStyleFilter) continue;
-      counts.all += 1;
-      counts[p.subjectType] = (counts[p.subjectType] || 0) + 1;
-    }
-    return counts;
-  }, [poseManifest, poseStyleFilter]);
+  }, [poseSourceFilter, poseFramingFilter, activePoseMultiMode, poseSearch]);
 
   const poseFramingCounts = useMemo(() => {
     const counts: Record<string, number> = {
@@ -647,13 +647,30 @@ export function PromptForge() {
       "close-up": 0,
     };
     for (const p of poseManifest) {
-      if (poseStyleFilter !== "all" && p.styleCategory !== poseStyleFilter) continue;
-      if (poseSubjectFilter !== "all" && p.subjectType !== poseSubjectFilter) continue;
+      if (poseSourceFilter !== "all" && p.source !== poseSourceFilter) continue;
+      if (activePoseMultiMode === "paired" && !p.variants?.secondary) continue;
+      if (activePoseMultiMode === "duo" && p.subjectCount < 2) continue;
       counts.all += 1;
       counts[p.framing] = (counts[p.framing] || 0) + 1;
     }
     return counts;
-  }, [poseManifest, poseStyleFilter, poseSubjectFilter]);
+  }, [poseManifest, poseSourceFilter, activePoseMultiMode]);
+
+  const posePairedCount = useMemo(
+    () =>
+      poseManifest.filter(
+        (p) => (poseSourceFilter === "all" || p.source === poseSourceFilter) && Boolean(p.variants?.secondary),
+      ).length,
+    [poseManifest, poseSourceFilter],
+  );
+
+  const poseDuoCount = useMemo(
+    () =>
+      poseManifest.filter(
+        (p) => (poseSourceFilter === "all" || p.source === poseSourceFilter) && p.subjectCount >= 2,
+      ).length,
+    [poseManifest, poseSourceFilter],
+  );
 
   const visibleShelfPoses = useMemo(() => {
     return displayedPoses.slice(0, poseShelfLimit);
@@ -745,12 +762,16 @@ export function PromptForge() {
     commitDoc(emptyDoc(), "Cleared all pins from board.");
   };
 
-  const handleSelectManifestPose = (pose: PoseManifestItem) => {
-    const next = applyPoseManifestItem(doc, pose, slot);
+  const handleSelectManifestPose = (pose: PoseManifestItem, useSecondaryOverride?: boolean) => {
+    const useSecondary =
+      useSecondaryOverride ?? (isTargetingSecondarySubject || activePoseMultiMode === "paired");
+    const next = applyPoseManifestItem(doc, pose, slot, {
+      useSecondaryVariant: useSecondary,
+    });
     setUntouched(false);
     commitDoc(
       next,
-      `Pinned ${pose.styleCategory} (${pose.subjectType} · ${pose.framing}) to ${doc.subjects[slot]?.subject_id.trim() || `Subject ${slot + 1}`}.`,
+      `Pinned "${pose.title}" (${pose.sourceLabel} · ${pose.framing}) to ${doc.subjects[slot]?.subject_id.trim() || `Subject ${slot + 1}`}.`,
     );
   };
 
@@ -759,9 +780,9 @@ export function PromptForge() {
     const picked = pickRandomPoseManifestItem(
       pool,
       {
-        styleCategory: poseStyleFilter,
+        source: poseSourceFilter,
         framing: poseFramingFilter,
-        subjectType: poseSubjectFilter,
+        multiMode: activePoseMultiMode,
       },
       doc.subjects[slot]?.pose_reference?.reference_id,
     );
@@ -1876,7 +1897,9 @@ export function PromptForge() {
                       : assetTab === "wardrobe"
                         ? `${allWardrobeItems.length} Pieces · ${allWardrobeOutfits.length} Outfits`
                         : assetTab === "poses"
-                          ? `${poseStyleCounts.all.toLocaleString()} Poses`
+                          ? poseSourceCounts.all > 0
+                            ? `${poseSourceCounts.all.toLocaleString()} Poses`
+                            : "3-Source Poses"
                           : assetTab === "lighting"
                             ? `${LIGHTING_LIBRARY.length} Setups`
                             : assetTab === "camera"
@@ -1932,7 +1955,12 @@ export function PromptForge() {
               {[
                 { id: "cast" as const, label: "Cast", icon: Users, count: CAST_MODELS.length },
                 { id: "wardrobe" as const, label: "Wardrobe", icon: Shirt, count: allWardrobeItems.length },
-                { id: "poses" as const, label: "Poses", icon: Sparkles, count: poseStyleCounts.all },
+                {
+                  id: "poses" as const,
+                  label: "Poses",
+                  icon: Sparkles,
+                  count: poseSourceCounts.all > 0 ? poseSourceCounts.all : undefined,
+                },
                 { id: "lighting" as const, label: "Light", icon: SunMedium, count: LIGHTING_LIBRARY.length },
                 { id: "camera" as const, label: "Camera", icon: Camera, count: CAMERA_LIBRARY.length },
                 { id: "styles" as const, label: "Styles", icon: Palette, count: STYLE_LIBRARY.length },
@@ -2225,19 +2253,19 @@ export function PromptForge() {
             </>
           )}
 
-          {/* TAB 2: POSES (5,000 PoseDreamer + Duo Pose References) */}
+          {/* TAB 2: POSES (3-Source Curated Mannequin Pose References) */}
           {assetTab === "poses" && (
             <>
               <div className="shrink-0 border-b border-border bg-surface/30 px-3 py-2 space-y-2">
                 <div className="flex items-center justify-between gap-1.5">
                   <select
-                    aria-label="Filter pose style"
-                    value={poseStyleFilter}
-                    onChange={(e) => setPoseStyleFilter(e.target.value as PoseStyleCategoryId)}
+                    aria-label="Filter pose library source"
+                    value={poseSourceFilter}
+                    onChange={(e) => setPoseSourceFilter(e.target.value as PoseSourceId)}
                     className="h-7 min-w-0 flex-1 rounded-md border border-border bg-bg px-2 text-[11px] font-semibold text-foreground focus:border-amber-500 focus:outline-none"
                   >
-                    {POSE_STYLE_OPTIONS.map((opt) => {
-                      const cnt = poseStyleCounts[opt.id] ?? 0;
+                    {POSE_SOURCE_OPTIONS.map((opt) => {
+                      const cnt = poseSourceCounts[opt.id] ?? 0;
                       return (
                         <option key={opt.id} value={opt.id}>
                           {cnt > 0 ? `${opt.label} (${cnt.toLocaleString()})` : opt.label}
@@ -2271,10 +2299,10 @@ export function PromptForge() {
                     type="button"
                     onClick={() => setPoseGalleryOpen(true)}
                     className="flex h-7 shrink-0 items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 text-[11px] font-semibold text-amber-400 hover:bg-amber-500/20 transition-all shadow-xs"
-                    title="Open Fullscreen Virtualized 5,000-Card Gallery"
+                    title="Open Fullscreen Virtualized Pose Library"
                   >
                     <Sparkles className="size-3" />
-                    <span>5k Grid</span>
+                    <span>Full Grid</span>
                   </button>
                 </div>
 
@@ -2299,33 +2327,62 @@ export function PromptForge() {
                     )}
                   </div>
 
-                  <div
-                    role="group"
-                    aria-label="Filter subject type"
-                    className="flex shrink-0 items-center rounded-md border border-border bg-bg p-0.5"
-                  >
-                    {POSE_SUBJECT_OPTIONS.map((opt) => {
-                      const active = poseSubjectFilter === opt.id;
-                      const cnt = poseSubjectCounts[opt.id] ?? 0;
-                      return (
+                  {!hasSecondSubject && (
+                    <button
+                      type="button"
+                      onClick={addSubject}
+                      className="flex h-7 shrink-0 items-center gap-1 rounded-md border border-cyan-500/40 bg-cyan-500/10 px-2 text-[10px] font-semibold text-cyan-300 hover:bg-cyan-500/20"
+                      title="Add a second subject to unlock paired model variants and duo poses"
+                    >
+                      <Plus className="size-3" />
+                      <span>2nd Subj</span>
+                    </button>
+                  )}
+                </div>
+
+                {hasSecondSubject && (
+                  <div className="flex flex-wrap items-center justify-between gap-1.5 rounded-md border border-cyan-500/30 bg-cyan-500/10 px-2 py-1">
+                    <div className="flex items-center gap-1">
+                      <Users className="size-3 text-cyan-400" />
+                      {doc.subjects.map((subj, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setSubjectIndex(idx)}
+                          className={cn(
+                            "rounded px-1.5 py-0.5 text-[10px] font-semibold transition-all",
+                            idx === slot
+                              ? "bg-cyan-400 text-black"
+                              : "bg-bg/80 text-muted hover:text-foreground",
+                          )}
+                        >
+                          {subj.subject_id.trim() || `Subj ${idx + 1}`}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[
+                        { id: "all" as const, label: "All" },
+                        { id: "paired" as const, label: `Paired (${posePairedCount})` },
+                        { id: "duo" as const, label: `Duo (${poseDuoCount})` },
+                      ].map((opt) => (
                         <button
                           key={opt.id}
                           type="button"
-                          onClick={() => setPoseSubjectFilter(opt.id)}
-                          title={`${opt.label} (${cnt.toLocaleString()})`}
+                          onClick={() => setPoseMultiMode(opt.id)}
                           className={cn(
-                            "rounded px-2 py-0.5 text-[10px] font-semibold transition-all",
-                            active
-                              ? "bg-cyan-500 text-black"
-                              : "text-muted hover:text-foreground",
+                            "rounded px-1.5 py-0.5 text-[10px] font-semibold transition-all",
+                            activePoseMultiMode === opt.id
+                              ? "bg-purple-500 text-white"
+                              : "bg-bg/80 text-muted hover:text-foreground",
                           )}
                         >
                           {opt.label}
                         </button>
-                      );
-                    })}
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div className="flex items-center gap-1 overflow-x-auto pb-0.5 no-scrollbar text-xs">
                   {POSE_FRAMING_OPTIONS.map((pill) => {
@@ -2357,12 +2414,12 @@ export function PromptForge() {
                 {poseManifestLoading ? (
                   <div className="py-12 text-center text-xs text-muted">
                     <Sparkles className="mx-auto size-8 opacity-40 mb-2 animate-pulse text-amber-400" />
-                    <p>Loading 5,000 Solo Pose References...</p>
+                    <p>Loading Pose Reference Library...</p>
                   </div>
                 ) : displayedPoses.length === 0 ? (
                   <div className="py-12 text-center text-xs text-muted">
                     <Sparkles className="mx-auto size-8 opacity-30 mb-2" />
-                    <p>No poses match "{poseSearch}".</p>
+                    <p>No poses match &ldquo;{poseSearch || poseSourceFilter}&rdquo;.</p>
                   </div>
                 ) : (
                   <>
@@ -2380,6 +2437,7 @@ export function PromptForge() {
                           pose={pose}
                           applied={isPoseManifestApplied(doc, pose, slot)}
                           density={assetDensity}
+                          useSecondaryVariant={isTargetingSecondarySubject || activePoseMultiMode === "paired"}
                           onSelect={() => handleSelectManifestPose(pose)}
                         />
                       ))}
@@ -2399,7 +2457,7 @@ export function PromptForge() {
                           onClick={() => setPoseGalleryOpen(true)}
                           className="text-[11px] text-amber-400 hover:underline"
                         >
-                          Open Virtualized 5k Gallery ({displayedPoses.length.toLocaleString()} poses)
+                          Open Fullscreen Gallery ({displayedPoses.length.toLocaleString()} poses)
                         </button>
                       </div>
                     )}
@@ -3106,6 +3164,10 @@ export function PromptForge() {
         onSelectPose={handleSelectManifestPose}
         onClearPose={handleClearPose}
         activePoseId={doc.subjects[slot]?.pose_reference?.reference_id}
+        subjects={doc.subjects}
+        activeSubjectIndex={slot}
+        onSelectSubject={(idx) => setSubjectIndex(idx)}
+        onAddSubject={addSubject}
       />
       <CameraCatalogModal
         isOpen={cameraGalleryOpen}

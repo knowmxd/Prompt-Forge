@@ -4,5 +4,6 @@ node_modules/
 .env
 .env.*
 .DS_Store
-public/poses/pose_*.webp
-
+public/poses/posemyart/
+public/poses/opensegra/
+public/poses/posemaniacs/

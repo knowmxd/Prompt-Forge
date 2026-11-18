@@ -1,27 +1,32 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Check, Filter, RotateCcw, Search, Shuffle, Sparkles, X } from "lucide-react";
+import { Check, Filter, Plus, RotateCcw, Search, Shuffle, Sparkles, Users, X } from "lucide-react";
 import {
   POSE_FRAMING_OPTIONS,
-  POSE_STYLE_OPTIONS,
-  POSE_SUBJECT_OPTIONS,
+  POSE_SOURCE_OPTIONS,
   filterPoseManifest,
   pickRandomPoseManifestItem,
+  resolvePoseDisplayImage,
   type PoseFramingId,
   type PoseManifestItem,
-  type PoseStyleCategoryId,
-  type PoseSubjectTypeId,
+  type PoseMultiSubjectFilter,
+  type PoseSourceId,
 } from "@/lib/prompt/pose-manifest";
+import type { Subject } from "@/lib/prompt/model";
 import { usePoseManifest } from "@/lib/prompt/use-pose-manifest";
 
 interface PoseCatalogModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectPose: (pose: PoseManifestItem) => void;
+  onSelectPose: (pose: PoseManifestItem, useSecondaryVariant?: boolean) => void;
   onClearPose: () => void;
   activePoseId?: string;
+  subjects?: Subject[];
+  activeSubjectIndex?: number;
+  onSelectSubject?: (index: number) => void;
+  onAddSubject?: () => void;
 }
 
-const CARD_ROW_HEIGHT = 286;
+const CARD_ROW_HEIGHT = 296;
 const GRID_GAP = 14;
 const OVERSCAN_ROWS = 2;
 
@@ -31,10 +36,14 @@ export function PoseCatalogModal({
   onSelectPose,
   onClearPose,
   activePoseId,
+  subjects = [],
+  activeSubjectIndex = 0,
+  onSelectSubject,
+  onAddSubject,
 }: PoseCatalogModalProps) {
-  const [styleCategory, setStyleCategory] = useState<PoseStyleCategoryId>("all");
+  const [sourceFilter, setSourceFilter] = useState<PoseSourceId>("all");
   const [framing, setFraming] = useState<PoseFramingId>("all");
-  const [subjectType, setSubjectType] = useState<PoseSubjectTypeId>("all");
+  const [multiMode, setMultiMode] = useState<PoseMultiSubjectFilter>("all");
   const [query, setQuery] = useState("");
   const [justAppliedId, setJustAppliedId] = useState<string | null>(null);
 
@@ -44,6 +53,15 @@ export function PoseCatalogModal({
   const [viewportHeight, setViewportHeight] = useState(720);
 
   const { poses, loading, error } = usePoseManifest(isOpen);
+
+  const hasSecondSubject = subjects.length >= 2;
+  const isTargetingSecondarySubject = hasSecondSubject && activeSubjectIndex >= 1;
+
+  useEffect(() => {
+    if (!hasSecondSubject && multiMode !== "all") {
+      setMultiMode("all");
+    }
+  }, [hasSecondSubject, multiMode]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -75,31 +93,20 @@ export function PoseCatalogModal({
       scrollRef.current.scrollTop = 0;
     }
     setScrollTop(0);
-  }, [styleCategory, framing, subjectType, query]);
+  }, [sourceFilter, framing, multiMode, query]);
 
-  const styleCounts = useMemo(() => {
+  const sourceCounts = useMemo(() => {
     const counts: Record<string, number> = {
       all: poses.length,
-      Streetwear: 0,
-      "Editorial Lookbook": 0,
-      "Cinematic Poster": 0,
-      "Expressive Signature": 0,
+      posemyart: 0,
+      opensegra: 0,
+      posemaniacs: 0,
     };
     for (const p of poses) {
-      counts[p.styleCategory] = (counts[p.styleCategory] || 0) + 1;
+      counts[p.source] = (counts[p.source] || 0) + 1;
     }
     return counts;
   }, [poses]);
-
-  const subjectCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: 0, solo: 0, duo: 0 };
-    for (const p of poses) {
-      if (styleCategory !== "all" && p.styleCategory !== styleCategory) continue;
-      counts.all += 1;
-      counts[p.subjectType] = (counts[p.subjectType] || 0) + 1;
-    }
-    return counts;
-  }, [poses, styleCategory]);
 
   const framingCounts = useMemo(() => {
     const counts: Record<string, number> = {
@@ -109,22 +116,39 @@ export function PoseCatalogModal({
       "close-up": 0,
     };
     for (const p of poses) {
-      if (styleCategory !== "all" && p.styleCategory !== styleCategory) continue;
-      if (subjectType !== "all" && p.subjectType !== subjectType) continue;
+      if (sourceFilter !== "all" && p.source !== sourceFilter) continue;
+      if (multiMode === "paired" && !p.variants?.secondary) continue;
+      if (multiMode === "duo" && p.subjectCount < 2) continue;
       counts.all += 1;
       counts[p.framing] = (counts[p.framing] || 0) + 1;
     }
     return counts;
-  }, [poses, styleCategory, subjectType]);
+  }, [poses, sourceFilter, multiMode]);
+
+  const pairedCount = useMemo(
+    () =>
+      poses.filter(
+        (p) => (sourceFilter === "all" || p.source === sourceFilter) && Boolean(p.variants?.secondary),
+      ).length,
+    [poses, sourceFilter],
+  );
+
+  const duoCount = useMemo(
+    () =>
+      poses.filter(
+        (p) => (sourceFilter === "all" || p.source === sourceFilter) && p.subjectCount >= 2,
+      ).length,
+    [poses, sourceFilter],
+  );
 
   const filteredPoses = useMemo(() => {
     return filterPoseManifest(poses, {
-      styleCategory,
+      source: sourceFilter,
       framing,
-      subjectType,
+      multiMode: hasSecondSubject ? multiMode : "all",
       query,
     });
-  }, [poses, styleCategory, framing, subjectType, query]);
+  }, [poses, sourceFilter, framing, multiMode, hasSecondSubject, query]);
 
   const cols = useMemo(() => {
     if (viewportWidth >= 1280) return 6;
@@ -147,7 +171,8 @@ export function PoseCatalogModal({
   }, [filteredPoses, startRow, endRow, cols]);
 
   const handlePick = (pose: PoseManifestItem) => {
-    onSelectPose(pose);
+    const useSecondary = isTargetingSecondarySubject || multiMode === "paired";
+    onSelectPose(pose, useSecondary);
     setJustAppliedId(pose.id);
     window.setTimeout(() => {
       setJustAppliedId((cur) => (cur === pose.id ? null : cur));
@@ -158,7 +183,11 @@ export function PoseCatalogModal({
     const pool = filteredPoses.length > 0 ? filteredPoses : poses;
     const picked = pickRandomPoseManifestItem(
       pool,
-      { styleCategory, framing, subjectType },
+      {
+        source: sourceFilter,
+        framing,
+        multiMode: hasSecondSubject ? multiMode : "all",
+      },
       activePoseId,
     );
     if (picked) {
@@ -186,24 +215,24 @@ export function PoseCatalogModal({
               Pose Reference Library
             </h2>
             <p className="text-xs text-neutral-400">
-              5,000 curated PoseDreamer &amp; editorial duo references · 80% Solo / 20% Duo · 50/30/20 Framing
+              {poses.length > 0 ? `${poses.length.toLocaleString()} curated 3D mannequin poses` : "Curated 3D mannequin poses"} · PoseMy.Art, OpenSegra (5 angles) &amp; Posemaniacs
             </p>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {/* Style Category Dropdown */}
+          {/* Library Source Dropdown */}
           <div className="relative flex items-center">
             <Filter className="pointer-events-none absolute left-2.5 h-3.5 w-3.5 text-amber-400" />
             <select
-              id="pose-style-select"
-              aria-label="Filter pose style"
-              value={styleCategory}
-              onChange={(e) => setStyleCategory(e.target.value as PoseStyleCategoryId)}
+              id="pose-source-select"
+              aria-label="Filter pose library source"
+              value={sourceFilter}
+              onChange={(e) => setSourceFilter(e.target.value as PoseSourceId)}
               className="h-9 rounded-lg border border-neutral-700 bg-neutral-900 pl-8 pr-8 text-xs font-semibold text-white focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
             >
-              {POSE_STYLE_OPTIONS.map((opt) => {
-                const count = styleCounts[opt.id] ?? 0;
+              {POSE_SOURCE_OPTIONS.map((opt) => {
+                const count = sourceCounts[opt.id] ?? 0;
                 return (
                   <option key={opt.id} value={opt.id}>
                     {count > 0 ? `${opt.label} (${count.toLocaleString()})` : opt.label}
@@ -212,6 +241,18 @@ export function PoseCatalogModal({
               })}
             </select>
           </div>
+
+          {!hasSecondSubject && onAddSubject && (
+            <button
+              type="button"
+              onClick={onAddSubject}
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-cyan-500/40 bg-cyan-500/10 px-3 text-xs font-semibold text-cyan-300 transition-colors hover:bg-cyan-500/20"
+              title="Add a second subject to unlock paired alternates and duo pose selection"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>Add 2nd Subject</span>
+            </button>
+          )}
 
           <button
             type="button"
@@ -246,7 +287,7 @@ export function PoseCatalogModal({
         </div>
       </div>
 
-      {/* Search Bar, Subject Toggle & Framing Filter Pills */}
+      {/* Search Bar & Framing Filter Pills */}
       <div className="shrink-0 space-y-2.5 border-b border-neutral-800/80 bg-neutral-950/90 px-5 py-3">
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative min-w-[240px] flex-1">
@@ -255,7 +296,7 @@ export function PoseCatalogModal({
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search 5,000 poses by style, framing, solo/duo, angle, tag, or ID..."
+              placeholder="Search poses by title, source (PoseMy.Art / OpenSegra / Posemaniacs), angle, framing, or tag..."
               className="w-full rounded-full border border-neutral-800 bg-neutral-900/90 py-2 pl-10 pr-8 text-sm text-white placeholder-neutral-500 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
               autoFocus
             />
@@ -271,39 +312,6 @@ export function PoseCatalogModal({
             )}
           </div>
 
-          {/* Subject Toggle (All / Solo / Duo) */}
-          <div
-            role="group"
-            aria-label="Filter subject count"
-            className="flex items-center rounded-full border border-neutral-800 bg-neutral-900 p-0.5"
-          >
-            {POSE_SUBJECT_OPTIONS.map((opt) => {
-              const count = subjectCounts[opt.id] ?? 0;
-              const isSelected = subjectType === opt.id;
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => setSubjectType(opt.id)}
-                  className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold transition-all ${
-                    isSelected
-                      ? "bg-cyan-500 text-black shadow-sm"
-                      : "text-neutral-300 hover:text-white"
-                  }`}
-                >
-                  <span>{opt.label}</span>
-                  <span
-                    className={`rounded-full px-1.5 text-[10px] tabular-nums ${
-                      isSelected ? "bg-black/20 text-black" : "bg-neutral-800 text-neutral-400"
-                    }`}
-                  >
-                    {count.toLocaleString()}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
           <div className="text-xs font-mono text-neutral-400 shrink-0">
             Showing{" "}
             <span className="font-bold text-amber-400">
@@ -314,32 +322,79 @@ export function PoseCatalogModal({
         </div>
 
         {/* Framing Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
-          {POSE_FRAMING_OPTIONS.map((pill) => {
-            const count = framingCounts[pill.id] ?? 0;
-            const isSelected = framing === pill.id;
-            return (
-              <button
-                key={pill.id}
-                type="button"
-                onClick={() => setFraming(pill.id)}
-                className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all ${
-                  isSelected
-                    ? "bg-amber-500 text-black shadow-sm font-semibold"
-                    : "border border-neutral-800 bg-neutral-900/80 text-neutral-300 hover:border-neutral-700 hover:text-white"
-                }`}
-              >
-                <span>{pill.label}</span>
-                <span
-                  className={`rounded-full px-1.5 py-0.2 text-[10px] tabular-nums ${
-                    isSelected ? "bg-black/20 text-black" : "bg-neutral-800 text-neutral-400"
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+            {POSE_FRAMING_OPTIONS.map((pill) => {
+              const count = framingCounts[pill.id] ?? 0;
+              const isSelected = framing === pill.id;
+              return (
+                <button
+                  key={pill.id}
+                  type="button"
+                  onClick={() => setFraming(pill.id)}
+                  className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all ${
+                    isSelected
+                      ? "bg-amber-500 text-black shadow-sm font-semibold"
+                      : "border border-neutral-800 bg-neutral-900/80 text-neutral-300 hover:border-neutral-700 hover:text-white"
                   }`}
                 >
-                  {count.toLocaleString()}
-                </span>
-              </button>
-            );
-          })}
+                  <span>{pill.label}</span>
+                  <span
+                    className={`rounded-full px-1.5 py-0.2 text-[10px] tabular-nums ${
+                      isSelected ? "bg-black/20 text-black" : "bg-neutral-800 text-neutral-400"
+                    }`}
+                  >
+                    {count.toLocaleString()}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Revealed only when 2+ subjects exist in PromptDoc */}
+          {hasSecondSubject && (
+            <div className="flex flex-wrap items-center gap-2 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1">
+              <Users className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
+              <span className="text-[11px] font-semibold text-cyan-200">Assigning:</span>
+              <div className="flex items-center gap-1">
+                {subjects.map((subj, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => onSelectSubject?.(idx)}
+                    className={`rounded px-2 py-0.5 text-[11px] font-semibold transition-all ${
+                      idx === activeSubjectIndex
+                        ? "bg-cyan-400 text-black"
+                        : "bg-neutral-900 text-neutral-300 hover:text-white"
+                    }`}
+                  >
+                    {subj.subject_id.trim() || `Subject ${idx + 1}`}
+                  </button>
+                ))}
+              </div>
+              <div className="h-4 w-px bg-cyan-500/30" />
+              <div className="flex items-center gap-1">
+                {[
+                  { id: "all" as const, label: "All" },
+                  { id: "paired" as const, label: `Paired Alts (${pairedCount})` },
+                  { id: "duo" as const, label: `Duo (${duoCount})` },
+                ].map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setMultiMode(opt.id)}
+                    className={`rounded px-2 py-0.5 text-[10px] font-semibold transition-all ${
+                      multiMode === opt.id
+                        ? "bg-purple-500 text-white"
+                        : "bg-neutral-900/90 text-neutral-300 hover:text-white"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -352,9 +407,9 @@ export function PoseCatalogModal({
         {loading && poses.length === 0 ? (
           <div className="flex h-64 flex-col items-center justify-center text-neutral-400">
             <Sparkles className="mb-3 h-8 w-8 animate-pulse text-amber-400" />
-            <p className="text-sm font-medium text-white">Loading 5,000 Pose References...</p>
+            <p className="text-sm font-medium text-white">Loading Pose Reference Library...</p>
             <p className="mt-1 text-xs text-neutral-500">
-              Preparing virtualized grid across PoseDreamer &amp; Duo references
+              Preparing virtualized grid across PoseMy.Art, OpenSegra &amp; Posemaniacs
             </p>
           </div>
         ) : error ? (
@@ -370,9 +425,9 @@ export function PoseCatalogModal({
             <button
               type="button"
               onClick={() => {
-                setStyleCategory("all");
+                setSourceFilter("all");
                 setFraming("all");
-                setSubjectType("all");
+                setMultiMode("all");
                 setQuery("");
               }}
               className="mt-3 rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-1.5 text-xs text-amber-400 hover:bg-neutral-800"
@@ -396,6 +451,10 @@ export function PoseCatalogModal({
               {visibleSlice.map((pose) => {
                 const isSelected = activePoseId === pose.id;
                 const isJustApplied = justAppliedId === pose.id;
+                const useAlt = Boolean(
+                  (isTargetingSecondarySubject || multiMode === "paired") && pose.variants?.secondary,
+                );
+                const imgUrl = resolvePoseDisplayImage(pose, useAlt);
                 return (
                   <button
                     key={pose.id}
@@ -411,28 +470,34 @@ export function PoseCatalogModal({
                     {/* Visual Reference Image */}
                     <div className="relative w-full flex-1 min-h-0 overflow-hidden bg-neutral-950">
                       <img
-                        src={pose.imageUrl}
-                        alt={`${pose.styleCategory} ${pose.subjectType} ${pose.framing}`}
+                        src={imgUrl}
+                        alt={pose.title}
                         loading="lazy"
                         decoding="async"
                         className="h-full w-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
                       />
 
-                      {/* Subject Type Badge */}
-                      <span
-                        className={`absolute top-2 left-2 rounded-md px-1.5 py-0.5 text-[10px] font-mono font-bold uppercase backdrop-blur-sm ${
-                          pose.subjectType === "duo"
-                            ? "bg-cyan-500/85 text-black"
-                            : "bg-black/80 text-amber-300"
-                        }`}
-                      >
-                        {pose.subjectType}
+                      {/* Source Badge */}
+                      <span className="absolute top-2 left-2 rounded-md bg-black/80 px-1.5 py-0.5 text-[10px] font-mono font-bold text-amber-300 backdrop-blur-sm">
+                        {pose.sourceLabel}
                       </span>
 
-                      {/* Framing & Angle Badge */}
+                      {/* Framing Badge */}
                       <span className="absolute top-2 right-2 rounded-md bg-black/75 px-1.5 py-0.5 text-[10px] text-neutral-200 backdrop-blur-sm">
                         {pose.framing}
                       </span>
+
+                      {pose.subjectCount >= 2 && (
+                        <span className="absolute bottom-2 left-2 rounded-md bg-cyan-500/90 px-1.5 py-0.5 text-[10px] font-bold text-black shadow">
+                          2 Subjects
+                        </span>
+                      )}
+
+                      {useAlt && (
+                        <span className="absolute bottom-2 left-2 rounded-md bg-purple-500/90 px-1.5 py-0.5 text-[10px] font-bold text-white shadow">
+                          Paired Alt (Subj {activeSubjectIndex + 1})
+                        </span>
+                      )}
 
                       {isSelected && (
                         <div className="absolute bottom-2 right-2 flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-black shadow">
@@ -446,7 +511,7 @@ export function PoseCatalogModal({
                     <div className="shrink-0 p-2.5 bg-neutral-950/90 border-t border-neutral-800/70">
                       <div className="flex items-center justify-between gap-2">
                         <h3 className="text-xs font-semibold text-white truncate group-hover:text-amber-300">
-                          {pose.styleCategory}
+                          {pose.title}
                         </h3>
                         <span className="text-[10px] font-mono text-neutral-500 shrink-0">
                           {pose.id}
@@ -470,7 +535,7 @@ export function PoseCatalogModal({
 
                     {isJustApplied && (
                       <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-amber-500 py-1 text-center text-[10px] font-bold text-black">
-                        Selected!
+                        Selected for Subject {activeSubjectIndex + 1}!
                       </div>
                     )}
                   </button>
@@ -484,8 +549,9 @@ export function PoseCatalogModal({
       {/* Footer */}
       <div className="flex items-center justify-between border-t border-neutral-800 bg-neutral-950/95 px-5 py-2.5 text-xs text-neutral-400 shrink-0">
         <span>
-          Visual-First Pose Library · Click any card to bind{" "}
-          <code className="text-amber-400">pose_reference</code> into your live JSON
+          Visual-First Pose Library · Click any card to inject{" "}
+          <code className="text-amber-400">kinetic_posture</code> &amp;{" "}
+          <code className="text-amber-400">pose_reference</code> into Subject {activeSubjectIndex + 1}
         </span>
         <button
           type="button"

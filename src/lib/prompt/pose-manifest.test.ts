@@ -14,104 +14,137 @@ import {
 
 const SAMPLE_ITEMS: PoseManifestItem[] = [
   {
-    id: "pose_0001",
-    imageUrl: "/poses/pose_0001.webp",
+    id: "posemyart_0001",
+    source: "posemyart",
+    sourceLabel: "PoseMy.Art",
+    imageUrl: "/poses/posemyart/posemyart_0001.webp",
+    subjectCount: 1,
+    title: "Confident knee sitting pose",
+    naturalPrompt: "Female is sitting on her knees, holding her hip with her left hand",
     framing: "full-body",
-    subjectType: "solo",
-    styleCategory: "Streetwear",
-    angle: "three-quarter",
-    tags: ["solo", "full-body", "streetwear", "three-quarter"],
-    rawCaption: "PoseDreamer (laion) full-body solo three-quarter pose",
-    naturalPrompt: "",
+    angle: "front",
+    tags: ["knee sitting", "sitting", "hand"],
   },
   {
-    id: "pose_4001",
-    imageUrl: "/poses/pose_4001.webp",
+    id: "opensegra_0001",
+    source: "opensegra",
+    sourceLabel: "OpenSegra",
+    imageUrl: "/poses/opensegra/opensegra_0001.webp",
+    subjectCount: 2,
+    title: "Back-to-back duo (Diagonal)",
+    naturalPrompt: "Two figures leaning back-to-back in a balanced editorial duo stance.",
     framing: "medium",
-    subjectType: "duo",
-    styleCategory: "Editorial Lookbook",
-    angle: "eye-level",
-    tags: ["duo", "medium", "editorial", "eye-level"],
-    rawCaption: "2girls, editorial fashion duo standing side by side",
-    naturalPrompt: "",
+    angle: "diagonal",
+    tags: ["duo", "diagonal", "standing"],
+  },
+  {
+    id: "posemaniacs_0001",
+    source: "posemaniacs",
+    sourceLabel: "Posemaniacs",
+    imageUrl: "/poses/posemaniacs/posemaniacs_0001_primary.webp",
+    variants: {
+      primary: "/poses/posemaniacs/posemaniacs_0001_primary.webp",
+      secondary: "/poses/posemaniacs/posemaniacs_0001_secondary.webp",
+    },
+    subjectCount: 1,
+    title: "Fashion Walking Standing",
+    naturalPrompt: "Single figure in an editorial fashion stance, mid-stride walking motion.",
+    framing: "full-body",
+    angle: "diagonal",
+    tags: ["standing", "walking", "fashion"],
   },
 ];
 
 describe("pose manifest filtering and PromptDoc wiring", () => {
-  it("filters by styleCategory, framing, subjectType, and search query", () => {
-    assert.equal(filterPoseManifest(SAMPLE_ITEMS, { styleCategory: "Streetwear" }).length, 1);
-    assert.equal(filterPoseManifest(SAMPLE_ITEMS, { subjectType: "duo" })[0]?.id, "pose_4001");
-    assert.equal(filterPoseManifest(SAMPLE_ITEMS, { framing: "medium" })[0]?.id, "pose_4001");
-    assert.equal(filterPoseManifest(SAMPLE_ITEMS, { query: "three-quarter" })[0]?.id, "pose_0001");
+  it("filters by source, framing, multiMode (paired / duo), and search query", () => {
+    assert.equal(filterPoseManifest(SAMPLE_ITEMS, { source: "posemyart" }).length, 1);
+    assert.equal(filterPoseManifest(SAMPLE_ITEMS, { multiMode: "duo" })[0]?.id, "opensegra_0001");
+    assert.equal(filterPoseManifest(SAMPLE_ITEMS, { multiMode: "paired" })[0]?.id, "posemaniacs_0001");
+    assert.equal(filterPoseManifest(SAMPLE_ITEMS, { framing: "medium" })[0]?.id, "opensegra_0001");
+    assert.equal(filterPoseManifest(SAMPLE_ITEMS, { query: "fashion" })[0]?.id, "posemaniacs_0001");
   });
 
-  it("populates pose_reference JSON fields and fallback kinetic_posture cleanly when naturalPrompt is blank", () => {
+  it("populates pose_reference JSON fields and switches to secondary variant when requested", () => {
     const doc = emptyDoc();
-    const updated = applyPoseManifestItem(doc, SAMPLE_ITEMS[0]!, 0);
+    const updatedPrimary = applyPoseManifestItem(doc, SAMPLE_ITEMS[2]!, 0);
 
     assert.equal(
-      updated.subjects[0]?.kinetic_posture,
-      "solo full-body streetwear (three-quarter)",
+      updatedPrimary.subjects[0]?.kinetic_posture,
+      "Single figure in an editorial fashion stance, mid-stride walking motion.",
     );
-    assert.deepEqual(updated.subjects[0]?.pose_reference, {
-      reference_id: "pose_0001",
-      image_url: "/poses/pose_0001.webp",
-      style_category: "Streetwear",
+    assert.deepEqual(updatedPrimary.subjects[0]?.pose_reference, {
+      reference_id: "posemaniacs_0001",
+      source: "posemaniacs",
+      source_label: "Posemaniacs",
+      image_url: "/poses/posemaniacs/posemaniacs_0001_primary.webp",
+      variants: {
+        primary: "/poses/posemaniacs/posemaniacs_0001_primary.webp",
+        secondary: "/poses/posemaniacs/posemaniacs_0001_secondary.webp",
+      },
+      subject_count: 1,
+      title: "Fashion Walking Standing",
+      pose_description: "Single figure in an editorial fashion stance, mid-stride walking motion.",
       framing: "full-body",
-      subject_type: "solo",
-      angle: "three-quarter",
-      tags: ["solo", "full-body", "streetwear", "three-quarter"],
-      raw_caption: "PoseDreamer (laion) full-body solo three-quarter pose",
+      angle: "diagonal",
+      tags: ["standing", "walking", "fashion"],
     });
-    assert.equal(isPoseManifestApplied(updated, SAMPLE_ITEMS[0]!, 0), true);
-    assert.ok(toPromptLine(updated).includes("streetwear"));
-    assert.ok(toJson(updated).includes('"reference_id": "pose_0001"'));
+    assert.equal(isPoseManifestApplied(updatedPrimary, SAMPLE_ITEMS[2]!, 0), true);
+    assert.ok(toPromptLine(updatedPrimary).includes("mid-stride walking"));
+    assert.ok(toJson(updatedPrimary).includes('"reference_id": "posemaniacs_0001"'));
 
-    const cleared = clearSubjectPose(updated, 0);
+    const updatedSecondary = applyPoseManifestItem(doc, SAMPLE_ITEMS[2]!, 0, {
+      useSecondaryVariant: true,
+    });
+    assert.equal(
+      updatedSecondary.subjects[0]?.pose_reference?.image_url,
+      "/poses/posemaniacs/posemaniacs_0001_secondary.webp",
+    );
+
+    const cleared = clearSubjectPose(updatedPrimary, 0);
     assert.equal(cleared.subjects[0]?.kinetic_posture, "");
     assert.equal(cleared.subjects[0]?.pose_reference, undefined);
-    assert.equal(isPoseManifestApplied(cleared, SAMPLE_ITEMS[0]!, 0), false);
+    assert.equal(isPoseManifestApplied(cleared, SAMPLE_ITEMS[2]!, 0), false);
   });
 
   it("respects filters when picking a random pose", () => {
     for (let i = 0; i < 10; i++) {
-      const picked = pickRandomPoseManifestItem(SAMPLE_ITEMS, { subjectType: "duo" });
-      assert.equal(picked?.subjectType, "duo");
+      const picked = pickRandomPoseManifestItem(SAMPLE_ITEMS, { multiMode: "duo" });
+      assert.equal(picked?.id, "opensegra_0001");
     }
   });
 
-  it("verifies 5,000 generated PoseDreamer + Duo manifest entries and local WebP assets on disk when present", () => {
+  it("verifies generated 3-source manifest entries and local WebP assets on disk when present", () => {
     const manifestPath = resolve(process.cwd(), "public/data/poses.json");
     if (!existsSync(manifestPath)) {
       return;
     }
     const items = JSON.parse(readFileSync(manifestPath, "utf-8")) as PoseManifestItem[];
-    assert.equal(items.length, 5000);
+    assert.ok(items.length >= 4000, `Expected >= 4000 poses, found ${items.length}`);
 
-    const subjectCounts: Record<string, number> = {};
-    const framingCounts: Record<string, number> = {};
+    const sourceCounts: Record<string, number> = {};
+    const seenIds = new Set<string>();
     for (const item of items) {
-      subjectCounts[item.subjectType] = (subjectCounts[item.subjectType] ?? 0) + 1;
-      framingCounts[item.framing] = (framingCounts[item.framing] ?? 0) + 1;
-      assert.ok(item.id.length > 0);
-      assert.equal(item.naturalPrompt, "");
-      assert.ok(Array.isArray(item.tags) && item.tags.length > 0);
+      assert.ok(item.id.length > 0 && !seenIds.has(item.id), `Duplicate or empty id: ${item.id}`);
+      seenIds.add(item.id);
+      sourceCounts[item.source] = (sourceCounts[item.source] ?? 0) + 1;
+      assert.ok(["posemyart", "opensegra", "posemaniacs"].includes(item.source));
+      assert.ok(item.title.length > 0);
+      assert.ok(item.naturalPrompt.length > 0);
+      assert.ok(item.subjectCount >= 1);
       assert.ok(["full-body", "medium", "close-up"].includes(item.framing));
-      assert.ok(["solo", "duo"].includes(item.subjectType));
-      assert.ok(
-        ["Streetwear", "Editorial Lookbook", "Cinematic Poster", "Expressive Signature"].includes(
-          item.styleCategory,
-        ),
-      );
-      assert.ok(["eye-level", "three-quarter", "profile", "low-angle"].includes(item.angle));
+      assert.ok(["front", "side", "diagonal", "above", "below"].includes(item.angle));
+      assert.ok(Array.isArray(item.tags));
+
       const diskPath = resolve(process.cwd(), "public", item.imageUrl.replace(/^\/+/, ""));
       assert.ok(existsSync(diskPath), `Missing WebP asset on disk: ${diskPath}`);
+      if (item.variants?.secondary) {
+        const altPath = resolve(process.cwd(), "public", item.variants.secondary.replace(/^\/+/, ""));
+        assert.ok(existsSync(altPath), `Missing secondary WebP asset on disk: ${altPath}`);
+      }
     }
 
-    assert.equal(subjectCounts.solo, 4000);
-    assert.equal(subjectCounts.duo, 1000);
-    assert.equal(framingCounts["full-body"], 2500);
-    assert.equal(framingCounts.medium, 1500);
-    assert.equal(framingCounts["close-up"], 1000);
+    assert.equal(sourceCounts.posemyart, 2000);
+    assert.equal(sourceCounts.opensegra, 1439);
+    assert.ok((sourceCounts.posemaniacs ?? 0) >= 600);
   });
 });

@@ -17,9 +17,9 @@ import {
 } from "./pose-database.ts";
 
 describe("pose database", () => {
-  it("loads 1,041 total poses (97 curated + 944 Shisei CC0 gray clay mannequin poses)", () => {
+  it("loads 97 curated posture presets", () => {
     assert.equal(CURATED_POSE_LIBRARY.length, 97);
-    assert.equal(POSE_LIBRARY.length, 1041);
+    assert.equal(POSE_LIBRARY.length, 97);
   });
 
   it("ensures every pose has non-empty ID, name, posture, category, stance, and tags", () => {
@@ -33,28 +33,15 @@ describe("pose database", () => {
       assert.ok(validCategories.has(pose.category), `${pose.id} has invalid category: ${pose.category}`);
       assert.ok(validStances.has(pose.stance), `${pose.id} has invalid stance: ${pose.stance}`);
       assert.ok(Array.isArray(pose.tags) && pose.tags.length > 0, `${pose.id} missing tags`);
+      assert.equal(pose.image, undefined, `${pose.id} should not reference deleted legacy pose images`);
     }
   });
 
-  it("verifies every pose in POSE_LIBRARY references a valid studio mannequin image on disk", () => {
-    for (const pose of POSE_LIBRARY) {
-      assert.ok(pose.image && pose.image.trim().length > 0, `${pose.id} missing image`);
-      const localImagePath = resolve(process.cwd(), "public", pose.image.replace(/^\//, ""));
-      assert.ok(existsSync(localImagePath), `Pose image file missing: ${localImagePath}`);
-    }
-  });
-
-  it("retrieves poses in O(1) time via getPoseById for both curated and Shisei poses", () => {
+  it("retrieves poses in O(1) time via getPoseById", () => {
     const curated = getPoseById("kng-guard-low");
     assert.ok(curated);
     assert.equal(curated?.name, "Low Blade Guard");
     assert.equal(curated?.category, "action");
-
-    const shisei = getPoseById("shisei-P001-front");
-    assert.ok(shisei);
-    assert.ok(shisei?.posture.length > 0);
-    assert.equal(shisei?.id, "shisei-P001-front");
-    assert.equal(shisei?.image, "/poses/shisei/std_P001_front.webp");
   });
 
   it("filters poses by category, stance, and search query", () => {
