@@ -8,6 +8,7 @@ import type { LightingItem } from "@/lib/prompt/lighting-database";
 import type { CameraItem } from "@/lib/prompt/camera-database";
 import type { CastModelItem } from "@/lib/prompt/cast-database";
 import type { StyleGuideItem } from "@/lib/prompt/style-database";
+import type { BackgroundItem } from "@/lib/prompt/background-database";
 
 function cn(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(" ");
@@ -808,6 +809,104 @@ export function StyleCard({
           </span>
           <span className={cn("text-[10px] font-semibold", applied ? "text-fuchsia-400" : "text-primary group-hover:underline")}>
             {applied ? "Applied" : "+ Apply DNA"}
+          </span>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+export function BackgroundCard({
+  item,
+  applied,
+  density,
+  onSelect,
+}: {
+  item: BackgroundItem;
+  applied: boolean;
+  density: "comfortable" | "compact";
+  onSelect: () => void;
+}) {
+  if (density === "compact") {
+    return (
+      <button
+        type="button"
+        onClick={onSelect}
+        title={`${item.name} (${item.badge}) - Click to apply environment & props`}
+        aria-pressed={applied}
+        className={cn(
+          "group relative flex flex-col overflow-hidden rounded-lg border bg-surface text-left transition-all hover:border-sky-500/60 hover:shadow-xs",
+          applied ? "border-sky-500 ring-2 ring-sky-500/40" : "border-border",
+        )}
+      >
+        <div className="relative aspect-square w-full bg-neutral-900/60 overflow-hidden">
+          <img
+            src={item.image}
+            alt={item.name}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+          <span className="absolute top-1 left-1 rounded bg-black/80 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-sky-300 backdrop-blur-xs">
+            {item.badge}
+          </span>
+          {applied && (
+            <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-sky-500 text-black shadow font-bold">
+              <Check className="size-2.5 stroke-[3]" />
+            </span>
+          )}
+        </div>
+        <div className="p-1.5">
+          <p className="text-[11px] font-medium leading-tight text-foreground truncate group-hover:text-sky-400">
+            {item.name}
+          </p>
+        </div>
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={applied}
+      className={cn(
+        "group relative flex flex-col overflow-hidden rounded-xl border bg-surface text-left transition-all hover:border-sky-500/60 hover:shadow-md",
+        applied ? "border-sky-500 ring-2 ring-sky-500/40" : "border-border",
+      )}
+    >
+      <div className="relative aspect-[4/3] w-full bg-neutral-900/60 overflow-hidden">
+        <img
+          src={item.image}
+          alt={item.name}
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+        />
+        <span className="absolute top-1.5 left-1.5 rounded-md bg-black/80 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-sky-300 backdrop-blur-xs">
+          {item.badge}
+        </span>
+        {applied && (
+          <span className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-sky-500 text-black shadow font-bold">
+            <Check className="size-3 stroke-[3]" />
+          </span>
+        )}
+      </div>
+      <div className="p-2.5 flex-1 flex flex-col justify-between">
+        <div>
+          <h4 className="text-xs font-semibold leading-snug text-foreground line-clamp-1 group-hover:text-sky-400">
+            {item.name}
+          </h4>
+          <p className="mt-1 text-[10px] text-muted line-clamp-1">
+            {item.subtitle}
+          </p>
+        </div>
+        <div className="mt-2 flex items-center justify-between pt-1 border-t border-border/50">
+          <span className="text-[9px] font-medium text-faint capitalize">
+            {item.props.length} props · {item.category}
+          </span>
+          <span className={cn("text-[10px] font-semibold", applied ? "text-sky-400" : "text-primary group-hover:underline")}>
+            {applied ? "Applied" : "+ Apply Scene"}
           </span>
         </div>
       </div>

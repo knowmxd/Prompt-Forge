@@ -23,6 +23,7 @@ import {
   Undo2,
   Dices,
   FileText,
+  MapPin,
 } from "lucide-react";
 import type { PromptDoc, ClusterId } from "@/lib/prompt/model";
 import { STYLE_LIBRARY, isStyleGuideApplied } from "@/lib/prompt/style-database";
@@ -31,9 +32,10 @@ import { WARDROBE_OUTFITS, isWardrobeOutfitApplied } from "@/lib/prompt/wardrobe
 import { POSE_LIBRARY } from "@/lib/prompt/pose-database";
 import { LIGHTING_LIBRARY, isLightingApplied } from "@/lib/prompt/lighting-database";
 import { CAMERA_LIBRARY, isCameraApplied } from "@/lib/prompt/camera-database";
+import { BACKGROUND_LIBRARY, isBackgroundApplied } from "@/lib/prompt/background-database";
 import type { LockedSlots } from "./prompt-summary-pills";
 
-type AssetTabKey = "cast" | "wardrobe" | "poses" | "lighting" | "camera" | "styles";
+type AssetTabKey = "cast" | "wardrobe" | "poses" | "lighting" | "camera" | "styles" | "backgrounds";
 
 export type VisualBoardProps = {
   doc: PromptDoc;
@@ -55,6 +57,7 @@ export type VisualBoardProps = {
   onClearPose: () => void;
   onClearLighting: () => void;
   onClearCamera: () => void;
+  onClearBackground: () => void;
   onResetCanvas: () => void;
   onOpenAssetTab: (tab: AssetTabKey) => void;
   onDrillDownToCluster: (clusterId: ClusterId) => void;
@@ -83,6 +86,7 @@ export function VisualBoardStudio({
   onClearPose,
   onClearLighting,
   onClearCamera,
+  onClearBackground,
   onResetCanvas,
   onOpenAssetTab,
   onDrillDownToCluster,
@@ -121,6 +125,10 @@ export function VisualBoardStudio({
     return CAMERA_LIBRARY.find((c) => isCameraApplied(doc, c));
   }, [doc]);
 
+  const matchedBackground = useMemo(() => {
+    return BACKGROUND_LIBRARY.find((b) => isBackgroundApplied(doc, b));
+  }, [doc]);
+
   // Mix-and-match wardrobe pieces
   const wardrobeLayers = useMemo(() => {
     const wa = activeSubject?.wardrobe_architecture;
@@ -144,6 +152,7 @@ export function VisualBoardStudio({
     Boolean(activeSubject?.kinetic_posture),
     Boolean(doc.aesthetic_dna.lighting_architecture.lighting_style),
     Boolean(doc.scene_composition.framing_doctrine.named_principle || doc.scene_composition.framing_doctrine.camera_elevation_and_axis),
+    Boolean(doc.scene_composition.environmental_staging.location_context),
   ].filter(Boolean).length;
 
   return (
@@ -158,7 +167,7 @@ export function VisualBoardStudio({
             <div className="flex items-center gap-2">
               <h2 className="text-sm font-bold text-foreground truncate">Interactive Moodboard</h2>
               <span className="rounded-full bg-primary/10 border border-primary/20 px-2 py-0.2 text-[10px] font-semibold text-primary shrink-0">
-                {activeCount} / 6 Pins
+                {activeCount} / 7 Pins
               </span>
             </div>
             <p className="hidden sm:block text-[11px] text-muted truncate">
@@ -882,6 +891,89 @@ export function VisualBoardStudio({
                     Pin Camera Angle &amp; Lens
                   </span>
                   <span className="text-[10px] text-faint">Focal length &amp; depth</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* 7. Background & Setting Pin */}
+          <div
+            className={`group relative flex flex-col rounded-xl border bg-surface/80 p-3 shadow-xs transition-all overflow-hidden sm:col-span-2 xl:col-span-3 ${
+              activeAssetTab === "backgrounds"
+                ? "border-sky-400/70 ring-1 ring-sky-400/25"
+                : "border-border/70 hover:border-primary/50"
+            }`}
+          >
+            <div className="flex items-center justify-between pb-2 border-b border-border/40">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-sky-400">
+                <MapPin className="size-3.5" />
+                <span>BACKGROUND &amp; SETTING</span>
+              </div>
+              <div className="flex items-center gap-0.5">
+                <button
+                  type="button"
+                  onClick={() => onOpenAssetTab("backgrounds")}
+                  className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold text-muted hover:text-sky-300 rounded-md hover:bg-neutral-800 transition-colors"
+                  title="Browse & Swap Background"
+                >
+                  <RefreshCw className="size-2.5" />
+                  <span>Swap</span>
+                </button>
+                {doc.scene_composition.environmental_staging.location_context && (
+                  <button
+                    type="button"
+                    onClick={onClearBackground}
+                    className="p-1 text-muted hover:text-red-400 rounded-md hover:bg-neutral-800"
+                    title="Remove Background"
+                  >
+                    <X className="size-3" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => onDrillDownToCluster("environment")}
+                  className="p-1 text-muted hover:text-primary rounded-md hover:bg-neutral-800"
+                  title="Edit in Cluster Pages"
+                >
+                  <ExternalLink className="size-3" />
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-2.5 flex-1 min-h-[84px]">
+              {matchedBackground ? (
+                <div className="flex gap-3 items-start">
+                  <img
+                    src={matchedBackground.image}
+                    alt={matchedBackground.name}
+                    className="size-20 rounded-lg object-cover border border-neutral-700 shadow-xs shrink-0"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <span className="text-[10px] font-bold text-sky-400 uppercase">{matchedBackground.badge}</span>
+                    <h3 className="font-bold text-foreground text-sm truncate">{matchedBackground.name}</h3>
+                    <p className="text-[11px] text-muted line-clamp-2 mt-0.5 leading-tight">
+                      {matchedBackground.location}
+                    </p>
+                  </div>
+                </div>
+              ) : doc.scene_composition.environmental_staging.location_context ? (
+                <div>
+                  <h3 className="font-bold text-foreground text-sm">Custom Environment</h3>
+                  <p className="text-[11px] text-muted line-clamp-2 mt-1">
+                    {doc.scene_composition.environmental_staging.location_context}
+                  </p>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onOpenAssetTab("backgrounds")}
+                  className="w-full h-full flex flex-col items-center justify-center rounded-lg border border-dashed border-border/70 hover:border-sky-400/50 hover:bg-sky-500/5 p-4 text-center transition-all group/btn"
+                >
+                  <Plus className="size-5 text-muted group-hover/btn:text-sky-400 transition-colors" />
+                  <span className="text-xs font-semibold text-muted group-hover/btn:text-foreground mt-1">
+                    Pin Background &amp; Setting
+                  </span>
+                  <span className="text-[10px] text-faint">139 curated environments &amp; grounded props</span>
                 </button>
               )}
             </div>

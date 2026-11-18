@@ -12,6 +12,7 @@ import {
   Grid3X3,
   ImagePlus,
   Layers,
+  MapPin,
   Maximize2,
   Minimize2,
   Palette,
@@ -35,6 +36,7 @@ import {
   CameraCard,
   CastModelCard,
   StyleCard,
+  BackgroundCard,
 } from "@/components/workbench/asset-cards";
 import {
   ClusterMenu,
@@ -63,6 +65,15 @@ import {
   type StyleGuideItem,
   type StyleCategory,
 } from "@/lib/prompt/style-database";
+import {
+  BACKGROUND_LIBRARY,
+  BACKGROUND_CATEGORIES,
+  filterBackgrounds,
+  applyBackgroundItem,
+  isBackgroundApplied,
+  type BackgroundItem,
+  type BackgroundCategory,
+} from "@/lib/prompt/background-database";
 import {
   CAST_MODELS,
   CAST_CATEGORIES,
@@ -192,7 +203,7 @@ const FILTERS: Array<{ id: "all" | SnippetCategory; label: string }> = [
 ];
 
 type Pane = "source" | "forge" | "assets";
-type AssetTab = "cast" | "wardrobe" | "poses" | "lighting" | "camera" | "styles" | "saved";
+type AssetTab = "cast" | "wardrobe" | "poses" | "lighting" | "camera" | "styles" | "backgrounds" | "saved";
 
 const WARDROBE_SLOT_PILLS: Array<{ id: WardrobeSlot | "all"; label: string }> = [
   { id: "all", label: "All Pieces" },
@@ -399,6 +410,8 @@ export function PromptForge() {
   const [styleCategoryFilter, setStyleCategoryFilter] = useState<StyleCategory>("all");
   const [styleSearch, setStyleSearch] = useState("");
   const [styleGalleryOpen, setStyleGalleryOpen] = useState(false);
+  const [backgroundCategoryFilter, setBackgroundCategoryFilter] = useState<BackgroundCategory>("all");
+  const [backgroundSearch, setBackgroundSearch] = useState("");
   const [workbenchMode, setWorkbenchMode] = useState<"board" | "segmented">("board");
   const [sourceDrawerOpen, setSourceDrawerOpen] = useState(false);
   const [docHistory, setDocHistory] = useState<PromptDoc[]>([]);
@@ -546,6 +559,11 @@ export function PromptForge() {
       }
     }
 
+    const randomBg = pick(BACKGROUND_LIBRARY);
+    if (randomBg) {
+      next = applyBackgroundItem(next, randomBg);
+    }
+
     setUntouched(false);
     commitDoc(next, "Remixed unlocked board slots.");
   }
@@ -676,6 +694,23 @@ export function PromptForge() {
   const displayedStyles = useMemo(() => {
     return filterStyleGuides(styleSearch, styleCategoryFilter);
   }, [styleSearch, styleCategoryFilter]);
+
+  const displayedBackgrounds = useMemo(() => {
+    return filterBackgrounds(backgroundSearch, backgroundCategoryFilter);
+  }, [backgroundSearch, backgroundCategoryFilter]);
+
+  const handleSelectBackground = (item: BackgroundItem) => {
+    const next = applyBackgroundItem(doc, item);
+    setUntouched(false);
+    commitDoc(next, `Pinned "${item.name}" background & props.`);
+  };
+
+  const handleClearBackground = () => {
+    let next = setAt(doc, "scene_composition.environmental_staging.location_context", "");
+    next = setAt(next, "scene_composition.environmental_staging.atmosphere_and_air_density", "");
+    next = setAt(next, "scene_composition.environmental_staging.grounded_props", []);
+    commitDoc(next, "Cleared background & environmental staging.");
+  };
 
   const handleSelectStyle = (style: StyleGuideItem) => {
     const next = applyStyleGuide(doc, style, lockedSlots);
@@ -943,6 +978,10 @@ export function PromptForge() {
         } else if (event.key === "6") {
           event.preventDefault();
           setAssetTab("styles");
+          setPane("assets");
+        } else if (event.key === "7") {
+          event.preventDefault();
+          setAssetTab("backgrounds");
           setPane("assets");
         }
       }
@@ -1594,6 +1633,7 @@ export function PromptForge() {
               onClearPose={handleClearPose}
               onClearLighting={handleClearLighting}
               onClearCamera={handleClearCamera}
+              onClearBackground={handleClearBackground}
               onResetCanvas={handleResetCanvas}
               onOpenAssetTab={(tab) => {
                 setAssetTab(tab);
@@ -1878,7 +1918,9 @@ export function PromptForge() {
                               ? `${CAMERA_LIBRARY.length} Angles`
                               : assetTab === "styles"
                                 ? `${STYLE_LIBRARY.length} Styles`
-                                : "Saved"}
+                                : assetTab === "backgrounds"
+                                  ? `${BACKGROUND_LIBRARY.length} Scenes`
+                                  : "Saved"}
                   </span>
                 </div>
                 <p className="truncate text-[10px] text-muted">
@@ -1936,6 +1978,7 @@ export function PromptForge() {
                 { id: "lighting" as const, label: "Light", icon: SunMedium, count: LIGHTING_LIBRARY.length },
                 { id: "camera" as const, label: "Camera", icon: Camera, count: CAMERA_LIBRARY.length },
                 { id: "styles" as const, label: "Styles", icon: Palette, count: STYLE_LIBRARY.length },
+                { id: "backgrounds" as const, label: "Bg", icon: MapPin, count: BACKGROUND_LIBRARY.length },
                 { id: "saved" as const, label: "Saved", icon: BookmarkIcon },
               ].map((tab) => {
                 const Icon = tab.icon;
@@ -2720,6 +2763,116 @@ export function PromptForge() {
                         applied={isStyleGuideApplied(doc, item)}
                         density={assetDensity}
                         onSelect={() => handleSelectStyle(item)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* TAB 4C: BACKGROUNDS & ENVIRONMENTS (99 Curated Scenes) */}
+          {assetTab === "backgrounds" && (
+            <>
+              <div className="shrink-0 border-b border-border bg-surface/30 px-3 py-2 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs text-muted">
+                    Environmental staging, air density &amp; grounded props
+                  </p>
+                  {doc.scene_composition.environmental_staging.location_context && (
+                    <button
+                      type="button"
+                      onClick={handleClearBackground}
+                      className="flex h-7 shrink-0 items-center gap-1 rounded-md border border-border bg-bg px-2 text-[11px] font-medium text-muted hover:text-foreground"
+                      title="Clear active background"
+                    >
+                      <RotateCcw className="size-3" />
+                      <span>Clear</span>
+                    </button>
+                  )}
+                </div>
+
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted" />
+                  <input
+                    type="text"
+                    value={backgroundSearch}
+                    onChange={(e) => setBackgroundSearch(e.target.value)}
+                    placeholder={`Search ${BACKGROUND_LIBRARY.length} scenes (e.g. neon, ruins, brutalist, coast, nyc)...`}
+                    className="w-full rounded-md border border-border bg-bg py-1.5 pl-8 pr-7 text-xs text-foreground placeholder-muted focus:border-primary focus:outline-none"
+                  />
+                  {backgroundSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setBackgroundSearch("")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1 overflow-x-auto pb-0.5 no-scrollbar text-xs">
+                  {BACKGROUND_CATEGORIES.map((cat) => {
+                    const active = backgroundCategoryFilter === cat.id;
+                    const count =
+                      cat.id === "all"
+                        ? BACKGROUND_LIBRARY.length
+                        : BACKGROUND_LIBRARY.filter((item) => item.category === cat.id).length;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setBackgroundCategoryFilter(cat.id)}
+                        className={cn(
+                          "h-7 shrink-0 rounded-full px-2.5 text-[11px] font-medium transition-all flex items-center gap-1",
+                          active
+                            ? "bg-sky-500 text-black font-semibold shadow-xs"
+                            : "border border-border bg-bg text-muted hover:text-foreground",
+                        )}
+                      >
+                        <span>{cat.label.replace(/\s*\(\d+\)/, "")}</span>
+                        <span className={cn("text-[9px] px-1 rounded-full", active ? "bg-black/20 text-black" : "text-muted")}>
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
+                {displayedBackgrounds.length === 0 ? (
+                  <div className="py-12 text-center text-xs text-muted">
+                    <MapPin className="mx-auto size-8 opacity-30 mb-2" />
+                    <p>No backgrounds match "{backgroundSearch}".</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBackgroundSearch("");
+                        setBackgroundCategoryFilter("all");
+                      }}
+                      className="mt-2 text-xs font-semibold text-primary underline"
+                    >
+                      Reset filters
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    className={cn(
+                      "grid",
+                      assetDensity === "compact"
+                        ? "grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-1.5"
+                        : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2",
+                    )}
+                  >
+                    {displayedBackgrounds.map((item) => (
+                      <BackgroundCard
+                        key={item.id}
+                        item={item}
+                        applied={isBackgroundApplied(doc, item)}
+                        density={assetDensity}
+                        onSelect={() => handleSelectBackground(item)}
                       />
                     ))}
                   </div>
